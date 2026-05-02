@@ -1,10 +1,3 @@
-from flask import Flask
+from app import create_app
 
-app = Flask(__name__)
-
-
-@app.get("/api/health")
-def health_check():
-    return {
-        "status": "ok",
-    }, 200
+app = create_app()
