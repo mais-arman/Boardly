@@ -1,4 +1,4 @@
-import uuid
+from uuid import uuid4
 from datetime import datetime, timezone
 from app.extensions import db
 
@@ -6,7 +6,7 @@ from app.extensions import db
 class User(db.Model):
     __tablename__ = "users"
 
-    id = db.Column(db.UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = db.Column(db.UUID(as_uuid=True), primary_key=True, default=uuid4)
 
     name = db.Column(db.String(120), nullable=False)
     email = db.Column(db.String(255), unique=True, nullable=False, index=True)

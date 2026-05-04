@@ -1,21 +1,20 @@
 services:
 
   db:
-      image: postgres:16
-      container_name: boardly_postgres
-      environment:
-        POSTGRES_DB: boardly
-        POSTGRES_USER: boardly_user
-        POSTGRES_PASSWORD: boardly_password000
-      ports:
-        - "5432:5432"
-      volumes:
-        - postgres_data:/var/lib/postgresql/data
+    image: postgres:16
+    container_name: boardly_postgres
+    environment:
+      POSTGRES_DB: boardly
+      POSTGRES_USER: boardly_user
+      POSTGRES_PASSWORD: boardly_password000
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
   backend:
     build:
       context: ./apps/backend
-      dockerfile: Dockerfile
     container_name: boardly_backend
     ports:
       - "8001:8000"
@@ -23,11 +22,12 @@ services:
       - ./apps/backend:/app
     env_file:
       - ./apps/backend/.env
+    depends_on:
+      - db
 
   frontend:
     build:
       context: ./apps/frontend
-      dockerfile: Dockerfile
     container_name: boardly_frontend
     ports:
       - "5173:5173"

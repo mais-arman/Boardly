@@ -2,8 +2,10 @@ __pycache__/
 *.pyc
 
 venv/
-apps/frontend/.env
-apps/backend/.env
+apps/frontend/.env.production
+apps/frontend/.env.development
+apps/backend/.env.production
+apps/backend/.env.development
 
 node_modules/
 dist/
