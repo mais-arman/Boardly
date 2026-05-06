@@ -11,7 +11,6 @@ class BoardPermissionService:
 
     @staticmethod
     def get_user_role(user_id, board_id):
-
         membership_role = (
             db.session.query(BoardMember.role)
             .filter_by(
@@ -32,22 +31,12 @@ class BoardPermissionService:
         return None
 
     @staticmethod
-    def has_permission(
-        user_id,
-        board_id,
-        permission: Permission,
-    ):
-        role = BoardPermissionService.get_user_role(
-            user_id,
-            board_id,
-        )
+    def has_permission(user_id, board_id, permission: Permission):
+        role = BoardPermissionService.get_user_role(user_id, board_id)
 
         if not role:
             return False
 
-        allowed_roles = PERMISSIONS.get(
-            permission,
-            set(),
-        )
+        allowed_roles = PERMISSIONS.get(permission, set())
 
         return role in allowed_roles

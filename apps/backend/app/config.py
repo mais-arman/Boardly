@@ -10,6 +10,9 @@ class BaseConfig:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL")
 
+    if not SQLALCHEMY_DATABASE_URI:
+        raise RuntimeError("DATABASE_URL is not set")
+
 class DevelopmentConfig(BaseConfig):
     DEBUG = True
     LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG")

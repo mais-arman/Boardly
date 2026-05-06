@@ -1,6 +1,7 @@
 from uuid import uuid4
 from datetime import datetime, timezone
 from app.extensions import db
+from app.models.board_role import BoardRole
 
 class BoardMember(db.Model):
     __tablename__ = "board_members"
@@ -20,8 +21,9 @@ class BoardMember(db.Model):
     )
 
     role = db.Column(
-        db.String(30),
+        db.Enum(BoardRole, values_callable=lambda enum: [e.value for e in enum]),
         nullable=False,
+        default=BoardRole.VIEWER,
     )
 
     created_at = db.Column(
@@ -46,7 +48,6 @@ class BoardMember(db.Model):
             "user_id",
             name="uq_board_member",
         ),
-
         db.Index(
             "ix_board_members_board_user",
             "board_id",
