@@ -20,4 +20,4 @@ def create_app():
 
     app.logger.info("Boardly backend started successfully")
 
-    return app    
+    return app
