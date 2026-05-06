@@ -1,6 +1,6 @@
 from flask import Flask
 from app.config import Config
-from app.extensions import db, migrate
+from app.extensions import db, migrate, jwt, limiter, init_redis
 from app.utils.error_handlers import register_error_handlers
 from app.utils.logger import configure_logging
 
@@ -13,8 +13,15 @@ def create_app():
 
     db.init_app(app)
     migrate.init_app(app, db)
+    jwt.init_app(app)
+    limiter.init_app(app)
+    init_redis(app)
 
     from app import models
+    from app.utils import jwt_handlers
+
+    from app.routes.auth_routes import auth_bp
+    app.register_blueprint(auth_bp, url_prefix="/api/auth")
 
     register_error_handlers(app)
 

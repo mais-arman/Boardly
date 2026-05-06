@@ -1,65 +1,79 @@
+import logging
+from flask import jsonify
 from marshmallow import ValidationError
-from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from werkzeug.exceptions import HTTPException
+from flask_limiter.errors import RateLimitExceeded
 from app.extensions import db
 from app.utils.exceptions import AppError
-from app.utils.responses import error_response
+
+logger = logging.getLogger(__name__)
 
 
 def register_error_handlers(app):
 
-    @app.errorhandler(AppError)
-    def handle_app_error(error):
-        return error_response(
-            message=error.message,
-            status_code=error.status_code,
-            errors=error.errors,
-        )
+    @app.errorhandler(RateLimitExceeded)
+    def handle_rate_limit(error):
+        response = {
+            "error": "RateLimitExceeded",
+            "message": "Too many requests. Please try again later.",
+        }
 
-    @app.errorhandler(ValidationError)
-    def handle_validation_error(error):
-        return error_response(
-            message="Validation error",
-            status_code=400,
-            errors=error.messages,
-        )
+        logger.warning({
+            "error": "RateLimitExceeded",
+            "message": str(error.description),
+            "status_code": 429,
+        })
 
-    @app.errorhandler(IntegrityError)
-    def handle_integrity_error(error):
-        db.session.rollback()
-
-        app.logger.exception("Database integrity error")
-
-        return error_response(
-            message="Database integrity error",
-            status_code=400,
-        )
-
-    @app.errorhandler(SQLAlchemyError)
-    def handle_database_error(error):
-        db.session.rollback()
-
-        app.logger.exception("Database error")
-
-        return error_response(
-            message="Database error",
-            status_code=500,
-        )
-
-    @app.errorhandler(HTTPException)
-    def handle_http_exception(error):
-        return error_response(
-            message=error.description,
-            status_code=error.code,
-        )
+        return jsonify(response), 429
 
     @app.errorhandler(Exception)
-    def handle_unexpected_error(error):
-        db.session.rollback()
+    def handle_exceptions(error):
+        errors = None
 
-        app.logger.exception("Unexpected error")
+        if isinstance(error, AppError):
+            status_code = error.status_code
+            message = error.message
+            error_name = error.__class__.__name__
+            errors = error.errors
 
-        return error_response(
-            message="Internal server error",
-            status_code=500,
-        )
+        elif isinstance(error, ValidationError):
+            status_code = 400
+            message = "Validation error"
+            error_name = "ValidationError"
+            errors = error.messages
+
+        elif isinstance(error, HTTPException):
+            status_code = error.code
+            message = getattr(error, "description", "HTTP error")
+            error_name = getattr(error, "name", error.__class__.__name__)
+
+        else:
+            status_code = getattr(error, "code", 500)
+            error_name = error.__class__.__name__
+            message = "Internal server error" if status_code >= 500 else str(error)
+
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+
+        log_data = {
+            "error": error_name,
+            "message": str(error),
+            "status_code": status_code,
+        }
+
+        if status_code >= 500:
+            logger.error(log_data, exc_info=error)
+        else:
+            logger.warning(log_data)
+
+        response = {
+            "error": error_name,
+            "message": message,
+        }
+
+        if errors is not None:
+            response["errors"] = errors
+
+        return jsonify(response), status_code

@@ -1,10 +1,12 @@
 {
     "cSpell.words": [
         "backref",
+        "blocklist",
         "Boardly",
         "colorama",
         "itsdangerous",
         "onupdate",
-        "selectin"
+        "selectin",
+        "setex"
     ]
 }

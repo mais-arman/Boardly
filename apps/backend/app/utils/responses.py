@@ -5,17 +5,20 @@ def success_response(data=None, message="Success", status_code=200, meta=None):
         "success": True,
         "message": message,
         "data": data,
-        "meta": meta,
     }
 
-    return jsonify(response), status_code
+    if meta is not None:
+        response["meta"] = meta
 
+    return jsonify(response), status_code
 
 def error_response(message="Something went wrong", status_code=500, errors=None):
     response = {
         "success": False,
         "message": message,
-        "errors": errors,
     }
+
+    if errors is not None:
+        response["errors"] = errors
 
     return jsonify(response), status_code
