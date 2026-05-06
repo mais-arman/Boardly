@@ -1,10 +1,11 @@
 import logging
-from flask import jsonify
+from flask import request
 from marshmallow import ValidationError
 from werkzeug.exceptions import HTTPException
 from flask_limiter.errors import RateLimitExceeded
 from app.extensions import db
 from app.utils.exceptions import AppError
+from app.utils.responses import error_response
 
 logger = logging.getLogger(__name__)
 
@@ -13,18 +14,19 @@ def register_error_handlers(app):
 
     @app.errorhandler(RateLimitExceeded)
     def handle_rate_limit(error):
-        response = {
-            "error": "RateLimitExceeded",
-            "message": "Too many requests. Please try again later.",
-        }
-
         logger.warning({
             "error": "RateLimitExceeded",
             "message": str(error.description),
             "status_code": 429,
+            "path": request.path,
+            "method": request.method,
         })
 
-        return jsonify(response), 429
+        return error_response(
+            error="RateLimitExceeded",
+            message="Too many requests. Please try again later.",
+            status_code=429,
+        )
 
     @app.errorhandler(Exception)
     def handle_exceptions(error):
@@ -61,19 +63,18 @@ def register_error_handlers(app):
             "error": error_name,
             "message": str(error),
             "status_code": status_code,
+            "path": request.path,
+            "method": request.method,
         }
 
         if status_code >= 500:
-            logger.error(log_data, exc_info=error)
-        else:
+            logger.error(log_data, exc_info=True)
+        elif status_code != 404:
             logger.warning(log_data)
 
-        response = {
-            "error": error_name,
-            "message": message,
-        }
-
-        if errors is not None:
-            response["errors"] = errors
-
-        return jsonify(response), status_code
+        return error_response(
+            error=error_name,
+            message=message,
+            status_code=status_code,
+            errors=errors,
+        )

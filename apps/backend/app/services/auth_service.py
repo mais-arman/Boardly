@@ -3,8 +3,7 @@ from sqlalchemy.exc import IntegrityError
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.extensions import db
 from app.models.user import User
-from app.utils.exceptions import BadRequestError, UnauthorizedError, ConflictError
-
+from app.utils.exceptions import UnauthorizedError, ConflictError
 
 class AuthService:
 
@@ -53,7 +52,12 @@ class AuthService:
 
     @staticmethod
     def refresh(user_id):
-        access_token = create_access_token(identity=str(user_id))
+        user = db.session.get(User, user_id)
+
+        if not user:
+            raise UnauthorizedError("User not found")
+
+        access_token = create_access_token(identity=str(user.id))
 
         return {
             "access_token": access_token,

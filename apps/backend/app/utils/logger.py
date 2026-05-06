@@ -5,6 +5,7 @@ from flask import has_request_context, request
 class JsonFormatter(logging.Formatter):
     def format(self, record):
         log_record = {
+            "timestamp": self.formatTime(record, self.datefmt),
             "level": record.levelname,
             "logger": record.name,
             "message": record.getMessage(),

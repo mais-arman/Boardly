@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
-from app.extensions import db, redis_client, limiter
+from app.extensions import db, get_redis, limiter
 from app.models.user import User
 from app.schemas.auth_schema import SignupSchema, LoginSchema, UserResponseSchema
 from app.services.auth_service import AuthService
@@ -70,7 +70,7 @@ def logout():
     ttl = int(expires_at - now)
 
     if ttl > 0:
-        redis_client.setex(
+        get_redis().setex(
             f"{JWT_BLOCKLIST_PREFIX}{jti}",
             ttl,
             "revoked",

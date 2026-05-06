@@ -1,11 +1,12 @@
 from flask import jsonify
-from app.extensions import jwt, redis_client
+from app.extensions import jwt, get_redis
 
 JWT_BLOCKLIST_PREFIX = "jwt_blocklist:"
 
 
 def jwt_error_response(error_name, message, status_code=401):
     response = {
+        "success": False,
         "error": error_name,
         "message": message,
     }
@@ -17,7 +18,7 @@ def jwt_error_response(error_name, message, status_code=401):
 def check_if_token_revoked(jwt_header, jwt_payload):
     jti = jwt_payload["jti"]
 
-    return redis_client.exists(f"{JWT_BLOCKLIST_PREFIX}{jti}") == 1
+    return bool(get_redis().exists(f"{JWT_BLOCKLIST_PREFIX}{jti}"))
 
 
 @jwt.expired_token_loader

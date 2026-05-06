@@ -16,6 +16,7 @@ limiter = Limiter(
 
 redis_client = None
 
+
 def init_redis(app):
     global redis_client
 
@@ -25,3 +26,10 @@ def init_redis(app):
     )
 
     redis_client.ping()
+
+
+def get_redis():
+    if redis_client is None:
+        raise RuntimeError("Redis client is not initialized")
+
+    return redis_client

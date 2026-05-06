@@ -5,6 +5,7 @@
         "Boardly",
         "colorama",
         "itsdangerous",
+        "ondelete",
         "onupdate",
         "selectin",
         "setex"

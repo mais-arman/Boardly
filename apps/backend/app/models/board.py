@@ -16,7 +16,7 @@ class Board(db.Model):
 
     owner_id = db.Column(
         db.UUID(as_uuid=True),
-        db.ForeignKey("users.id"),
+        db.ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
