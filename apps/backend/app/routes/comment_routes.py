@@ -1,0 +1,55 @@
+from flask import Blueprint, request
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from app.schemas.comment_schema import (
+    CommentCreateSchema,
+    CommentResponseSchema,
+)
+from app.services.comment_service import CommentService
+from app.utils.responses import success_response
+
+
+comment_bp = Blueprint("comments", __name__)
+
+comment_create_schema = CommentCreateSchema()
+comment_response_schema = CommentResponseSchema()
+comments_response_schema = CommentResponseSchema(many=True)
+
+
+@comment_bp.get("/cards/<uuid:card_id>/comments")
+@jwt_required()
+def get_card_comments(card_id):
+    comments = CommentService.get_card_comments(get_jwt_identity(), card_id)
+
+    return success_response(
+        data=comments_response_schema.dump(comments),
+        message="Comments fetched successfully",
+    )
+
+
+@comment_bp.post("/cards/<uuid:card_id>/comments")
+@jwt_required()
+def create_comment(card_id):
+    data = comment_create_schema.load(request.get_json(silent=True) or {})
+
+    comment = CommentService.create_comment(
+        get_jwt_identity(),
+        card_id,
+        data,
+    )
+
+    return success_response(
+        data=comment_response_schema.dump(comment),
+        message="Comment created successfully",
+        status_code=201,
+    )
+
+
+@comment_bp.delete("/comments/<uuid:comment_id>")
+@jwt_required()
+def delete_comment(comment_id):
+    CommentService.delete_comment(get_jwt_identity(), comment_id)
+
+    return success_response(
+        data=None,
+        message="Comment deleted successfully",
+    )

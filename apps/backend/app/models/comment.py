@@ -1,25 +1,28 @@
 from uuid import uuid4
 from datetime import datetime, timezone
 from app.extensions import db
-from app.models.card_label import card_labels
 
-class Card(db.Model):
-    __tablename__ = "cards"
+
+class Comment(db.Model):
+    __tablename__ = "comments"
 
     id = db.Column(db.UUID(as_uuid=True), primary_key=True, default=uuid4)
 
-    list_id = db.Column(
+    card_id = db.Column(
         db.UUID(as_uuid=True),
-        db.ForeignKey("board_lists.id", ondelete="CASCADE"),
+        db.ForeignKey("cards.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
 
-    title = db.Column(db.String(200), nullable=False)
+    user_id = db.Column(
+        db.UUID(as_uuid=True),
+        db.ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
 
-    description = db.Column(db.Text, nullable=True)
-
-    position = db.Column(db.Integer, nullable=False, default=0)
+    content = db.Column(db.Text, nullable=False)
 
     created_at = db.Column(
         db.DateTime(timezone=True),
@@ -34,22 +37,16 @@ class Card(db.Model):
         nullable=False,
     )
 
-    list = db.relationship(
-        "BoardList",
+    card = db.relationship(
+        "Card",
         backref=db.backref(
-            "cards",
+            "comments",
             lazy="selectin",
             cascade="all, delete-orphan",
         ),
     )
 
-    labels = db.relationship(
-        "Label",
-        secondary=card_labels,
-        back_populates="cards",
-        lazy="selectin",
-    )
-
-    __table_args__ = (
-        db.Index("ix_cards_list_position", "list_id", "position"),
+    user = db.relationship(
+        "User",
+        backref=db.backref("comments", lazy="selectin"),
     )

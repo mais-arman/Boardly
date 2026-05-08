@@ -1,6 +1,5 @@
 from marshmallow import Schema, fields, validate
 
-
 class CardCreateSchema(Schema):
     title = fields.String(
         required=True,
@@ -12,7 +11,6 @@ class CardCreateSchema(Schema):
         allow_none=True,
         validate=validate.Length(max=5000),
     )
-
 
 class CardUpdateSchema(Schema):
     title = fields.String(
@@ -42,5 +40,17 @@ class CardResponseSchema(Schema):
     title = fields.String()
     description = fields.String(allow_none=True)
     position = fields.Integer()
+    labels = fields.Method("get_labels")
     created_at = fields.DateTime()
     updated_at = fields.DateTime()
+
+    def get_labels(self, card):
+        return [
+            {
+                "id": str(label.id),
+                "board_id": str(label.board_id),
+                "name": label.name,
+                "color": label.color,
+            }
+            for label in card.labels
+        ]
