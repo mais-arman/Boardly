@@ -18,6 +18,7 @@ class Permission(str, Enum):
     MANAGE_LABELS = "manage_labels"
     APPLY_LABELS = "apply_labels"
     COMMENT_CARD = "comment_card"
+    ASSIGN_CARD = "assign_card"
 
 
 PERMISSIONS = {
@@ -63,6 +64,11 @@ PERMISSIONS = {
         BoardRole.EDITOR,
     },
     Permission.COMMENT_CARD: {
+        BoardRole.OWNER,
+        BoardRole.ADMIN,
+        BoardRole.EDITOR,
+    },
+    Permission.ASSIGN_CARD: {
         BoardRole.OWNER,
         BoardRole.ADMIN,
         BoardRole.EDITOR,

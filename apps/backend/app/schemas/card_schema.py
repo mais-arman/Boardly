@@ -12,6 +12,11 @@ class CardCreateSchema(Schema):
         validate=validate.Length(max=5000),
     )
 
+    due_date = fields.DateTime(
+        required=False,
+        allow_none=True,
+    )
+
 class CardUpdateSchema(Schema):
     title = fields.String(
         required=False,
@@ -22,6 +27,11 @@ class CardUpdateSchema(Schema):
         required=False,
         allow_none=True,
         validate=validate.Length(max=5000),
+    )
+
+    due_date = fields.DateTime(
+        required=False,
+        allow_none=True,
     )
 
 
@@ -39,8 +49,10 @@ class CardResponseSchema(Schema):
     list_id = fields.UUID()
     title = fields.String()
     description = fields.String(allow_none=True)
+    due_date = fields.DateTime(allow_none=True)
     position = fields.Integer()
     labels = fields.Method("get_labels")
+    assignees = fields.Method("get_assignees")
     created_at = fields.DateTime()
     updated_at = fields.DateTime()
 
@@ -53,4 +65,14 @@ class CardResponseSchema(Schema):
                 "color": label.color,
             }
             for label in card.labels
+        ]
+
+    def get_assignees(self, card):
+        return [
+            {
+                "id": str(user.id),
+                "name": user.name,
+                "email": user.email,
+            }
+            for user in card.assignees
         ]

@@ -2,15 +2,11 @@ from app.extensions import db
 from app.models.user import User
 from app.models.board import Board
 from app.models.board_member import BoardMember
+from app.models.invitation import BoardInvitation
+from app.models.invitation_status import InvitationStatus
 from app.models.board_role import BoardRole, Permission
 from app.services.board_permission_service import BoardPermissionService
-from app.utils.exceptions import (
-    ForbiddenError,
-    NotFoundError,
-    ConflictError,
-    BadRequestError,
-)
-
+from app.utils.exceptions import ForbiddenError, NotFoundError, ConflictError, BadRequestError
 
 class MemberService:
 
@@ -28,29 +24,41 @@ class MemberService:
         ):
             raise ForbiddenError("You do not have permission to invite members")
 
-        user = User.query.filter_by(email=data["email"].lower().strip()).first()
+        email = data["email"].lower().strip()
+        role = BoardRole(data["role"])
 
-        if not user:
-            raise NotFoundError("User not found")
+        user = User.query.filter_by(email=email).first()
 
-        existing_member = BoardMember.query.filter_by(
+        if user:
+            existing_member = BoardMember.query.filter_by(
+                board_id=board_id,
+                user_id=user.id,
+            ).first()
+
+            if existing_member:
+                raise ConflictError("User is already a board member")
+
+        existing_pending_invitation = BoardInvitation.query.filter_by(
             board_id=board_id,
-            user_id=user.id,
+            email=email,
+            status=InvitationStatus.PENDING,
         ).first()
 
-        if existing_member:
-            raise ConflictError("User is already a board member")
+        if existing_pending_invitation:
+            raise ConflictError("Pending invitation already exists for this email")
 
-        member = BoardMember(
+        invitation = BoardInvitation(
             board_id=board_id,
-            user_id=user.id,
-            role=BoardRole(data["role"]),
+            invited_by_id=request_user_id,
+            email=email,
+            role=role,
+            status=InvitationStatus.PENDING,
         )
 
-        db.session.add(member)
+        db.session.add(invitation)
         db.session.commit()
 
-        return member
+        return invitation
 
     @staticmethod
     def get_members(request_user_id, board_id):

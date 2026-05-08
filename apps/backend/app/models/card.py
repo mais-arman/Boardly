@@ -2,6 +2,7 @@ from uuid import uuid4
 from datetime import datetime, timezone
 from app.extensions import db
 from app.models.card_label import card_labels
+from app.models.card_assignee import card_assignees
 
 class Card(db.Model):
     __tablename__ = "cards"
@@ -18,6 +19,11 @@ class Card(db.Model):
     title = db.Column(db.String(200), nullable=False)
 
     description = db.Column(db.Text, nullable=True)
+
+    due_date = db.Column(
+        db.DateTime(timezone=True),
+        nullable=True,
+    )
 
     position = db.Column(db.Integer, nullable=False, default=0)
 
@@ -47,6 +53,13 @@ class Card(db.Model):
         "Label",
         secondary=card_labels,
         back_populates="cards",
+        lazy="selectin",
+    )
+
+    assignees = db.relationship(
+        "User",
+        secondary=card_assignees,
+        backref=db.backref("assigned_cards", lazy="selectin"),
         lazy="selectin",
     )
 

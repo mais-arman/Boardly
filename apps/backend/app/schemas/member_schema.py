@@ -1,7 +1,6 @@
 from marshmallow import Schema, fields, validate
 from app.models.board_role import BoardRole
 
-
 class InviteMemberSchema(Schema):
     email = fields.Email(required=True)
 
@@ -13,7 +12,6 @@ class InviteMemberSchema(Schema):
             BoardRole.VIEWER.value,
         ]),
     )
-
 
 class UpdateMemberRoleSchema(Schema):
     role = fields.String(
@@ -32,3 +30,14 @@ class MemberResponseSchema(Schema):
     user_id = fields.UUID()
     role = fields.Function(lambda member: member.role.value)
     created_at = fields.DateTime()
+
+
+class InvitationResponseSchema(Schema):
+    id = fields.UUID()
+    board_id = fields.UUID()
+    invited_by_id = fields.UUID()
+    email = fields.Email()
+    role = fields.Function(lambda invitation: invitation.role.value)
+    status = fields.Function(lambda invitation: invitation.status.value)
+    created_at = fields.DateTime()
+    responded_at = fields.DateTime(allow_none=True)

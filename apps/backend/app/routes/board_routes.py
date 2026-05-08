@@ -9,6 +9,7 @@ from app.schemas.member_schema import (
     InviteMemberSchema,
     UpdateMemberRoleSchema,
     MemberResponseSchema,
+    InvitationResponseSchema,
 )
 from app.services.board_service import BoardService
 from app.services.member_service import MemberService
@@ -23,6 +24,7 @@ board_response_schema = BoardResponseSchema()
 boards_response_schema = BoardResponseSchema(many=True)
 
 invite_member_schema = InviteMemberSchema()
+invitation_response_schema = InvitationResponseSchema()
 update_member_role_schema = UpdateMemberRoleSchema()
 member_response_schema = MemberResponseSchema()
 members_response_schema = MemberResponseSchema(many=True)
@@ -91,15 +93,15 @@ def delete_board(board_id):
 def invite_member(board_id):
     data = invite_member_schema.load(request.get_json(silent=True) or {})
 
-    member = MemberService.invite_member(
+    invitation = MemberService.invite_member(
         get_jwt_identity(),
         board_id,
         data,
     )
 
     return success_response(
-        data=member_response_schema.dump(member),
-        message="Member invited successfully",
+        data=invitation_response_schema.dump(invitation),
+        message="Invitation created successfully",
         status_code=201,
     )
 

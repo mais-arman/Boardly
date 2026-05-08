@@ -5,7 +5,6 @@ from app.models.board_role import Permission
 from app.services.board_permission_service import BoardPermissionService
 from app.utils.exceptions import ForbiddenError, NotFoundError, BadRequestError
 
-
 class CardService:
 
     @staticmethod
@@ -92,6 +91,7 @@ class CardService:
             list_id=list_id,
             title=data["title"].strip(),
             description=data.get("description"),
+            due_date=data.get("due_date"),
             position=next_position,
         )
 
@@ -116,6 +116,9 @@ class CardService:
 
         if "description" in data:
             card.description = data["description"]
+
+        if "due_date" in data:
+            card.due_date = data["due_date"]
 
         db.session.commit()
 
