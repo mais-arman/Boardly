@@ -10,13 +10,13 @@ class BoardMember(db.Model):
 
     board_id = db.Column(
         db.UUID(as_uuid=True),
-        db.ForeignKey("boards.id", ondelete="CASCADE"),
+        db.ForeignKey("boards.id"),
         nullable=False,
     )
 
     user_id = db.Column(
         db.UUID(as_uuid=True),
-        db.ForeignKey("users.id", ondelete="CASCADE"),
+        db.ForeignKey("users.id"),
         nullable=False,
     )
 
@@ -34,11 +34,7 @@ class BoardMember(db.Model):
 
     board = db.relationship(
         "Board",
-        backref=db.backref(
-            "members",
-            lazy="selectin",
-            cascade="all, delete-orphan",
-        ),
+        backref=db.backref("members", lazy="selectin"),
     )
 
     user = db.relationship(
@@ -47,13 +43,6 @@ class BoardMember(db.Model):
     )
 
     __table_args__ = (
-        db.UniqueConstraint(
-            "board_id",
-            "user_id",
-            name="uq_board_member",
-        ),
-        db.Index(
-            "ix_board_members_user_id",
-            "user_id",
-        ),
+        db.UniqueConstraint("board_id", "user_id", name="uq_board_member"),
+        db.Index("ix_board_members_user_id", "user_id"),
     )

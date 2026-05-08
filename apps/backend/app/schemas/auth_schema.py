@@ -1,6 +1,5 @@
 from marshmallow import Schema, fields, validate
 
-
 class SignupSchema(Schema):
     name = fields.String(
         required=True,
@@ -30,5 +29,6 @@ class UserResponseSchema(Schema):
     id = fields.UUID()
     name = fields.String()
     email = fields.Email()
+    role = fields.Function(lambda user: user.role.value)
     created_at = fields.DateTime()
     updated_at = fields.DateTime()

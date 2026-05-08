@@ -1,6 +1,7 @@
 from uuid import uuid4
 from datetime import datetime, timezone
 from app.extensions import db
+from app.models.user_role import UserRole
 
 class User(db.Model):
     __tablename__ = "users"
@@ -17,6 +18,12 @@ class User(db.Model):
     )
 
     password_hash = db.Column(db.String(255), nullable=False)
+
+    role = db.Column(
+        db.Enum(UserRole, values_callable=lambda enum: [e.value for e in enum]),
+        nullable=False,
+        default=UserRole.USER,
+    )
 
     created_at = db.Column(
         db.DateTime(timezone=True),

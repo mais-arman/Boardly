@@ -9,14 +9,11 @@ class Board(db.Model):
 
     title = db.Column(db.String(160), nullable=False)
 
-    description = db.Column(
-        db.Text,
-        nullable=True,
-    )
+    description = db.Column(db.Text, nullable=True)
 
     owner_id = db.Column(
         db.UUID(as_uuid=True),
-        db.ForeignKey("users.id", ondelete="CASCADE"),
+        db.ForeignKey("users.id"),
         nullable=False,
         index=True,
     )

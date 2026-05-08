@@ -21,7 +21,10 @@ def create_app():
     from app.utils import jwt_handlers
 
     from app.routes.auth_routes import auth_bp
+    from app.routes.board_routes import board_bp
+
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
+    app.register_blueprint(board_bp, url_prefix="/api/boards")
 
     register_error_handlers(app)
 
