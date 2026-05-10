@@ -4,10 +4,15 @@
         "blocklist",
         "Boardly",
         "colorama",
+        "eirn",
         "itsdangerous",
+        "lpng",
         "ondelete",
         "onupdate",
         "selectin",
-        "setex"
+        "setex",
+        "shhw",
+        "uaei",
+        "uaeishhweirnlpng"
     ]
 }
