@@ -36,3 +36,5 @@ CARD_LABEL_BY_ID = "/cards/<uuid:card_id>/labels/<uuid:label_id>"
 
 CARD_COMMENTS = "/cards/<uuid:card_id>/comments"
 COMMENT_BY_ID = "/comments/<uuid:comment_id>"
+
+AUTH_VERIFY_EMAIL = "/verify-email/<uuid:token>"

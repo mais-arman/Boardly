@@ -30,5 +30,6 @@ class UserResponseSchema(Schema):
     name = fields.String()
     email = fields.Email()
     role = fields.Function(lambda user: user.role.value)
+    is_email_verified = fields.Boolean()
     created_at = fields.DateTime()
     updated_at = fields.DateTime()

@@ -7,6 +7,7 @@ from app.constants.routes import (
     AUTH_REFRESH,
     AUTH_LOGOUT,
     AUTH_ME,
+    AUTH_VERIFY_EMAIL,
 )
 from app.extensions import db, get_redis
 from app.models.auth.user import User
@@ -95,3 +96,12 @@ def me():
         data=user_response_schema.dump(user),
         message="Current user fetched successfully",
     )
+
+@auth_bp.post(AUTH_VERIFY_EMAIL)
+def verify_email(token):
+    user = AuthService.verify_email(token)
+
+    return success_response(
+        data=user_response_schema.dump(user),
+        message="Email verified successfully",
+    )    

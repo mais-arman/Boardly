@@ -25,6 +25,24 @@ class User(db.Model):
         default=UserRole.USER,
     )
 
+    is_email_verified = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=False,
+    )
+
+    email_verification_token = db.Column(
+        db.UUID(as_uuid=True),
+        unique=True,
+        nullable=True,
+        index=True,
+    )
+
+    email_verification_expires_at = db.Column(
+        db.DateTime(timezone=True),
+        nullable=True,
+    )
+
     created_at = db.Column(
         db.DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),

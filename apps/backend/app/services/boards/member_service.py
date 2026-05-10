@@ -5,7 +5,7 @@ from app.models.boards.board_member import BoardMember
 from app.models.boards.invitation import BoardInvitation
 from app.models.boards.invitation_status import InvitationStatus
 from app.models.boards.board_role import BoardRole
-from app.services.email_service import EmailService
+from app.services.auth.email_service import EmailService
 from app.utils.exceptions import NotFoundError, ConflictError, BadRequestError
 
 
