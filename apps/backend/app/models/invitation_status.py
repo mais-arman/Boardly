@@ -5,3 +5,4 @@ class InvitationStatus(str, Enum):
     ACCEPTED = "accepted"
     DECLINED = "declined"
     CANCELLED = "cancelled"
+    EXPIRED = "expired"

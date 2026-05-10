@@ -29,6 +29,7 @@ def create_app():
     from app.routes.assignee_routes import assignee_bp
     from app.routes.invitation_routes import invitation_bp
 
+
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(board_bp, url_prefix="/api/boards")
     app.register_blueprint(list_bp, url_prefix="/api")

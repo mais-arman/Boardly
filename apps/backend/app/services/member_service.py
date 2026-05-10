@@ -6,7 +6,12 @@ from app.models.invitation import BoardInvitation
 from app.models.invitation_status import InvitationStatus
 from app.models.board_role import BoardRole, Permission
 from app.services.board_permission_service import BoardPermissionService
-from app.utils.exceptions import ForbiddenError, NotFoundError, ConflictError, BadRequestError
+from app.utils.exceptions import (
+    ForbiddenError,
+    NotFoundError,
+    ConflictError,
+    BadRequestError,
+)
 
 class MemberService:
 

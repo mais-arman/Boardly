@@ -18,7 +18,6 @@ user_response_schema = UserResponseSchema()
 
 
 @auth_bp.post("/signup")
-@limiter.limit("5 per minute")
 def signup():
     data = signup_schema.load(request.get_json(silent=True) or {})
     user = AuthService.signup(data)
@@ -31,7 +30,6 @@ def signup():
 
 
 @auth_bp.post("/login")
-@limiter.limit("5 per minute")
 def login():
     data = login_schema.load(request.get_json(silent=True) or {})
     result = AuthService.login(data)
@@ -73,7 +71,7 @@ def logout():
         get_redis().setex(
             f"{JWT_BLOCKLIST_PREFIX}{jti}",
             ttl,
-            "revoked",
+            1,
         )
 
     return success_response(message="Logout successful")

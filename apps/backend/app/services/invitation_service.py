@@ -4,7 +4,12 @@ from app.models.user import User
 from app.models.board_member import BoardMember
 from app.models.invitation import BoardInvitation
 from app.models.invitation_status import InvitationStatus
-from app.utils.exceptions import ForbiddenError, NotFoundError, ConflictError, BadRequestError
+from app.utils.exceptions import (
+    ForbiddenError,
+    NotFoundError,
+    ConflictError,
+    BadRequestError,
+)
 
 
 class InvitationService:
@@ -19,7 +24,7 @@ class InvitationService:
         return (
             BoardInvitation.query
             .filter_by(
-                email=user.email,
+                email=user.email.lower(),
                 status=InvitationStatus.PENDING,
             )
             .order_by(BoardInvitation.created_at.desc())
@@ -27,13 +32,13 @@ class InvitationService:
         )
 
     @staticmethod
-    def accept_invitation(user_id, invitation_id):
+    def accept_invitation(user_id, token):
         user = db.session.get(User, user_id)
 
         if not user:
             raise NotFoundError("User not found")
 
-        invitation = db.session.get(BoardInvitation, invitation_id)
+        invitation = BoardInvitation.query.filter_by(token=token).first()
 
         if not invitation:
             raise NotFoundError("Invitation not found")
@@ -41,8 +46,16 @@ class InvitationService:
         if invitation.status != InvitationStatus.PENDING:
             raise BadRequestError("Invitation is no longer pending")
 
+        now = datetime.now(timezone.utc)
+
+        if invitation.expires_at < now:
+            invitation.status = InvitationStatus.EXPIRED
+            invitation.responded_at = now
+            db.session.commit()
+            raise BadRequestError("Invitation has expired")
+
         if invitation.email.lower() != user.email.lower():
-            raise ForbiddenError("This invitation does not belong to you")
+            raise ForbiddenError("This invitation does not belong to this account")
 
         existing_member = BoardMember.query.filter_by(
             board_id=invitation.board_id,
@@ -59,7 +72,7 @@ class InvitationService:
         )
 
         invitation.status = InvitationStatus.ACCEPTED
-        invitation.responded_at = datetime.now(timezone.utc)
+        invitation.responded_at = now
 
         db.session.add(member)
         db.session.commit()
@@ -67,13 +80,13 @@ class InvitationService:
         return member
 
     @staticmethod
-    def decline_invitation(user_id, invitation_id):
+    def decline_invitation(user_id, token):
         user = db.session.get(User, user_id)
 
         if not user:
             raise NotFoundError("User not found")
 
-        invitation = db.session.get(BoardInvitation, invitation_id)
+        invitation = BoardInvitation.query.filter_by(token=token).first()
 
         if not invitation:
             raise NotFoundError("Invitation not found")
@@ -81,11 +94,19 @@ class InvitationService:
         if invitation.status != InvitationStatus.PENDING:
             raise BadRequestError("Invitation is no longer pending")
 
+        now = datetime.now(timezone.utc)
+
+        if invitation.expires_at < now:
+            invitation.status = InvitationStatus.EXPIRED
+            invitation.responded_at = now
+            db.session.commit()
+            raise BadRequestError("Invitation has expired")
+
         if invitation.email.lower() != user.email.lower():
-            raise ForbiddenError("This invitation does not belong to you")
+            raise ForbiddenError("This invitation does not belong to this account")
 
         invitation.status = InvitationStatus.DECLINED
-        invitation.responded_at = datetime.now(timezone.utc)
+        invitation.responded_at = now
 
         db.session.commit()
 

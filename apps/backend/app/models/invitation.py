@@ -1,5 +1,5 @@
 from uuid import uuid4
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from app.extensions import db
 from app.models.board_role import BoardRole
 from app.models.invitation_status import InvitationStatus
@@ -9,6 +9,14 @@ class BoardInvitation(db.Model):
     __tablename__ = "board_invitations"
 
     id = db.Column(db.UUID(as_uuid=True), primary_key=True, default=uuid4)
+
+    token = db.Column(
+        db.UUID(as_uuid=True),
+        unique=True,
+        nullable=False,
+        default=uuid4,
+        index=True,
+    )
 
     board_id = db.Column(
         db.UUID(as_uuid=True),
@@ -31,9 +39,18 @@ class BoardInvitation(db.Model):
     )
 
     status = db.Column(
-        db.Enum(InvitationStatus, values_callable=lambda enum: [e.value for e in enum]),
+        db.Enum(
+            InvitationStatus,
+            values_callable=lambda enum: [e.value for e in enum],
+        ),
         nullable=False,
         default=InvitationStatus.PENDING,
+    )
+
+    expires_at = db.Column(
+        db.DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc) + timedelta(days=7),
+        nullable=False,
     )
 
     created_at = db.Column(

@@ -26,12 +26,12 @@ def get_my_invitations():
     )
 
 
-@invitation_bp.post("/invitations/<uuid:invitation_id>/accept")
+@invitation_bp.post("/invitations/<uuid:token>/accept")
 @jwt_required()
-def accept_invitation(invitation_id):
+def accept_invitation(token):
     member = InvitationService.accept_invitation(
         get_jwt_identity(),
-        invitation_id,
+        token,
     )
 
     return success_response(
@@ -40,12 +40,12 @@ def accept_invitation(invitation_id):
     )
 
 
-@invitation_bp.post("/invitations/<uuid:invitation_id>/decline")
+@invitation_bp.post("/invitations/<uuid:token>/decline")
 @jwt_required()
-def decline_invitation(invitation_id):
+def decline_invitation(token):
     invitation = InvitationService.decline_invitation(
         get_jwt_identity(),
-        invitation_id,
+        token,
     )
 
     return success_response(
