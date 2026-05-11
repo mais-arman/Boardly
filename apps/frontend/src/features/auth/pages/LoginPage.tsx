@@ -3,6 +3,8 @@ import type { FormEvent } from "react";
 import { AxiosError } from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { ROUTES } from "../../../app/constants/routes";
+import Button from "../../../shared/components/Button";
+import Input from "../../../shared/components/Input";
 import { useAuth } from "../hooks/useAuth";
 
 type ErrorResponse = {
@@ -58,31 +60,27 @@ export default function LoginPage() {
         {error && <div className="alert error">{error}</div>}
 
         <form className="auth-form" onSubmit={handleSubmit}>
-          <div className="field-group">
-            <label>Email</label>
-            <input
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              required
-            />
-          </div>
+          <Input
+            label="Email"
+            type="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            required
+          />
 
-          <div className="field-group">
-            <label>Password</label>
-            <input
-              type="password"
-              placeholder="Your password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              required
-            />
-          </div>
+          <Input
+            label="Password"
+            type="password"
+            placeholder="Your password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            required
+          />
 
-          <button className="primary-button full-width" disabled={isLoggingIn}>
-            {isLoggingIn ? "Logging in..." : "Login"}
-          </button>
+          <Button type="submit" fullWidth isLoading={isLoggingIn}>
+            Login
+          </Button>
         </form>
 
         <p className="auth-footer">

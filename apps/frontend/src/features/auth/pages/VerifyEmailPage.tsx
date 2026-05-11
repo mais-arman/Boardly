@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { AxiosError } from "axios";
 import { Link, useParams } from "react-router-dom";
 import { ROUTES } from "../../../app/constants/routes";
+import Button from "../../../shared/components/Button";
 import { verifyEmailRequest } from "../api/authApi";
 
 type VerificationStatus = "loading" | "success" | "error";
@@ -51,19 +52,20 @@ export default function VerifyEmailPage() {
   return (
     <main className="auth-layout single">
       <section className="auth-card verification-card">
-        <div className="auth-card-header">
-          <span className="brand-mark">B</span>
-          <div>
-            <h2>Email verification</h2>
-            <p>Secure your Boardly account</p>
-          </div>
+        <div className={`verification-icon ${status}`}>
+          {status === "success" ? "✓" : status === "error" ? "!" : "…"}
         </div>
 
-        <div className={`alert ${status}`}>{message}</div>
+        <div className="verification-content">
+          <h2>Email verification</h2>
+          <p>{message}</p>
+        </div>
 
         {status !== "loading" && (
-          <Link className="primary-button full-width link-button" to={ROUTES.LOGIN}>
-            Go to login
+          <Link to={ROUTES.LOGIN} className="button-link">
+            <Button type="button" fullWidth>
+              Go to login
+            </Button>
           </Link>
         )}
       </section>

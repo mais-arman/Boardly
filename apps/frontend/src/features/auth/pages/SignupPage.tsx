@@ -3,6 +3,8 @@ import type { FormEvent } from "react";
 import { AxiosError } from "axios";
 import { Link } from "react-router-dom";
 import { ROUTES } from "../../../app/constants/routes";
+import Button from "../../../shared/components/Button";
+import Input from "../../../shared/components/Input";
 import { useAuth } from "../hooks/useAuth";
 
 type ErrorResponse = {
@@ -37,10 +39,7 @@ export default function SignupPage() {
     } catch (error: unknown) {
       if (error instanceof AxiosError) {
         const data = error.response?.data as ErrorResponse | undefined;
-
-        setError(
-          data?.message || "Signup failed. Please check your information."
-        );
+        setError(data?.message || "Signup failed. Please check your information.");
         return;
       }
 
@@ -72,43 +71,37 @@ export default function SignupPage() {
         {successMessage && <div className="alert success">{successMessage}</div>}
 
         <form className="auth-form" onSubmit={handleSubmit}>
-          <div className="field-group">
-            <label>Name</label>
-            <input
-              type="text"
-              placeholder="Your name"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              required
-            />
-          </div>
+          <Input
+            label="Name"
+            type="text"
+            placeholder="Your name"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            required
+          />
 
-          <div className="field-group">
-            <label>Email</label>
-            <input
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              required
-            />
-          </div>
+          <Input
+            label="Email"
+            type="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            required
+          />
 
-          <div className="field-group">
-            <label>Password</label>
-            <input
-              type="password"
-              placeholder="At least 8 characters"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              minLength={8}
-              required
-            />
-          </div>
+          <Input
+            label="Password"
+            type="password"
+            placeholder="At least 8 characters"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            minLength={8}
+            required
+          />
 
-          <button className="primary-button full-width" disabled={isSigningUp}>
-            {isSigningUp ? "Creating..." : "Create account"}
-          </button>
+          <Button type="submit" fullWidth isLoading={isSigningUp}>
+            Create account
+          </Button>
         </form>
 
         <p className="auth-footer">
