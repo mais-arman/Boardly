@@ -45,14 +45,21 @@ def register_error_handlers(app):
             errors = error.messages
 
         elif isinstance(error, HTTPException):
-            status_code = error.code
+            status_code = error.code or 500
             message = getattr(error, "description", "HTTP error")
             error_name = getattr(error, "name", error.__class__.__name__)
 
         else:
             status_code = getattr(error, "code", 500)
             error_name = error.__class__.__name__
+
+            if not isinstance(status_code, int):
+                status_code = 500
+
             message = "Internal server error" if status_code >= 500 else str(error)
+
+        if not isinstance(status_code, int):
+            status_code = 500
 
         try:
             db.session.rollback()
