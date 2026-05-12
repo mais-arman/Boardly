@@ -99,3 +99,34 @@ export type ApiResponse<T> = {
   message: string;
   data: T;
 };
+
+export type ManageableBoardRole = "admin" | "editor" | "viewer";
+
+export type BoardMember = {
+  id: string;
+  board_id: string;
+  user_id: string;
+  role: BoardRole;
+  created_at: string;
+};
+
+export type BoardInvitation = {
+  id: string;
+  board_id: string;
+  invited_by_id: string;
+  email: string;
+  role: ManageableBoardRole;
+  status: "pending" | "accepted" | "declined" | "cancelled" | "expired";
+  expires_at: string;
+  created_at: string;
+  responded_at: string | null;
+};
+
+export type InviteMemberPayload = {
+  email: string;
+  role: ManageableBoardRole;
+};
+
+export type UpdateMemberRolePayload = {
+  role: ManageableBoardRole;
+};

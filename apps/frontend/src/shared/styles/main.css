@@ -1253,3 +1253,101 @@ a {
 .trello-modal {
   color: var(--text);
 }
+
+.side-panel-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.35);
+  z-index: 60;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.members-panel {
+  width: min(460px, 100%);
+  height: 100vh;
+  overflow-y: auto;
+  background: white;
+  color: var(--text);
+  padding: 24px;
+  box-shadow: var(--shadow-lg);
+}
+
+.members-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.members-panel-header h2 {
+  margin: 0;
+  font-size: 26px;
+  letter-spacing: -0.04em;
+}
+
+.invite-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--border);
+}
+
+.field-group select,
+.member-actions select {
+  height: 44px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  padding: 0 12px;
+  background: white;
+  color: var(--text);
+  font: inherit;
+}
+
+.members-section {
+  margin-top: 24px;
+}
+
+.members-section h3 {
+  margin: 0 0 12px;
+  font-size: 17px;
+}
+
+.members-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.member-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--panel-soft);
+}
+
+.member-row strong {
+  display: block;
+  font-size: 14px;
+  word-break: break-all;
+}
+
+.member-row span {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.member-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

@@ -13,6 +13,14 @@ export const API_ROUTES = {
     BY_ID: (boardId: string) => `/boards/${boardId}`,
     LISTS: (boardId: string) => `/boards/${boardId}/lists`,
     REORDER_LISTS: (boardId: string) => `/boards/${boardId}/lists/reorder`,
+
+    MEMBERS: (boardId: string) => `/boards/${boardId}/members`,
+    MEMBER_BY_ID: (boardId: string, memberId: string) =>
+      `/boards/${boardId}/members/${memberId}`,
+
+    INVITATIONS: (boardId: string) => `/boards/${boardId}/invitations`,
+    CANCEL_INVITATION: (boardId: string, invitationId: string) =>
+      `/boards/${boardId}/invitations/${invitationId}/cancel`,
   },
 
   LISTS: {

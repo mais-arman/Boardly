@@ -24,12 +24,12 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-
 import { ROUTES } from "../../../app/constants/routes";
 import { t } from "../../../app/constants/translations";
 import Button from "../../../shared/components/Button";
 import Input from "../../../shared/components/Input";
 import Loader from "../../../shared/components/Loader";
+import BoardMembersPanel from "../components/BoardMembersPanel";
 import type { BoardList, Card, Comment } from "../types";
 import {
   createCardRequest,
@@ -71,6 +71,7 @@ export default function BoardPage() {
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const [pageError, setPageError] = useState("");
   const [modalError, setModalError] = useState("");
+  const [isMembersPanelOpen, setIsMembersPanelOpen] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -383,6 +384,7 @@ export default function BoardPage() {
   }
 
   const board = boardQuery.data;
+  const canManageMembers = board.role === "owner" || board.role === "admin";
 
   return (
     <main className="trello-board-page">
@@ -395,6 +397,14 @@ export default function BoardPage() {
         </div>
 
         <div className="board-header-actions">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => setIsMembersPanelOpen(true)}
+          >
+            Members
+          </Button>
+
           <span className={`role-pill ${board.role || "viewer"}`}>
             {board.role || "viewer"}
           </span>
@@ -538,6 +548,14 @@ export default function BoardPage() {
           }}
           onUpdate={handleUpdateCard}
           onCreateComment={handleCreateComment}
+        />
+      )}
+
+      {isMembersPanelOpen && (
+        <BoardMembersPanel
+          boardId={boardId}
+          canManageMembers={canManageMembers}
+          onClose={() => setIsMembersPanelOpen(false)}
         />
       )}
     </main>

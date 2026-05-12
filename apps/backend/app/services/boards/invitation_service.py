@@ -193,3 +193,32 @@ class InvitationService:
         db.session.commit()
 
         return invitation
+
+        @staticmethod
+        def cancel_invitation_by_id(request_user_id, board_id, invitation_id):
+            board = db.session.get(Board, board_id)
+
+            if not board:
+                raise NotFoundError(Messages.BOARD_NOT_FOUND)
+
+            if not BoardPermissionService.has_permission(
+                request_user_id,
+                board_id,
+                Permission.MANAGE_MEMBERS,
+            ):
+                raise ForbiddenError("You do not have permission to cancel invitations")
+
+            invitation = db.session.get(BoardInvitation, invitation_id)
+
+            if not invitation or str(invitation.board_id) != str(board_id):
+                raise NotFoundError(Messages.INVITATION_NOT_FOUND)
+
+            if invitation.status != InvitationStatus.PENDING:
+                raise BadRequestError(Messages.INVITATION_NOT_PENDING)
+
+            invitation.status = InvitationStatus.CANCELLED
+            invitation.responded_at = datetime.now(timezone.utc)
+
+            db.session.commit()
+
+            return invitation

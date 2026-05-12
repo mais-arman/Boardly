@@ -8,6 +8,7 @@ from app.constants.routes import (
     BOARD_INVITATION_BY_TOKEN,
     BOARD_MEMBERS,
     BOARD_MEMBER_BY_ID,
+    BOARD_INVITATION_CANCEL,
 )
 from app.models.boards.board_role import Permission
 from app.schemas.boards.board_schema import (
@@ -202,3 +203,18 @@ def remove_member(board_id, member_id):
         data=None,
         message="Member removed successfully",
     )
+
+@board_bp.delete(BOARD_INVITATION_CANCEL)
+@jwt_required()
+@board_permission(Permission.MANAGE_MEMBERS)
+def cancel_invitation_by_id(board_id, invitation_id):
+    invitation = InvitationService.cancel_invitation_by_id(
+        get_jwt_identity(),
+        board_id,
+        invitation_id,
+    )
+
+    return success_response(
+        data=invitation_response_schema.dump(invitation),
+        message=Messages.INVITATION_CANCELLED,
+    )    

@@ -16,6 +16,7 @@ BOARD_INVITATIONS = "/<uuid:board_id>/invitations"
 BOARD_INVITATION_BY_TOKEN = "/<uuid:board_id>/invitations/<token>"
 BOARD_MEMBERS = "/<uuid:board_id>/members"
 BOARD_MEMBER_BY_ID = "/<uuid:board_id>/members/<uuid:member_id>"
+BOARD_INVITATION_CANCEL = "/<uuid:board_id>/invitations/<uuid:invitation_id>/cancel"
 
 MY_INVITATIONS = "/invitations/me"
 INVITATION_PREVIEW = "/invitations/<token>"
@@ -39,3 +40,4 @@ CARD_LABEL_BY_ID = "/cards/<uuid:card_id>/labels/<uuid:label_id>"
 
 CARD_COMMENTS = "/cards/<uuid:card_id>/comments"
 COMMENT_BY_ID = "/comments/<uuid:comment_id>"
+
