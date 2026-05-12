@@ -2,11 +2,11 @@ from app.extensions import db
 from app.models.auth.user import User
 from app.models.cards.card import Card
 from app.models.boards.board_member import BoardMember
+from app.services.realtime_service import RealtimeService
 from app.utils.exceptions import NotFoundError, BadRequestError
 
 
 class AssigneeService:
-
     @staticmethod
     def add_assignee(card_id, data):
         card = db.session.get(Card, card_id)
@@ -34,6 +34,8 @@ class AssigneeService:
 
         db.session.commit()
 
+        RealtimeService.emit_board_event(board_id, "card.assignee.added")
+
         return card
 
     @staticmethod
@@ -42,6 +44,8 @@ class AssigneeService:
 
         if not card:
             raise NotFoundError("Card not found")
+
+        board_id = card.list.board_id
 
         user = db.session.get(User, user_id)
 
@@ -52,5 +56,7 @@ class AssigneeService:
             card.assignees.remove(user)
 
         db.session.commit()
+
+        RealtimeService.emit_board_event(board_id, "card.assignee.removed")
 
         return card

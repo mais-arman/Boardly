@@ -2,7 +2,7 @@ from flask import Flask
 from flask_cors import CORS
 from app.config import Config
 from app.constants.routes import AUTH_PREFIX, BOARDS_PREFIX, API_PREFIX
-from app.extensions import db, migrate, jwt, limiter, mail, init_redis
+from app.extensions import db, migrate, jwt, limiter, mail, init_redis, socketio
 from app.utils.error_handlers import register_error_handlers
 from app.utils.logger import configure_logging
 
@@ -34,6 +34,8 @@ def create_app():
     mail.init_app(app)
     init_redis(app)
 
+    socketio.init_app(app)
+
     from app import models
     from app.utils import jwt_handlers
 
@@ -45,6 +47,7 @@ def create_app():
     from app.routes.cards.assignee_routes import assignee_bp
     from app.routes.cards.label_routes import label_bp
     from app.routes.cards.comment_routes import comment_bp
+    from app.routes import socket_routes
 
     app.register_blueprint(auth_bp, url_prefix=AUTH_PREFIX)
     app.register_blueprint(board_bp, url_prefix=BOARDS_PREFIX)

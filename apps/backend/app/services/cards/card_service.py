@@ -1,11 +1,11 @@
 from app.extensions import db
 from app.models.cards.card import Card
 from app.models.lists.board_list import BoardList
+from app.services.realtime_service import RealtimeService
 from app.utils.exceptions import NotFoundError, BadRequestError
 
 
 class CardService:
-
     @staticmethod
     def _get_list_or_404(list_id):
         board_list = db.session.get(BoardList, list_id)
@@ -53,7 +53,7 @@ class CardService:
 
     @staticmethod
     def create_card(list_id, data):
-        CardService._get_list_or_404(list_id)
+        board_list = CardService._get_list_or_404(list_id)
 
         max_position = (
             db.session.query(db.func.max(Card.position))
@@ -74,11 +74,14 @@ class CardService:
         db.session.add(card)
         db.session.commit()
 
+        RealtimeService.emit_board_event(board_list.board_id, "card.created")
+
         return card
 
     @staticmethod
     def update_card(card_id, data):
         card = CardService._get_card_or_404(card_id)
+        board_id = card.list.board_id
 
         if "title" in data:
             card.title = data["title"].strip()
@@ -91,12 +94,16 @@ class CardService:
 
         db.session.commit()
 
+        RealtimeService.emit_board_event(board_id, "card.updated")
+
         return card
 
     @staticmethod
     def delete_card(card_id):
         card = CardService._get_card_or_404(card_id)
+
         source_list_id = card.list_id
+        board_id = card.list.board_id
 
         db.session.delete(card)
         db.session.flush()
@@ -104,6 +111,8 @@ class CardService:
         CardService._normalize_positions(source_list_id)
 
         db.session.commit()
+
+        RealtimeService.emit_board_event(board_id, "card.deleted")
 
     @staticmethod
     def move_card(card_id, data):
@@ -146,5 +155,7 @@ class CardService:
             CardService._normalize_positions(source_list_id)
 
         db.session.commit()
+
+        RealtimeService.emit_board_event(target_list.board_id, "card.moved")
 
         return card

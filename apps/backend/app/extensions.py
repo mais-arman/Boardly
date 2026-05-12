@@ -4,6 +4,7 @@ from flask_jwt_extended import JWTManager
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_mail import Mail
+from flask_socketio import SocketIO
 from redis import Redis
 
 
@@ -11,6 +12,14 @@ db = SQLAlchemy()
 migrate = Migrate()
 jwt = JWTManager()
 mail = Mail()
+
+socketio = SocketIO(
+    cors_allowed_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
+    async_mode="eventlet",
+)
 
 limiter = Limiter(
     key_func=get_remote_address,

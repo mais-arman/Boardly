@@ -3,11 +3,11 @@ from app.models.cards.card import Card
 from app.models.cards.comment import Comment
 from app.models.boards.board_role import Permission
 from app.services.boards.board_permission_service import BoardPermissionService
+from app.services.realtime_service import RealtimeService
 from app.utils.exceptions import ForbiddenError, NotFoundError
 
 
 class CommentService:
-
     @staticmethod
     def get_card_comments(card_id):
         card = db.session.get(Card, card_id)
@@ -38,6 +38,8 @@ class CommentService:
         db.session.add(comment)
         db.session.commit()
 
+        RealtimeService.emit_board_event(card.list.board_id, "comment.created")
+
         return comment
 
     @staticmethod
@@ -62,3 +64,5 @@ class CommentService:
 
         db.session.delete(comment)
         db.session.commit()
+
+        RealtimeService.emit_board_event(board_id, "comment.deleted")

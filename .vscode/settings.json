@@ -6,6 +6,7 @@
         "Boardly",
         "colorama",
         "eirn",
+        "eventlet",
         "itsdangerous",
         "lpng",
         "ondelete",
@@ -13,6 +14,7 @@
         "selectin",
         "setex",
         "shhw",
+        "socketio",
         "tanstack",
         "uaei",
         "uaeishhweirnlpng"

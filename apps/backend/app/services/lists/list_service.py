@@ -1,11 +1,11 @@
 from app.extensions import db
 from app.models.boards.board import Board
 from app.models.lists.board_list import BoardList
+from app.services.realtime_service import RealtimeService
 from app.utils.exceptions import NotFoundError, BadRequestError
 
 
 class ListService:
-
     @staticmethod
     def get_board_lists(board_id):
         board = db.session.get(Board, board_id)
@@ -53,6 +53,8 @@ class ListService:
         db.session.add(board_list)
         db.session.commit()
 
+        RealtimeService.emit_board_event(board_id, "list.created")
+
         return board_list
 
     @staticmethod
@@ -66,6 +68,8 @@ class ListService:
 
         db.session.commit()
 
+        RealtimeService.emit_board_event(board_list.board_id, "list.updated")
+
         return board_list
 
     @staticmethod
@@ -75,8 +79,12 @@ class ListService:
         if not board_list:
             raise NotFoundError("List not found")
 
+        board_id = board_list.board_id
+
         db.session.delete(board_list)
         db.session.commit()
+
+        RealtimeService.emit_board_event(board_id, "list.deleted")
 
     @staticmethod
     def reorder_lists(board_id, data):
@@ -116,6 +124,8 @@ class ListService:
             lists_by_id[item["id"]].position = position
 
         db.session.commit()
+
+        RealtimeService.emit_board_event(board_id, "lists.reordered")
 
         return (
             BoardList.query

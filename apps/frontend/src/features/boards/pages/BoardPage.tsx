@@ -32,6 +32,7 @@ import Input from "../../../shared/components/Input";
 import Loader from "../../../shared/components/Loader";
 import BoardMembersPanel from "../components/BoardMembersPanel";
 import CardDetailsModal from "../components/CardDetailsModal";
+import { useBoardRealtime } from "../hooks/useBoardRealtime";
 import type { BoardList, Card } from "../types";
 import {
   createCardRequest,
@@ -102,7 +103,17 @@ export default function BoardPage() {
     enabled: Boolean(boardId),
   });
 
-  const lists = useMemo(() => listsQuery.data || [], [listsQuery.data]);
+  const lists = useMemo<BoardList[]>(
+    () => listsQuery.data ?? [],
+    [listsQuery.data]
+  );
+
+  const listIds = useMemo(() => lists.map((list) => list.id), [lists]);
+
+  useBoardRealtime({
+    boardId,
+    listIds,
+  });
 
   const cardQueries = useQueries({
     queries: lists.map((list) => ({

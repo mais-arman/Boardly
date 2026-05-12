@@ -3,6 +3,7 @@ from app.extensions import db
 from app.models.boards.board import Board
 from app.models.cards.card import Card
 from app.models.cards.label import Label
+from app.services.realtime_service import RealtimeService
 from app.utils.exceptions import (
     NotFoundError,
     ConflictError,
@@ -11,7 +12,6 @@ from app.utils.exceptions import (
 
 
 class LabelService:
-
     @staticmethod
     def get_board_labels(board_id):
         board = db.session.get(Board, board_id)
@@ -41,6 +41,8 @@ class LabelService:
             db.session.rollback()
             raise ConflictError("Label already exists on this board")
 
+        RealtimeService.emit_board_event(board_id, "label.created")
+
         return label
 
     @staticmethod
@@ -65,6 +67,8 @@ class LabelService:
 
         db.session.commit()
 
+        RealtimeService.emit_board_event(board_id, "card.label.applied")
+
         return card
 
     @staticmethod
@@ -73,6 +77,8 @@ class LabelService:
 
         if not card:
             raise NotFoundError("Card not found")
+
+        board_id = card.list.board_id
 
         label = db.session.get(Label, label_id)
 
@@ -83,5 +89,7 @@ class LabelService:
             card.labels.remove(label)
 
         db.session.commit()
+
+        RealtimeService.emit_board_event(board_id, "card.label.removed")
 
         return card
