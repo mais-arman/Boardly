@@ -13,6 +13,7 @@ class InviteMemberSchema(Schema):
         ]),
     )
 
+
 class UpdateMemberRoleSchema(Schema):
     role = fields.String(
         required=True,
@@ -24,11 +25,18 @@ class UpdateMemberRoleSchema(Schema):
     )
 
 
+class MemberUserResponseSchema(Schema):
+    id = fields.UUID()
+    name = fields.String()
+    email = fields.Email()
+
+
 class MemberResponseSchema(Schema):
     id = fields.UUID()
     board_id = fields.UUID()
     user_id = fields.UUID()
     role = fields.Function(lambda member: member.role.value)
+    user = fields.Nested(MemberUserResponseSchema)
     created_at = fields.DateTime()
 
 

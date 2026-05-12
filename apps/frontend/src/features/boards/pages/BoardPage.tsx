@@ -24,13 +24,15 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+
 import { ROUTES } from "../../../app/constants/routes";
 import { t } from "../../../app/constants/translations";
 import Button from "../../../shared/components/Button";
 import Input from "../../../shared/components/Input";
 import Loader from "../../../shared/components/Loader";
 import BoardMembersPanel from "../components/BoardMembersPanel";
-import type { BoardList, Card, Comment } from "../types";
+import CardDetailsModal from "../components/CardDetailsModal";
+import type { BoardList, Card } from "../types";
 import {
   createCardRequest,
   createCommentRequest,
@@ -370,6 +372,18 @@ export default function BoardPage() {
     }
   }
 
+  function handleCardChanged(updatedCard: Card) {
+    setSelectedCard(updatedCard);
+
+    queryClient.invalidateQueries({
+      queryKey: [CARDS_QUERY_KEY, updatedCard.list_id],
+    });
+
+    queryClient.invalidateQueries({
+      queryKey: [BOARD_QUERY_KEY, boardId],
+    });
+  }
+
   if (boardQuery.isLoading || listsQuery.isLoading) {
     return <Loader />;
   }
@@ -385,6 +399,8 @@ export default function BoardPage() {
 
   const board = boardQuery.data;
   const canManageMembers = board.role === "owner" || board.role === "admin";
+  const canEdit =
+    board.role === "owner" || board.role === "admin" || board.role === "editor";
 
   return (
     <main className="trello-board-page">
@@ -421,6 +437,7 @@ export default function BoardPage() {
             type="button"
             onClick={handleCreateDefaultWorkflow}
             isLoading={createListMutation.isPending}
+            disabled={!canEdit}
           >
             {t.boards.setupWorkflow}
           </Button>
@@ -430,7 +447,7 @@ export default function BoardPage() {
       <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}
-        onDragEnd={handleDragEnd}
+        onDragEnd={canEdit ? handleDragEnd : undefined}
       >
         <SortableContext
           items={lists.map((list) => list.id)}
@@ -442,6 +459,7 @@ export default function BoardPage() {
                 key={list.id}
                 list={list}
                 cardIds={(cardsByList[list.id] || []).map((card) => card.id)}
+                disabled={!canEdit}
               >
                 <div className="trello-list-header">
                   <h2>{list.title}</h2>
@@ -453,6 +471,7 @@ export default function BoardPage() {
                     <SortableCard
                       key={card.id}
                       card={card}
+                      disabled={!canEdit}
                       onClick={() => setSelectedCard(card)}
                     >
                       {card.labels.length > 0 && (
@@ -485,69 +504,76 @@ export default function BoardPage() {
                   ))}
                 </div>
 
-                <form
-                  className="trello-add-card"
-                  onSubmit={(event) => handleCreateCard(event, list.id)}
-                >
-                  <input
-                    value={cardTitleByList[list.id] || ""}
-                    onChange={(event) =>
-                      setCardTitleByList((current) => ({
-                        ...current,
-                        [list.id]: event.target.value,
-                      }))
-                    }
-                    placeholder={t.boards.addCard}
+                {canEdit && (
+                  <form
+                    className="trello-add-card"
+                    onSubmit={(event) => handleCreateCard(event, list.id)}
+                  >
+                    <input
+                      value={cardTitleByList[list.id] || ""}
+                      onChange={(event) =>
+                        setCardTitleByList((current) => ({
+                          ...current,
+                          [list.id]: event.target.value,
+                        }))
+                      }
+                      placeholder={t.boards.addCard}
+                    />
+
+                    <Button
+                      type="submit"
+                      fullWidth
+                      variant="secondary"
+                      isLoading={createCardMutation.isPending}
+                    >
+                      {t.boards.addCard}
+                    </Button>
+                  </form>
+                )}
+              </SortableListContainer>
+            ))}
+
+            {canEdit && (
+              <article className="trello-list trello-add-list">
+                <form onSubmit={handleCreateList}>
+                  <Input
+                    label={t.boards.listTitle}
+                    value={newListTitle}
+                    onChange={(event) => setNewListTitle(event.target.value)}
+                    placeholder={t.boards.newListTitle}
+                    required
                   />
 
                   <Button
                     type="submit"
                     fullWidth
-                    variant="secondary"
-                    isLoading={createCardMutation.isPending}
+                    isLoading={createListMutation.isPending}
                   >
-                    {t.boards.addCard}
+                    + {t.boards.addList}
                   </Button>
                 </form>
-              </SortableListContainer>
-            ))}
-
-            <article className="trello-list trello-add-list">
-              <form onSubmit={handleCreateList}>
-                <Input
-                  label={t.boards.listTitle}
-                  value={newListTitle}
-                  onChange={(event) => setNewListTitle(event.target.value)}
-                  placeholder={t.boards.newListTitle}
-                  required
-                />
-
-                <Button
-                  type="submit"
-                  fullWidth
-                  isLoading={createListMutation.isPending}
-                >
-                  + {t.boards.addList}
-                </Button>
-              </form>
-            </article>
+              </article>
+            )}
           </section>
         </SortableContext>
       </DndContext>
 
       {selectedCard && (
         <CardDetailsModal
+          boardId={boardId}
           card={selectedCard}
           comments={commentsQuery.data || []}
           isUpdating={updateCardMutation.isPending}
           isAddingComment={createCommentMutation.isPending}
           error={modalError}
+          canEdit={canEdit}
           onClose={() => {
             setSelectedCard(null);
             setModalError("");
           }}
           onUpdate={handleUpdateCard}
           onCreateComment={handleCreateComment}
+          onCardChanged={handleCardChanged}
         />
       )}
 
@@ -565,15 +591,18 @@ export default function BoardPage() {
 function SortableListContainer({
   list,
   cardIds,
+  disabled,
   children,
 }: {
   list: BoardList;
   cardIds: string[];
+  disabled: boolean;
   children: ReactNode;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({
       id: list.id,
+      disabled,
       data: {
         type: "list",
         listId: list.id,
@@ -602,16 +631,19 @@ function SortableListContainer({
 
 function SortableCard({
   card,
+  disabled,
   children,
   onClick,
 }: {
   card: Card;
+  disabled: boolean;
   children: ReactNode;
   onClick: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({
       id: card.id,
+      disabled,
       data: {
         type: "card",
         listId: card.list_id,
@@ -636,146 +668,5 @@ function SortableCard({
     >
       {children}
     </button>
-  );
-}
-
-type CardDetailsModalProps = {
-  card: Card;
-  comments: Comment[];
-  isUpdating: boolean;
-  isAddingComment: boolean;
-  error: string;
-  onClose: () => void;
-  onUpdate: (payload: {
-    cardId: string;
-    title: string;
-    description: string;
-    dueDate: string;
-  }) => Promise<void>;
-  onCreateComment: (cardId: string, content: string) => Promise<void>;
-};
-
-function CardDetailsModal({
-  card,
-  comments,
-  isUpdating,
-  isAddingComment,
-  error,
-  onClose,
-  onUpdate,
-  onCreateComment,
-}: CardDetailsModalProps) {
-  const [title, setTitle] = useState(card.title);
-  const [description, setDescription] = useState(card.description || "");
-  const [dueDate, setDueDate] = useState(
-    card.due_date ? card.due_date.slice(0, 10) : ""
-  );
-  const [comment, setComment] = useState("");
-
-  async function handleSave(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    await onUpdate({
-      cardId: card.id,
-      title,
-      description,
-      dueDate,
-    });
-  }
-
-  async function handleAddComment(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    const content = comment.trim();
-
-    if (!content) {
-      return;
-    }
-
-    await onCreateComment(card.id, content);
-    setComment("");
-  }
-
-  return (
-    <div className="modal-backdrop">
-      <section className="card-modal trello-modal">
-        <header className="card-modal-header">
-          <div>
-            <p className="eyebrow">{t.boards.cardDetails}</p>
-            <h2>{card.title}</h2>
-          </div>
-
-          <button type="button" className="icon-button" onClick={onClose}>
-            ×
-          </button>
-        </header>
-
-        {error && <div className="alert error">{error}</div>}
-
-        <form className="card-modal-form" onSubmit={handleSave}>
-          <Input
-            label={t.boards.title}
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-            required
-          />
-
-          <div className="field-group">
-            <label htmlFor="card-description">{t.boards.description}</label>
-            <textarea
-              id="card-description"
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
-            />
-          </div>
-
-          <Input
-            label={t.boards.dueDate}
-            type="date"
-            value={dueDate}
-            onChange={(event) => setDueDate(event.target.value)}
-          />
-
-          <div className="form-actions">
-            <Button type="button" variant="secondary" onClick={onClose}>
-              {t.boards.cancel}
-            </Button>
-
-            <Button type="submit" isLoading={isUpdating}>
-              {t.boards.saveChanges}
-            </Button>
-          </div>
-        </form>
-
-        <section className="comments-section">
-          <h3>{t.boards.comments}</h3>
-
-          <form className="comment-form" onSubmit={handleAddComment}>
-            <textarea
-              value={comment}
-              onChange={(event) => setComment(event.target.value)}
-              placeholder={t.boards.writeComment}
-            />
-
-            <Button type="submit" isLoading={isAddingComment}>
-              {t.boards.addComment}
-            </Button>
-          </form>
-
-          <div className="comments-list">
-            {comments.length === 0 ? (
-              <p className="muted-text">{t.boards.noComments}</p>
-            ) : (
-              comments.map((item) => (
-                <article className="comment-item" key={item.id}>
-                  <p>{item.content}</p>
-                  <small>{new Date(item.created_at).toLocaleString()}</small>
-                </article>
-              ))
-            )}
-          </div>
-        </section>
-      </section>
-    </div>
   );
 }

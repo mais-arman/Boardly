@@ -1351,3 +1351,138 @@ a {
   align-items: center;
   gap: 8px;
 }
+
+.labels-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.label-option {
+  border: 1px solid var(--border);
+  background: white;
+  border-radius: 999px;
+  padding: 7px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 850;
+}
+
+.label-option span {
+  width: 28px;
+  height: 10px;
+  border-radius: 999px;
+}
+
+.label-option.selected {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+}
+
+.create-label-form {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: 1fr 52px auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.color-input {
+  width: 52px;
+  height: 48px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 5px;
+  background: white;
+}
+
+.assign-form {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.assignee-chip.removable {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.assignee-chip.removable button {
+  border: 0;
+  background: rgba(15, 23, 42, 0.12);
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 950;
+  width: 20px;
+  height: 20px;
+}
+
+@media (max-width: 640px) {
+  .create-label-form,
+  .assign-form {
+    grid-template-columns: 1fr;
+  }
+}
+
+.selected-labels-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.selected-label-chip {
+  color: white;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-weight: 900;
+  font-size: 12px;
+}
+
+.assignee-picker {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.assignee-option {
+  border: 1px solid var(--border);
+  background: white;
+  border-radius: 14px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.assignee-option.selected {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.assignee-option small {
+  display: block;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.avatar.mini {
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: var(--primary);
+  color: white;
+  font-size: 12px;
+  font-weight: 950;
+}

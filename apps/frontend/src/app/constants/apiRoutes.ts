@@ -21,6 +21,8 @@ export const API_ROUTES = {
     INVITATIONS: (boardId: string) => `/boards/${boardId}/invitations`,
     CANCEL_INVITATION: (boardId: string, invitationId: string) =>
       `/boards/${boardId}/invitations/${invitationId}/cancel`,
+
+    LABELS: (boardId: string) => `/boards/${boardId}/labels`,
   },
 
   LISTS: {
@@ -32,5 +34,13 @@ export const API_ROUTES = {
     BY_ID: (cardId: string) => `/cards/${cardId}`,
     MOVE: (cardId: string) => `/cards/${cardId}/move`,
     COMMENTS: (cardId: string) => `/cards/${cardId}/comments`,
+
+    ASSIGNEES: (cardId: string) => `/cards/${cardId}/assignees`,
+    ASSIGNEE_BY_ID: (cardId: string, userId: string) =>
+      `/cards/${cardId}/assignees/${userId}`,
+
+    LABELS: (cardId: string) => `/cards/${cardId}/labels`,
+    LABEL_BY_ID: (cardId: string, labelId: string) =>
+      `/cards/${cardId}/labels/${labelId}`,
   },
 } as const;

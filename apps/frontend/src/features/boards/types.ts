@@ -102,13 +102,6 @@ export type ApiResponse<T> = {
 
 export type ManageableBoardRole = "admin" | "editor" | "viewer";
 
-export type BoardMember = {
-  id: string;
-  board_id: string;
-  user_id: string;
-  role: BoardRole;
-  created_at: string;
-};
 
 export type BoardInvitation = {
   id: string;
@@ -129,4 +122,32 @@ export type InviteMemberPayload = {
 
 export type UpdateMemberRolePayload = {
   role: ManageableBoardRole;
+};
+
+export type CreateLabelPayload = {
+  name: string;
+  color: string;
+};
+
+export type ApplyLabelPayload = {
+  label_id: string;
+};
+
+export type AddAssigneePayload = {
+  user_id: string;
+};
+
+export type BoardMemberUser = {
+  id: string;
+  name: string;
+  email: string;
+};
+
+export type BoardMember = {
+  id: string;
+  board_id: string;
+  user_id: string;
+  role: BoardRole;
+  user: BoardMemberUser;
+  created_at: string;
 };

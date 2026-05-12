@@ -38,6 +38,10 @@ function getErrorMessage(error: unknown, fallback: string) {
   return fallback;
 }
 
+function getMemberDisplayName(member: BoardMember) {
+  return member.user?.name || member.user?.email || member.user_id;
+}
+
 export default function BoardMembersPanel({
   boardId,
   canManageMembers,
@@ -73,6 +77,9 @@ export default function BoardMembersPanel({
       setSuccessMessage("Invitation sent successfully.");
       queryClient.invalidateQueries({
         queryKey: [INVITATIONS_QUERY_KEY, boardId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [MEMBERS_QUERY_KEY, boardId],
       });
     },
   });
@@ -128,9 +135,7 @@ export default function BoardMembersPanel({
   }
 
   async function handleRoleChange(member: BoardMember, nextRole: string) {
-    if (member.role === "owner") {
-      return;
-    }
+    if (member.role === "owner") return;
 
     setError("");
 
@@ -145,9 +150,7 @@ export default function BoardMembersPanel({
   }
 
   async function handleRemoveMember(member: BoardMember) {
-    if (member.role === "owner") {
-      return;
-    }
+    if (member.role === "owner") return;
 
     setError("");
 
@@ -229,8 +232,10 @@ export default function BoardMembersPanel({
               {(membersQuery.data || []).map((member) => (
                 <article className="member-row" key={member.id}>
                   <div>
-                    <strong>{member.user_id}</strong>
-                    <span>{member.role}</span>
+                    <strong>{getMemberDisplayName(member)}</strong>
+                    <span>
+                      {member.user?.email || member.user_id} · {member.role}
+                    </span>
                   </div>
 
                   {canManageMembers && member.role !== "owner" && (
