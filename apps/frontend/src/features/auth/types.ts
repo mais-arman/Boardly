@@ -19,7 +19,7 @@ export type SignupPayload = {
   password: string;
 };
 
-export type LoginResponse = {
+export type AuthResponse = {
   user: User;
   access_token: string;
   refresh_token: string;

@@ -31,8 +31,8 @@ class User(db.Model):
         default=False,
     )
 
-    email_verification_token = db.Column(
-        db.UUID(as_uuid=True),
+    email_verification_token_hash = db.Column(
+        db.String(64),
         unique=True,
         nullable=True,
         index=True,

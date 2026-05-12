@@ -2,9 +2,11 @@ from flask import Blueprint
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.constants.routes import (
     MY_INVITATIONS,
+    INVITATION_PREVIEW,
     INVITATION_ACCEPT,
     INVITATION_DECLINE,
 )
+from app.constants.messages import Messages
 from app.schemas.boards.member_schema import (
     InvitationResponseSchema,
     MemberResponseSchema,
@@ -20,6 +22,16 @@ invitations_response_schema = InvitationResponseSchema(many=True)
 member_response_schema = MemberResponseSchema()
 
 
+@invitation_bp.get(INVITATION_PREVIEW)
+def preview_invitation(token):
+    invitation = InvitationService.get_invitation_by_token(token)
+
+    return success_response(
+        data=invitation_response_schema.dump(invitation),
+        message=Messages.INVITATION_FETCHED,
+    )
+
+
 @invitation_bp.get(MY_INVITATIONS)
 @jwt_required()
 def get_my_invitations():
@@ -27,7 +39,7 @@ def get_my_invitations():
 
     return success_response(
         data=invitations_response_schema.dump(invitations),
-        message="Invitations fetched successfully",
+        message=Messages.INVITATIONS_FETCHED,
     )
 
 
@@ -41,7 +53,7 @@ def accept_invitation(token):
 
     return success_response(
         data=member_response_schema.dump(member),
-        message="Invitation accepted successfully",
+        message=Messages.INVITATION_ACCEPTED,
     )
 
 
@@ -55,5 +67,5 @@ def decline_invitation(token):
 
     return success_response(
         data=invitation_response_schema.dump(invitation),
-        message="Invitation declined successfully",
+        message=Messages.INVITATION_DECLINED,
     )

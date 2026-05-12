@@ -25,6 +25,7 @@ from app.services.boards.member_service import MemberService
 from app.services.boards.invitation_service import InvitationService
 from app.utils.permission_decorators import board_permission
 from app.utils.responses import success_response
+from app.constants.messages import Messages
 
 
 board_bp = Blueprint("boards", __name__)
@@ -117,7 +118,7 @@ def invite_member(board_id):
 
     return success_response(
         data=invitation_response_schema.dump(invitation),
-        message="Invitation created successfully",
+        message=Messages.INVITATION_CREATED,
         status_code=201,
     )
 
@@ -126,11 +127,14 @@ def invite_member(board_id):
 @jwt_required()
 @board_permission(Permission.MANAGE_MEMBERS)
 def get_board_invitations(board_id):
-    invitations = InvitationService.get_board_invitations(board_id)
+    invitations = InvitationService.get_board_invitations(
+        get_jwt_identity(),
+        board_id,
+    )
 
     return success_response(
         data=invitations_response_schema.dump(invitations),
-        message="Board invitations fetched successfully",
+        message=Messages.INVITATIONS_FETCHED,
     )
 
 
@@ -138,11 +142,15 @@ def get_board_invitations(board_id):
 @jwt_required()
 @board_permission(Permission.MANAGE_MEMBERS)
 def cancel_invitation(board_id, token):
-    invitation = InvitationService.cancel_invitation(board_id, token)
+    invitation = InvitationService.cancel_invitation(
+        get_jwt_identity(),
+        board_id,
+        token,
+    )
 
     return success_response(
         data=invitation_response_schema.dump(invitation),
-        message="Invitation cancelled successfully",
+        message=Messages.INVITATION_CANCELLED,
     )
 
 

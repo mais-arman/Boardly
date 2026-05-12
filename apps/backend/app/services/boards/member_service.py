@@ -7,16 +7,17 @@ from app.models.boards.invitation_status import InvitationStatus
 from app.models.boards.board_role import BoardRole
 from app.services.auth.email_service import EmailService
 from app.utils.exceptions import NotFoundError, ConflictError, BadRequestError
+from app.utils.security import generate_secure_token, hash_token
+from app.constants.messages import Messages
 
 
 class MemberService:
-
     @staticmethod
     def invite_member(request_user_id, board_id, data):
         board = db.session.get(Board, board_id)
 
         if not board:
-            raise NotFoundError("Board not found")
+            raise NotFoundError(Messages.BOARD_NOT_FOUND)
 
         email = data["email"].lower().strip()
         role = BoardRole(data["role"])
@@ -30,7 +31,7 @@ class MemberService:
             ).first()
 
             if existing_member:
-                raise ConflictError("User is already a board member")
+                raise ConflictError(Messages.USER_ALREADY_MEMBER)
 
         existing_pending_invitation = BoardInvitation.query.filter_by(
             board_id=board_id,
@@ -39,7 +40,9 @@ class MemberService:
         ).first()
 
         if existing_pending_invitation:
-            raise ConflictError("Pending invitation already exists for this email")
+            raise ConflictError(Messages.PENDING_INVITATION_EXISTS)
+
+        raw_token = generate_secure_token()
 
         invitation = BoardInvitation(
             board_id=board_id,
@@ -47,20 +50,21 @@ class MemberService:
             email=email,
             role=role,
             status=InvitationStatus.PENDING,
+            token_hash=hash_token(raw_token),
         )
 
         try:
             db.session.add(invitation)
-            db.session.flush()  
+            db.session.flush()
 
-            EmailService.send_board_invitation(invitation)
+            EmailService.send_board_invitation(invitation, raw_token)
 
             db.session.commit()
             return invitation
 
         except Exception:
             db.session.rollback()
-            raise BadRequestError("Invitation email could not be sent")
+            raise BadRequestError(Messages.EMAIL_SEND_FAILED)
 
     @staticmethod
     def get_members(board_id):
@@ -71,10 +75,10 @@ class MemberService:
         member = db.session.get(BoardMember, member_id)
 
         if not member or str(member.board_id) != str(board_id):
-            raise NotFoundError("Member not found")
+            raise NotFoundError(Messages.MEMBER_NOT_FOUND)
 
         if member.role == BoardRole.OWNER:
-            raise BadRequestError("Owner role cannot be changed")
+            raise BadRequestError(Messages.OWNER_ROLE_CANNOT_BE_CHANGED)
 
         member.role = BoardRole(data["role"])
         db.session.commit()
@@ -86,10 +90,10 @@ class MemberService:
         member = db.session.get(BoardMember, member_id)
 
         if not member or str(member.board_id) != str(board_id):
-            raise NotFoundError("Member not found")
+            raise NotFoundError(Messages.MEMBER_NOT_FOUND)
 
         if member.role == BoardRole.OWNER:
-            raise BadRequestError("Owner cannot be removed")
+            raise BadRequestError(Messages.OWNER_CANNOT_BE_REMOVED)
 
         db.session.delete(member)
         db.session.commit()

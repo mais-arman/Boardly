@@ -9,7 +9,7 @@ import DashboardPage from "../../features/dashboard/pages/DashboardPage";
 export default function AppRouter() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to={ROUTES.DASHBOARD} replace />} />
+      <Route path={ROUTES.HOME} element={<Navigate to={ROUTES.DASHBOARD} replace />} />
 
       <Route path={ROUTES.LOGIN} element={<LoginPage />} />
       <Route path={ROUTES.SIGNUP} element={<SignupPage />} />

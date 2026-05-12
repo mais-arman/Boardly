@@ -8,14 +8,16 @@ from app.constants.routes import (
     AUTH_LOGOUT,
     AUTH_ME,
     AUTH_VERIFY_EMAIL,
+    AUTH_RESEND_VERIFICATION,
 )
+from app.constants.messages import Messages
 from app.extensions import db, get_redis
 from app.models.auth.user import User
 from app.schemas.auth.auth_schema import SignupSchema, LoginSchema, UserResponseSchema
 from app.services.auth.auth_service import AuthService
 from app.utils.jwt_handlers import JWT_BLOCKLIST_PREFIX
 from app.utils.responses import success_response
-from app.utils.exceptions import UnauthorizedError
+from app.utils.exceptions import UnauthorizedError, BadRequestError
 
 
 auth_bp = Blueprint("auth", __name__)
@@ -28,11 +30,15 @@ user_response_schema = UserResponseSchema()
 @auth_bp.post(AUTH_SIGNUP)
 def signup():
     data = signup_schema.load(request.get_json(silent=True) or {})
-    user = AuthService.signup(data)
+    result = AuthService.signup(data)
 
     return success_response(
-        data=user_response_schema.dump(user),
-        message="User registered successfully",
+        data={
+            "user": user_response_schema.dump(result["user"]),
+            "access_token": result["access_token"],
+            "refresh_token": result["refresh_token"],
+        },
+        message=Messages.USER_REGISTERED,
         status_code=201,
     )
 
@@ -48,7 +54,7 @@ def login():
             "access_token": result["access_token"],
             "refresh_token": result["refresh_token"],
         },
-        message="Login successful",
+        message=Messages.LOGIN_SUCCESS,
     )
 
 
@@ -59,7 +65,7 @@ def refresh():
 
     return success_response(
         data=result,
-        message="Token refreshed successfully",
+        message=Messages.TOKEN_REFRESHED,
     )
 
 
@@ -67,21 +73,16 @@ def refresh():
 @jwt_required()
 def logout():
     jwt_data = get_jwt()
-
-    jti = jwt_data["jti"]
-    expires_at = jwt_data["exp"]
-
-    now = datetime.now(timezone.utc).timestamp()
-    ttl = int(expires_at - now)
+    ttl = int(jwt_data["exp"] - datetime.now(timezone.utc).timestamp())
 
     if ttl > 0:
         get_redis().setex(
-            f"{JWT_BLOCKLIST_PREFIX}{jti}",
+            f"{JWT_BLOCKLIST_PREFIX}{jwt_data['jti']}",
             ttl,
             "1",
         )
 
-    return success_response(message="Logout successful")
+    return success_response(message=Messages.LOGOUT_SUCCESS)
 
 
 @auth_bp.get(AUTH_ME)
@@ -90,18 +91,35 @@ def me():
     user = db.session.get(User, get_jwt_identity())
 
     if not user:
-        raise UnauthorizedError("User not found")
+        raise UnauthorizedError(Messages.USER_NOT_FOUND)
 
     return success_response(
         data=user_response_schema.dump(user),
-        message="Current user fetched successfully",
+        message=Messages.CURRENT_USER_FETCHED,
     )
 
+
 @auth_bp.post(AUTH_VERIFY_EMAIL)
-def verify_email(token):
+def verify_email():
+    token = request.args.get("token")
+
+    if not token:
+        raise BadRequestError(Messages.VERIFICATION_TOKEN_REQUIRED)
+
     user = AuthService.verify_email(token)
 
     return success_response(
         data=user_response_schema.dump(user),
-        message="Email verified successfully",
-    )    
+        message=Messages.EMAIL_VERIFIED,
+    )
+
+
+@auth_bp.post(AUTH_RESEND_VERIFICATION)
+@jwt_required()
+def resend_verification():
+    user = AuthService.resend_verification_email(get_jwt_identity())
+
+    return success_response(
+        data=user_response_schema.dump(user),
+        message=Messages.VERIFICATION_EMAIL_SENT,
+    )

@@ -1,4 +1,3 @@
-from uuid import uuid4
 from datetime import datetime, timezone, timedelta
 from flask_jwt_extended import create_access_token, create_refresh_token
 from sqlalchemy.exc import IntegrityError
@@ -7,8 +6,16 @@ from app.extensions import db
 from app.models.auth.user import User
 from app.services.auth.email_service import EmailService
 from app.utils.exceptions import UnauthorizedError, ConflictError, BadRequestError
+from app.utils.security import generate_secure_token, hash_token
+from app.constants.messages import Messages
 
 class AuthService:
+    @staticmethod
+    def _issue_tokens(user):
+        return {
+            "access_token": create_access_token(identity=str(user.id)),
+            "refresh_token": create_refresh_token(identity=str(user.id)),
+        }
 
     @staticmethod
     def signup(data):
@@ -17,14 +24,16 @@ class AuthService:
         existing_user = User.query.filter_by(email=email).first()
 
         if existing_user:
-            raise ConflictError("Email already exists")
+            raise ConflictError(Messages.EMAIL_EXISTS)
+
+        raw_token = generate_secure_token()
 
         user = User(
             name=data["name"].strip(),
             email=email,
             password_hash=generate_password_hash(data["password"]),
             is_email_verified=False,
-            email_verification_token=uuid4(),
+            email_verification_token_hash=hash_token(raw_token),
             email_verification_expires_at=datetime.now(timezone.utc) + timedelta(hours=24),
         )
 
@@ -32,17 +41,20 @@ class AuthService:
             db.session.add(user)
             db.session.flush()
 
-            EmailService.send_email_verification(user)
+            EmailService.send_email_verification(user, raw_token)
 
             db.session.commit()
         except IntegrityError:
             db.session.rollback()
-            raise ConflictError("Email already exists")
+            raise ConflictError(Messages.EMAIL_EXISTS)
         except Exception:
             db.session.rollback()
-            raise BadRequestError("Verification email could not be sent")
+            raise BadRequestError(Messages.EMAIL_SEND_FAILED)
 
-        return user
+        return {
+            "user": user,
+            **AuthService._issue_tokens(user),
+        }
 
     @staticmethod
     def login(data):
@@ -52,18 +64,11 @@ class AuthService:
         user = User.query.filter_by(email=email).first()
 
         if not user or not check_password_hash(user.password_hash, password):
-            raise UnauthorizedError("Invalid email or password")
-
-        if not user.is_email_verified:
-            raise UnauthorizedError("Please verify your email before logging in")
-
-        access_token = create_access_token(identity=str(user.id))
-        refresh_token = create_refresh_token(identity=str(user.id))
+            raise UnauthorizedError(Messages.INVALID_CREDENTIALS)
 
         return {
             "user": user,
-            "access_token": access_token,
-            "refresh_token": refresh_token,
+            **AuthService._issue_tokens(user),
         }
 
     @staticmethod
@@ -71,20 +76,22 @@ class AuthService:
         user = db.session.get(User, user_id)
 
         if not user:
-            raise UnauthorizedError("User not found")
-
-        access_token = create_access_token(identity=str(user.id))
+            raise UnauthorizedError(Messages.USER_NOT_FOUND)
 
         return {
-            "access_token": access_token,
+            "access_token": create_access_token(identity=str(user.id)),
         }
 
     @staticmethod
-    def verify_email(token):
-        user = User.query.filter_by(email_verification_token=token).first()
+    def verify_email(raw_token):
+        token_hash = hash_token(raw_token)
+
+        user = User.query.filter_by(
+            email_verification_token_hash=token_hash,
+        ).first()
 
         if not user:
-            raise BadRequestError("Invalid verification token")
+            raise BadRequestError(Messages.INVALID_VERIFICATION_TOKEN)
 
         if user.is_email_verified:
             return user
@@ -92,12 +99,36 @@ class AuthService:
         now = datetime.now(timezone.utc)
 
         if user.email_verification_expires_at < now:
-            raise BadRequestError("Verification link has expired")
+            raise BadRequestError(Messages.VERIFICATION_EXPIRED)
 
         user.is_email_verified = True
-        user.email_verification_token = None
+        user.email_verification_token_hash = None
         user.email_verification_expires_at = None
 
         db.session.commit()
+
+        return user
+
+    @staticmethod
+    def resend_verification_email(user_id):
+        user = db.session.get(User, user_id)
+
+        if not user:
+            raise UnauthorizedError(Messages.USER_NOT_FOUND)
+
+        if user.is_email_verified:
+            return user
+
+        raw_token = generate_secure_token()
+
+        user.email_verification_token_hash = hash_token(raw_token)
+        user.email_verification_expires_at = datetime.now(timezone.utc) + timedelta(hours=24)
+
+        try:
+            EmailService.send_email_verification(user, raw_token)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise BadRequestError(Messages.EMAIL_SEND_FAILED)
 
         return user

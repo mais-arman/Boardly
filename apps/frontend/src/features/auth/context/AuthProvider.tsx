@@ -14,6 +14,16 @@ import type { AuthContextValue } from "./authContext";
 
 const AUTH_QUERY_KEY = ["auth", "me"];
 
+    function saveAuthTokens(accessToken: string, refreshToken: string) {
+    localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, accessToken);
+    localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refreshToken);
+    }
+
+    function clearAuthTokens() {
+    localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
+    localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
+    }
+
     export function AuthProvider({ children }: { children: ReactNode }) {
     const queryClient = useQueryClient();
     const hasToken = Boolean(localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN));
@@ -28,21 +38,23 @@ const AUTH_QUERY_KEY = ["auth", "me"];
     const loginMutation = useMutation({
         mutationFn: loginRequest,
         onSuccess: (data) => {
-        localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, data.access_token);
-        localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, data.refresh_token);
+        saveAuthTokens(data.access_token, data.refresh_token);
         queryClient.setQueryData(AUTH_QUERY_KEY, data.user);
         },
     });
 
     const signupMutation = useMutation({
         mutationFn: signupRequest,
+        onSuccess: (data) => {
+        saveAuthTokens(data.access_token, data.refresh_token);
+        queryClient.setQueryData(AUTH_QUERY_KEY, data.user);
+        },
     });
 
     const logoutMutation = useMutation({
         mutationFn: logoutRequest,
         onSettled: () => {
-        localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
-        localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
+        clearAuthTokens();
         queryClient.removeQueries({ queryKey: ["auth"] });
         },
     });

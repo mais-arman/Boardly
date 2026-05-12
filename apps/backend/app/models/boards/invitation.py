@@ -4,17 +4,15 @@ from app.extensions import db
 from app.models.boards.board_role import BoardRole
 from app.models.boards.invitation_status import InvitationStatus
 
-
 class BoardInvitation(db.Model):
     __tablename__ = "board_invitations"
 
     id = db.Column(db.UUID(as_uuid=True), primary_key=True, default=uuid4)
 
-    token = db.Column(
-        db.UUID(as_uuid=True),
+    token_hash = db.Column(
+        db.String(64),
         unique=True,
         nullable=False,
-        default=uuid4,
         index=True,
     )
 

@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AxiosError } from "axios";
-import { Link, useParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { ROUTES } from "../../../app/constants/routes";
+import { t } from "../../../app/constants/translations";
 import Button from "../../../shared/components/Button";
 import { verifyEmailRequest } from "../api/authApi";
 
@@ -12,37 +13,42 @@ type ErrorResponse = {
 };
 
 export default function VerifyEmailPage() {
-  const { token } = useParams<{ token: string }>();
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get("token");
+
+  const hasVerifiedRef = useRef(false);
 
   const [status, setStatus] = useState<VerificationStatus>("loading");
-  const [message, setMessage] = useState("Verifying your email address...");
+  const [message, setMessage] = useState<string>(t.verification.loading);
 
   useEffect(() => {
     async function verifyEmail() {
+      if (hasVerifiedRef.current) {
+        return;
+      }
+
+      hasVerifiedRef.current = true;
+
       if (!token) {
         setStatus("error");
-        setMessage("Verification token is missing.");
+        setMessage(t.verification.missingToken);
         return;
       }
 
       try {
         await verifyEmailRequest(token);
         setStatus("success");
-        setMessage("Your email has been verified successfully.");
+        setMessage(t.verification.success);
       } catch (error: unknown) {
         setStatus("error");
 
         if (error instanceof AxiosError) {
           const data = error.response?.data as ErrorResponse | undefined;
-
-          setMessage(
-            data?.message ||
-              "Verification failed. The link may be invalid or expired."
-          );
+          setMessage(data?.message || t.verification.failed);
           return;
         }
 
-        setMessage("Verification failed. Please try again.");
+        setMessage(t.verification.tryAgain);
       }
     }
 
@@ -57,14 +63,14 @@ export default function VerifyEmailPage() {
         </div>
 
         <div className="verification-content">
-          <h2>Email verification</h2>
+          <h2>{t.verification.title}</h2>
           <p>{message}</p>
         </div>
 
         {status !== "loading" && (
-          <Link to={ROUTES.LOGIN} className="button-link">
+          <Link to={ROUTES.DASHBOARD} className="button-link">
             <Button type="button" fullWidth>
-              Go to login
+              {t.common.goToDashboard}
             </Button>
           </Link>
         )}

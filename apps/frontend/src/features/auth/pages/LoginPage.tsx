@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import { AxiosError } from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { ROUTES } from "../../../app/constants/routes";
+import { t } from "../../../app/constants/translations";
 import Button from "../../../shared/components/Button";
 import Input from "../../../shared/components/Input";
 import { useAuth } from "../hooks/useAuth";
@@ -17,6 +18,7 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   const [error, setError] = useState("");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -29,31 +31,28 @@ export default function LoginPage() {
     } catch (error: unknown) {
       if (error instanceof AxiosError) {
         const data = error.response?.data as ErrorResponse | undefined;
-        setError(data?.message || "Login failed. Please check your credentials.");
+        setError(data?.message || t.auth.loginFailed);
         return;
       }
 
-      setError("Login failed. Please try again.");
+      setError(t.auth.loginTryAgain);
     }
   }
 
   return (
     <main className="auth-layout">
       <section className="auth-hero">
-        <div className="hero-badge">Kanban Collaboration</div>
-        <h1>Manage work clearly with Boardly.</h1>
-        <p>
-          Organize boards, track cards, invite collaborators, and keep your team
-          aligned.
-        </p>
+        <div className="hero-badge">{t.auth.loginHeroBadge}</div>
+        <h1>{t.auth.loginHeroTitle}</h1>
+        <p>{t.auth.loginHeroDescription}</p>
       </section>
 
       <section className="auth-card">
         <div className="auth-card-header">
           <span className="brand-mark">B</span>
           <div>
-            <h2>Welcome back</h2>
-            <p>Login to your workspace</p>
+            <h2>{t.auth.loginTitle}</h2>
+            <p>{t.auth.loginSubtitle}</p>
           </div>
         </div>
 
@@ -61,31 +60,30 @@ export default function LoginPage() {
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <Input
-            label="Email"
+            label={t.auth.email}
             type="email"
-            placeholder="you@example.com"
+            placeholder={t.auth.emailPlaceholder}
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             required
           />
 
           <Input
-            label="Password"
+            label={t.auth.password}
             type="password"
-            placeholder="Your password"
+            placeholder={t.auth.loginPasswordPlaceholder}
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             required
           />
 
           <Button type="submit" fullWidth isLoading={isLoggingIn}>
-            Login
+            {t.auth.login}
           </Button>
         </form>
 
         <p className="auth-footer">
-          Don&apos;t have an account?{" "}
-          <Link to={ROUTES.SIGNUP}>Create account</Link>
+          {t.auth.noAccount} <Link to={ROUTES.SIGNUP}>{t.auth.createAccount}</Link>
         </p>
       </section>
     </main>

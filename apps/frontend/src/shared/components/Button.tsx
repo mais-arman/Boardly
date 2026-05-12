@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { t } from "../../app/constants/translations";
 
 type ButtonVariant = "primary" | "secondary" | "danger";
 
@@ -27,7 +28,7 @@ export default function Button({
         {...props}
         >
         {isLoading && <span className="button-spinner" />}
-        <span>{isLoading ? "Please wait..." : children}</span>
+        <span>{isLoading ? t.common.pleaseWait : children}</span>
         </button>
     );
 }

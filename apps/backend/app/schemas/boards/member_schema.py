@@ -34,7 +34,6 @@ class MemberResponseSchema(Schema):
 
 class InvitationResponseSchema(Schema):
     id = fields.UUID()
-    token = fields.UUID()
     board_id = fields.UUID()
     invited_by_id = fields.UUID()
     email = fields.Email()
