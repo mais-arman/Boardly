@@ -1,6 +1,5 @@
 from marshmallow import Schema, fields, validate
 
-
 class BoardCreateSchema(Schema):
     title = fields.String(
         required=True,
@@ -32,5 +31,9 @@ class BoardResponseSchema(Schema):
     title = fields.String()
     description = fields.String(allow_none=True)
     owner_id = fields.UUID()
+    role = fields.String(allow_none=True)
+    members_count = fields.Integer()
+    lists_count = fields.Integer()
+    cards_count = fields.Integer()
     created_at = fields.DateTime()
     updated_at = fields.DateTime()

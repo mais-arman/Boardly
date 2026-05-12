@@ -1,5 +1,6 @@
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
+
 from app.constants.routes import (
     BOARD_ROOT,
     BOARD_BY_ID,
@@ -71,7 +72,10 @@ def create_board():
 @jwt_required()
 @board_permission(Permission.VIEW_BOARD)
 def get_board(board_id):
-    board = BoardService.get_board(board_id)
+    board = BoardService.get_board(
+        board_id,
+        get_jwt_identity(),
+    )
 
     return success_response(
         data=board_response_schema.dump(board),
@@ -84,7 +88,11 @@ def get_board(board_id):
 @board_permission(Permission.EDIT_BOARD)
 def update_board(board_id):
     data = board_update_schema.load(request.get_json(silent=True) or {})
-    board = BoardService.update_board(board_id, data)
+    board = BoardService.update_board(
+        board_id,
+        data,
+        get_jwt_identity(),
+    )
 
     return success_response(
         data=board_response_schema.dump(board),

@@ -738,3 +738,518 @@ a {
     align-items: stretch;
   }
 }
+
+.field-group textarea {
+  min-height: 110px;
+  border-radius: 15px;
+  border: 1px solid var(--border);
+  padding: 14px;
+  font-size: 15px;
+  background: #fbfdff;
+  color: var(--text);
+  resize: vertical;
+  transition: 0.18s ease;
+}
+
+.field-group textarea:hover {
+  border-color: #cbd5e1;
+}
+
+.field-group textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: white;
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
+}
+
+.create-board-panel {
+  margin-bottom: 24px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.empty-state {
+  min-height: 280px;
+  border: 1px dashed var(--border);
+  border-radius: 24px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 34px;
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.empty-icon {
+  width: 62px;
+  height: 62px;
+  border-radius: 22px;
+  display: grid;
+  place-items: center;
+  background: var(--primary-soft);
+  font-size: 30px;
+  margin-bottom: 14px;
+}
+
+.empty-state h3 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.empty-state p {
+  margin: 8px 0 20px;
+  color: var(--muted);
+}
+
+.board-date {
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.role-pill.admin {
+  background: var(--info-bg);
+  color: var(--info-text);
+}
+
+.board-page {
+  min-height: 100vh;
+  padding: 28px;
+  background:
+    radial-gradient(circle at top right, rgba(79, 70, 229, 0.1), transparent 32%),
+    var(--bg);
+}
+
+.board-page-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.board-page-header h1 {
+  margin: 8px 0 8px;
+  font-size: clamp(32px, 5vw, 52px);
+  letter-spacing: -0.05em;
+}
+
+.board-page-header p {
+  margin: 0;
+  color: var(--muted);
+  max-width: 720px;
+  line-height: 1.6;
+}
+
+.back-link {
+  font-weight: 900;
+}
+
+.kanban-board {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  overflow-x: auto;
+  padding-bottom: 18px;
+}
+
+.kanban-list {
+  width: 320px;
+  flex: 0 0 320px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.kanban-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.kanban-list-header h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.kanban-list-header span {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-weight: 950;
+}
+
+.kanban-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.kanban-card {
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--border);
+  background: white;
+  border-radius: 18px;
+  padding: 14px;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: 0.18s ease;
+}
+
+.kanban-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.kanban-card strong {
+  display: block;
+  font-size: 15px;
+  margin-bottom: 8px;
+}
+
+.kanban-card p {
+  margin: 0 0 10px;
+  color: var(--muted);
+  line-height: 1.5;
+  font-size: 13px;
+}
+
+.card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.card-badges span,
+.label-chip,
+.assignee-chip {
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.add-card-form {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.add-card-form input {
+  height: 42px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  padding: 0 12px;
+  background: #fbfdff;
+}
+
+.add-list-panel form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  z-index: 50;
+}
+
+.card-modal {
+  width: min(760px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  background: white;
+  border-radius: 28px;
+  padding: 24px;
+  box-shadow: var(--shadow-lg);
+}
+
+.card-modal-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 20px;
+}
+
+.card-modal-header h2 {
+  margin: 0;
+  font-size: 28px;
+  letter-spacing: -0.04em;
+}
+
+.icon-button {
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--panel-soft);
+  cursor: pointer;
+  font-size: 26px;
+  font-weight: 900;
+}
+
+.card-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-section h3,
+.comments-section h3 {
+  margin: 0 0 10px;
+  font-size: 16px;
+}
+
+.label-list,
+.assignee-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.comments-section {
+  margin-top: 26px;
+  border-top: 1px solid var(--border);
+  padding-top: 20px;
+}
+
+.comment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.comment-form textarea {
+  min-height: 90px;
+  border-radius: 15px;
+  border: 1px solid var(--border);
+  padding: 14px;
+  resize: vertical;
+}
+
+.comments-list {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.comment-item {
+  background: var(--panel-soft);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 12px;
+}
+
+.comment-item p {
+  margin: 0 0 6px;
+}
+
+.comment-item small,
+.muted-text {
+  color: var(--muted);
+}
+
+.trello-board-page {
+  min-height: 100vh;
+  padding: 18px;
+  background:
+    linear-gradient(135deg, rgba(15, 64, 140, 0.96), rgba(20, 74, 157, 0.96)),
+    var(--bg);
+  color: white;
+}
+
+.trello-board-header {
+  height: 72px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  padding: 0 10px;
+}
+
+.trello-board-header h1 {
+  margin: 6px 0 0;
+  font-size: 24px;
+}
+
+.trello-board-header .back-link {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.board-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.workflow-empty {
+  width: min(560px, 100%);
+  margin: 80px auto;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 24px;
+  padding: 28px;
+  text-align: center;
+  backdrop-filter: blur(14px);
+}
+
+.workflow-empty h2 {
+  margin: 0 0 8px;
+}
+
+.workflow-empty p {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.trello-lanes {
+  height: calc(100vh - 110px);
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  overflow-x: auto;
+  padding: 10px 6px 28px;
+}
+
+.trello-list {
+  width: 310px;
+  max-height: calc(100vh - 130px);
+  flex: 0 0 310px;
+  background: #101204;
+  color: #e5e7eb;
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
+}
+
+.trello-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.trello-list-header h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.trello-list-header span {
+  color: #a1a1aa;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.trello-cards {
+  max-height: calc(100vh - 315px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 4px;
+}
+
+.trello-card {
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: #222327;
+  color: #e5e7eb;
+  border-radius: 10px;
+  padding: 12px;
+  cursor: pointer;
+  transition: 0.16s ease;
+}
+
+.trello-card:hover {
+  background: #2f3035;
+  transform: translateY(-1px);
+}
+
+.trello-card strong {
+  display: block;
+  font-size: 14px;
+}
+
+.trello-card p {
+  color: #a1a1aa;
+  margin: 8px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.trello-card-labels {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.trello-card-labels span {
+  width: 42px;
+  height: 7px;
+  border-radius: 999px;
+}
+
+.trello-card-footer {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: #cbd5e1;
+  font-size: 12px;
+}
+
+.trello-add-card {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.trello-add-card input {
+  height: 40px;
+  border: 0;
+  border-radius: 10px;
+  padding: 0 12px;
+  background: #2f3035;
+  color: white;
+}
+
+.trello-add-card input::placeholder {
+  color: #a1a1aa;
+}
+
+.trello-add-list {
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(12px);
+}
+
+.trello-add-list form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.trello-modal {
+  color: var(--text);
+}

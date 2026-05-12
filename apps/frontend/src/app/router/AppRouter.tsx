@@ -5,6 +5,7 @@ import LoginPage from "../../features/auth/pages/LoginPage";
 import SignupPage from "../../features/auth/pages/SignupPage";
 import VerifyEmailPage from "../../features/auth/pages/VerifyEmailPage";
 import DashboardPage from "../../features/dashboard/pages/DashboardPage";
+import BoardPage from "../../features/boards/pages/BoardPage";
 
 export default function AppRouter() {
   return (
@@ -17,6 +18,7 @@ export default function AppRouter() {
 
       <Route element={<ProtectedRoute />}>
         <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
+        <Route path={ROUTES.BOARD} element={<BoardPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to={ROUTES.DASHBOARD} replace />} />
