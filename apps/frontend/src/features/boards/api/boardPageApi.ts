@@ -12,6 +12,7 @@ import type {
   MoveCardPayload,
   ReorderListsPayload,
   UpdateCardPayload,
+  UpdateListPayload,
 } from "../types";
 
 export async function getBoardRequest(boardId: string): Promise<Board> {
@@ -42,6 +43,22 @@ export async function createListRequest(
   );
 
   return response.data.data;
+}
+
+export async function updateListRequest(
+  listId: string,
+  payload: UpdateListPayload
+): Promise<BoardList> {
+  const response = await apiClient.patch<ApiResponse<BoardList>>(
+    API_ROUTES.LISTS.BY_ID(listId),
+    payload
+  );
+
+  return response.data.data;
+}
+
+export async function deleteListRequest(listId: string): Promise<void> {
+  await apiClient.delete(API_ROUTES.LISTS.BY_ID(listId));
 }
 
 export async function reorderListsRequest(
@@ -98,6 +115,10 @@ export async function updateCardRequest(
   );
 
   return response.data.data;
+}
+
+export async function deleteCardRequest(cardId: string): Promise<void> {
+  await apiClient.delete(API_ROUTES.CARDS.BY_ID(cardId));
 }
 
 export async function getCardCommentsRequest(cardId: string): Promise<Comment[]> {

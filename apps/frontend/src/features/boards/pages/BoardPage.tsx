@@ -37,6 +37,8 @@ import {
   createCardRequest,
   createCommentRequest,
   createListRequest,
+  deleteCardRequest,
+  deleteListRequest,
   getBoardListsRequest,
   getBoardRequest,
   getCardCommentsRequest,
@@ -44,6 +46,7 @@ import {
   moveCardRequest,
   reorderListsRequest,
   updateCardRequest,
+  updateListRequest,
 } from "../api/boardPageApi";
 
 type ErrorResponse = { message?: string };
@@ -70,6 +73,10 @@ export default function BoardPage() {
   const [cardTitleByList, setCardTitleByList] = useState<Record<string, string>>(
     {}
   );
+
+  const [editingListId, setEditingListId] = useState<string | null>(null);
+  const [editingListTitle, setEditingListTitle] = useState("");
+
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const [pageError, setPageError] = useState("");
   const [modalError, setModalError] = useState("");
@@ -128,6 +135,25 @@ export default function BoardPage() {
     },
   });
 
+  const updateListMutation = useMutation({
+    mutationFn: ({ listId, title }: { listId: string; title: string }) =>
+      updateListRequest(listId, { title }),
+    onSuccess: () => {
+      setEditingListId(null);
+      setEditingListTitle("");
+      queryClient.invalidateQueries({ queryKey: [LISTS_QUERY_KEY, boardId] });
+      queryClient.invalidateQueries({ queryKey: [BOARD_QUERY_KEY, boardId] });
+    },
+  });
+
+  const deleteListMutation = useMutation({
+    mutationFn: (listId: string) => deleteListRequest(listId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [LISTS_QUERY_KEY, boardId] });
+      queryClient.invalidateQueries({ queryKey: [BOARD_QUERY_KEY, boardId] });
+    },
+  });
+
   const createCardMutation = useMutation({
     mutationFn: ({ listId, title }: { listId: string; title: string }) =>
       createCardRequest(listId, {
@@ -145,6 +171,23 @@ export default function BoardPage() {
         queryKey: [CARDS_QUERY_KEY, variables.listId],
       });
       queryClient.invalidateQueries({ queryKey: [BOARD_QUERY_KEY, boardId] });
+    },
+  });
+
+  const deleteCardMutation = useMutation({
+    mutationFn: (cardId: string) => deleteCardRequest(cardId),
+    onSuccess: (_, cardId) => {
+      setSelectedCard(null);
+      setModalError("");
+
+      lists.forEach((list) => {
+        queryClient.invalidateQueries({
+          queryKey: [CARDS_QUERY_KEY, list.id],
+        });
+      });
+
+      queryClient.invalidateQueries({ queryKey: [BOARD_QUERY_KEY, boardId] });
+      queryClient.removeQueries({ queryKey: [COMMENTS_QUERY_KEY, cardId] });
     },
   });
 
@@ -258,6 +301,54 @@ export default function BoardPage() {
     }
   }
 
+  function startEditingList(list: BoardList) {
+    setEditingListId(list.id);
+    setEditingListTitle(list.title);
+  }
+
+  async function handleUpdateList(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!editingListId) {
+      return;
+    }
+
+    const title = editingListTitle.trim();
+
+    if (!title) {
+      return;
+    }
+
+    setPageError("");
+
+    try {
+      await updateListMutation.mutateAsync({
+        listId: editingListId,
+        title,
+      });
+    } catch (error) {
+      setPageError(getErrorMessage(error, "Failed to update list."));
+    }
+  }
+
+  async function handleDeleteList(list: BoardList) {
+    const confirmed = window.confirm(
+      `Delete list "${list.title}" and all its cards?`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setPageError("");
+
+    try {
+      await deleteListMutation.mutateAsync(list.id);
+    } catch (error) {
+      setPageError(getErrorMessage(error, "Failed to delete list."));
+    }
+  }
+
   async function handleCreateCard(
     event: FormEvent<HTMLFormElement>,
     listId: string
@@ -290,6 +381,22 @@ export default function BoardPage() {
       await updateCardMutation.mutateAsync(payload);
     } catch (error) {
       setModalError(getErrorMessage(error, "Failed to update card."));
+    }
+  }
+
+  async function handleDeleteCard(card: Card) {
+    const confirmed = window.confirm(`Delete card "${card.title}"?`);
+
+    if (!confirmed) {
+      return;
+    }
+
+    setModalError("");
+
+    try {
+      await deleteCardMutation.mutateAsync(card.id);
+    } catch (error) {
+      setModalError(getErrorMessage(error, "Failed to delete card."));
     }
   }
 
@@ -459,11 +566,65 @@ export default function BoardPage() {
                 key={list.id}
                 list={list}
                 cardIds={(cardsByList[list.id] || []).map((card) => card.id)}
-                disabled={!canEdit}
+                disabled={!canEdit || editingListId === list.id}
               >
                 <div className="trello-list-header">
-                  <h2>{list.title}</h2>
-                  <span>{cardsByList[list.id]?.length || 0}</span>
+                  {editingListId === list.id ? (
+                    <form
+                      className="list-title-edit-form"
+                      onSubmit={handleUpdateList}
+                    >
+                      <input
+                        value={editingListTitle}
+                        onChange={(event) =>
+                          setEditingListTitle(event.target.value)
+                        }
+                        autoFocus
+                      />
+
+                      <div className="list-edit-actions">
+                        <button type="submit">Save</button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingListId(null);
+                            setEditingListTitle("");
+                          }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
+                  ) : (
+                    <>
+                      <h2>{list.title}</h2>
+
+                      <div className="list-header-actions">
+                        <span>{cardsByList[list.id]?.length || 0}</span>
+
+                        {canEdit && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => startEditingList(list)}
+                              title="Edit list"
+                            >
+                              ✎
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteList(list)}
+                              title="Delete list"
+                              className="danger-icon"
+                            >
+                              ×
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 <div className="trello-cards">
@@ -565,6 +726,7 @@ export default function BoardPage() {
           comments={commentsQuery.data || []}
           isUpdating={updateCardMutation.isPending}
           isAddingComment={createCommentMutation.isPending}
+          isDeleting={deleteCardMutation.isPending}
           error={modalError}
           canEdit={canEdit}
           onClose={() => {
@@ -572,6 +734,7 @@ export default function BoardPage() {
             setModalError("");
           }}
           onUpdate={handleUpdateCard}
+          onDelete={handleDeleteCard}
           onCreateComment={handleCreateComment}
           onCardChanged={handleCardChanged}
         />

@@ -26,6 +26,7 @@ type CardDetailsModalProps = {
   comments: Comment[];
   isUpdating: boolean;
   isAddingComment: boolean;
+  isDeleting: boolean;
   error: string;
   canEdit: boolean;
   onClose: () => void;
@@ -35,6 +36,7 @@ type CardDetailsModalProps = {
     description: string;
     dueDate: string;
   }) => Promise<void>;
+  onDelete: (card: Card) => Promise<void>;
   onCreateComment: (cardId: string, content: string) => Promise<void>;
   onCardChanged: (card: Card) => void;
 };
@@ -57,10 +59,12 @@ export default function CardDetailsModal({
   comments,
   isUpdating,
   isAddingComment,
+  isDeleting,
   error,
   canEdit,
   onClose,
   onUpdate,
+  onDelete,
   onCreateComment,
   onCardChanged,
 }: CardDetailsModalProps) {
@@ -148,9 +152,7 @@ export default function CardDetailsModal({
   }, [boardMembers, draftAssigneeIds]);
 
   function toggleDraftLabel(label: CardLabel) {
-    if (!canEdit) {
-      return;
-    }
+    if (!canEdit) return;
 
     setDraftLabelIds((current) =>
       current.includes(label.id)
@@ -160,9 +162,7 @@ export default function CardDetailsModal({
   }
 
   function toggleDraftAssignee(member: BoardMember) {
-    if (!canEdit) {
-      return;
-    }
+    if (!canEdit) return;
 
     setDraftAssigneeIds((current) =>
       current.includes(member.user_id)
@@ -222,9 +222,7 @@ export default function CardDetailsModal({
   async function handleSave(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!canEdit) {
-      return;
-    }
+    if (!canEdit) return;
 
     setLocalError("");
 
@@ -249,31 +247,27 @@ export default function CardDetailsModal({
     }
   }
 
-  async function handleAddComment(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    const content = comment.trim();
-
-    if (!content) {
-      return;
-    }
-
-    await onCreateComment(card.id, content);
-    setComment("");
-  }
-
   async function handleCreateLabel() {
     setLocalError("");
 
-    if (!labelName.trim()) {
-      return;
-    }
+    if (!labelName.trim()) return;
 
     try {
       await createLabelMutation.mutateAsync();
     } catch (error) {
       setLocalError(getErrorMessage(error, "Failed to create label."));
     }
+  }
+
+  async function handleAddComment(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const content = comment.trim();
+
+    if (!content) return;
+
+    await onCreateComment(card.id, content);
+    setComment("");
   }
 
   const isSavingMeta =
@@ -450,14 +444,25 @@ export default function CardDetailsModal({
           </section>
 
           {canEdit && (
-            <div className="form-actions">
-              <Button type="button" variant="secondary" onClick={onClose}>
-                {t.boards.cancel}
+            <div className="form-actions split-actions">
+              <Button
+                type="button"
+                variant="danger"
+                isLoading={isDeleting}
+                onClick={() => onDelete(card)}
+              >
+                Delete card
               </Button>
 
-              <Button type="submit" isLoading={isUpdating || isSavingMeta}>
-                {t.boards.saveChanges}
-              </Button>
+              <div className="right-actions">
+                <Button type="button" variant="secondary" onClick={onClose}>
+                  {t.boards.cancel}
+                </Button>
+
+                <Button type="submit" isLoading={isUpdating || isSavingMeta}>
+                  {t.boards.saveChanges}
+                </Button>
+              </div>
             </div>
           )}
         </form>

@@ -151,3 +151,7 @@ export type BoardMember = {
   user: BoardMemberUser;
   created_at: string;
 };
+
+export type UpdateListPayload = {
+  title: string;
+};
