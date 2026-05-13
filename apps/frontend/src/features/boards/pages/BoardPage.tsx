@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
-import { AxiosError } from "axios";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   useMutation,
   useQueries,
@@ -28,8 +27,10 @@ import { CSS } from "@dnd-kit/utilities";
 import { ROUTES } from "../../../app/constants/routes";
 import { t } from "../../../app/constants/translations";
 import Button from "../../../shared/components/Button";
+import ConfirmModal from "../../../shared/components/ConfirmModal";
 import Input from "../../../shared/components/Input";
 import Loader from "../../../shared/components/Loader";
+import { getApiErrorMessage } from "../../../shared/api/getApiErrorMessage";
 import BoardMembersPanel from "../components/BoardMembersPanel";
 import CardDetailsModal from "../components/CardDetailsModal";
 import { useBoardRealtime } from "../hooks/useBoardRealtime";
@@ -49,25 +50,26 @@ import {
   updateCardRequest,
   updateListRequest,
 } from "../api/boardPageApi";
-
-type ErrorResponse = { message?: string };
+import { deleteBoardRequest, updateBoardRequest } from "../api/boardsApi";
 
 const BOARD_QUERY_KEY = "board";
 const LISTS_QUERY_KEY = "board-lists";
 const CARDS_QUERY_KEY = "list-cards";
 const COMMENTS_QUERY_KEY = "card-comments";
 
-function getErrorMessage(error: unknown, fallback: string) {
-  if (error instanceof AxiosError) {
-    const data = error.response?.data as ErrorResponse | undefined;
-    return data?.message || fallback;
-  }
-
-  return fallback;
-}
+const BOARD_COLORS = [
+  "#0f4c81",
+  "#1d4ed8",
+  "#7c3aed",
+  "#be185d",
+  "#047857",
+  "#b45309",
+  "#334155",
+];
 
 export default function BoardPage() {
   const { boardId } = useParams<{ boardId: string }>();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const [newListTitle, setNewListTitle] = useState("");
@@ -77,6 +79,15 @@ export default function BoardPage() {
 
   const [editingListId, setEditingListId] = useState<string | null>(null);
   const [editingListTitle, setEditingListTitle] = useState("");
+
+  const [isBoardSettingsOpen, setIsBoardSettingsOpen] = useState(false);
+  const [boardTitle, setBoardTitle] = useState("");
+  const [boardDescription, setBoardDescription] = useState("");
+  const [boardColor, setBoardColor] = useState(BOARD_COLORS[0]);
+
+  const [listToDelete, setListToDelete] = useState<BoardList | null>(null);
+  const [cardToDelete, setCardToDelete] = useState<Card | null>(null);
+  const [isDeleteBoardOpen, setIsDeleteBoardOpen] = useState(false);
 
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const [pageError, setPageError] = useState("");
@@ -136,6 +147,34 @@ export default function BoardPage() {
     enabled: Boolean(selectedCard?.id),
   });
 
+  const updateBoardMutation = useMutation({
+    mutationFn: ({
+      title,
+      description,
+      backgroundColor,
+    }: {
+      title: string;
+      description: string;
+      backgroundColor: string;
+    }) =>
+      updateBoardRequest(boardId as string, {
+        title,
+        description: description || null,
+        background_color: backgroundColor,
+      }),
+    onSuccess: () => {
+      setIsBoardSettingsOpen(false);
+      queryClient.invalidateQueries({ queryKey: [BOARD_QUERY_KEY, boardId] });
+    },
+  });
+
+  const deleteBoardMutation = useMutation({
+    mutationFn: () => deleteBoardRequest(boardId as string),
+    onSuccess: () => {
+      navigate(ROUTES.DASHBOARD, { replace: true });
+    },
+  });
+
   const createListMutation = useMutation({
     mutationFn: (title: string) =>
       createListRequest(boardId as string, { title }),
@@ -160,6 +199,7 @@ export default function BoardPage() {
   const deleteListMutation = useMutation({
     mutationFn: (listId: string) => deleteListRequest(listId),
     onSuccess: () => {
+      setListToDelete(null);
       queryClient.invalidateQueries({ queryKey: [LISTS_QUERY_KEY, boardId] });
       queryClient.invalidateQueries({ queryKey: [BOARD_QUERY_KEY, boardId] });
     },
@@ -189,6 +229,7 @@ export default function BoardPage() {
     mutationFn: (cardId: string) => deleteCardRequest(cardId),
     onSuccess: (_, cardId) => {
       setSelectedCard(null);
+      setCardToDelete(null);
       setModalError("");
 
       lists.forEach((list) => {
@@ -283,20 +324,63 @@ export default function BoardPage() {
     },
   });
 
+  function openBoardSettings() {
+    if (!boardQuery.data) return;
+
+    setBoardTitle(boardQuery.data.title);
+    setBoardDescription(boardQuery.data.description || "");
+    setBoardColor(boardQuery.data.background_color || BOARD_COLORS[0]);
+    setIsBoardSettingsOpen(true);
+  }
+
+  async function handleUpdateBoard(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setPageError("");
+
+    const title = boardTitle.trim();
+
+    if (title.length < 2) {
+      setPageError("Board title must be at least 2 characters.");
+      return;
+    }
+
+    try {
+      await updateBoardMutation.mutateAsync({
+        title,
+        description: boardDescription,
+        backgroundColor: boardColor,
+      });
+    } catch (error) {
+      setPageError(getApiErrorMessage(error, "Failed to update board."));
+    }
+  }
+
+  async function handleDeleteBoard() {
+    setPageError("");
+
+    try {
+      await deleteBoardMutation.mutateAsync();
+    } catch (error) {
+      setPageError(getApiErrorMessage(error, "Failed to delete board."));
+      setIsDeleteBoardOpen(false);
+    }
+  }
+
   async function handleCreateList(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setPageError("");
 
     const title = newListTitle.trim();
 
-    if (!title) {
+    if (title.length < 2) {
+      setPageError("List title must be at least 2 characters.");
       return;
     }
 
     try {
       await createListMutation.mutateAsync(title);
     } catch (error) {
-      setPageError(getErrorMessage(error, "Failed to create list."));
+      setPageError(getApiErrorMessage(error, "Failed to create list."));
     }
   }
 
@@ -308,7 +392,7 @@ export default function BoardPage() {
         await createListMutation.mutateAsync(title);
       }
     } catch (error) {
-      setPageError(getErrorMessage(error, "Failed to create workflow lists."));
+      setPageError(getApiErrorMessage(error, "Failed to create workflow lists."));
     }
   }
 
@@ -320,13 +404,12 @@ export default function BoardPage() {
   async function handleUpdateList(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!editingListId) {
-      return;
-    }
+    if (!editingListId) return;
 
     const title = editingListTitle.trim();
 
-    if (!title) {
+    if (title.length < 2) {
+      setPageError("List title must be at least 2 characters.");
       return;
     }
 
@@ -338,25 +421,20 @@ export default function BoardPage() {
         title,
       });
     } catch (error) {
-      setPageError(getErrorMessage(error, "Failed to update list."));
+      setPageError(getApiErrorMessage(error, "Failed to update list."));
     }
   }
 
-  async function handleDeleteList(list: BoardList) {
-    const confirmed = window.confirm(
-      `Delete list "${list.title}" and all its cards?`
-    );
-
-    if (!confirmed) {
-      return;
-    }
+  async function handleDeleteList() {
+    if (!listToDelete) return;
 
     setPageError("");
 
     try {
-      await deleteListMutation.mutateAsync(list.id);
+      await deleteListMutation.mutateAsync(listToDelete.id);
     } catch (error) {
-      setPageError(getErrorMessage(error, "Failed to delete list."));
+      setPageError(getApiErrorMessage(error, "Failed to delete list."));
+      setListToDelete(null);
     }
   }
 
@@ -369,14 +447,15 @@ export default function BoardPage() {
 
     const title = cardTitleByList[listId]?.trim();
 
-    if (!title) {
+    if (!title || title.length < 2) {
+      setPageError("Card title must be at least 2 characters.");
       return;
     }
 
     try {
       await createCardMutation.mutateAsync({ listId, title });
     } catch (error) {
-      setPageError(getErrorMessage(error, "Failed to create card."));
+      setPageError(getApiErrorMessage(error, "Failed to create card."));
     }
   }
 
@@ -388,26 +467,32 @@ export default function BoardPage() {
   }) {
     setModalError("");
 
+    if (payload.title.trim().length < 2) {
+      setModalError("Card title must be at least 2 characters.");
+      return;
+    }
+
     try {
       await updateCardMutation.mutateAsync(payload);
     } catch (error) {
-      setModalError(getErrorMessage(error, "Failed to update card."));
+      setModalError(getApiErrorMessage(error, "Failed to update card."));
     }
   }
 
   async function handleDeleteCard(card: Card) {
-    const confirmed = window.confirm(`Delete card "${card.title}"?`);
+    setCardToDelete(card);
+  }
 
-    if (!confirmed) {
-      return;
-    }
+  async function confirmDeleteCard() {
+    if (!cardToDelete) return;
 
     setModalError("");
 
     try {
-      await deleteCardMutation.mutateAsync(card.id);
+      await deleteCardMutation.mutateAsync(cardToDelete.id);
     } catch (error) {
-      setModalError(getErrorMessage(error, "Failed to delete card."));
+      setModalError(getApiErrorMessage(error, "Failed to delete card."));
+      setCardToDelete(null);
     }
   }
 
@@ -417,16 +502,14 @@ export default function BoardPage() {
     try {
       await createCommentMutation.mutateAsync({ cardId, content });
     } catch (error) {
-      setModalError(getErrorMessage(error, "Failed to add comment."));
+      setModalError(getApiErrorMessage(error, "Failed to add comment."));
     }
   }
 
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
 
-    if (!over || !boardId) {
-      return;
-    }
+    if (!over || !boardId) return;
 
     const activeType = active.data.current?.type;
     const overType = over.data.current?.type;
@@ -435,9 +518,7 @@ export default function BoardPage() {
       const oldIndex = lists.findIndex((list) => list.id === active.id);
       const newIndex = lists.findIndex((list) => list.id === over.id);
 
-      if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) {
-        return;
-      }
+      if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return;
 
       const reorderedLists = arrayMove(lists, oldIndex, newIndex);
 
@@ -447,24 +528,20 @@ export default function BoardPage() {
           reorderedLists,
         });
       } catch (error) {
-        setPageError(getErrorMessage(error, "Failed to reorder lists."));
+        setPageError(getApiErrorMessage(error, "Failed to reorder lists."));
       }
 
       return;
     }
 
-    if (activeType !== "card") {
-      return;
-    }
+    if (activeType !== "card") return;
 
     const activeCard = active.data.current?.card as Card | undefined;
     const targetListId =
       (over.data.current?.listId as string | undefined) ||
       (over.data.current?.card as Card | undefined)?.list_id;
 
-    if (!activeCard || !targetListId) {
-      return;
-    }
+    if (!activeCard || !targetListId) return;
 
     const targetCards = cardsByList[targetListId] || [];
     const overCard = over.data.current?.card as Card | undefined;
@@ -486,7 +563,7 @@ export default function BoardPage() {
         position: targetPosition,
       });
     } catch (error) {
-      setPageError(getErrorMessage(error, "Failed to move card."));
+      setPageError(getApiErrorMessage(error, "Failed to move card."));
     }
   }
 
@@ -519,9 +596,13 @@ export default function BoardPage() {
   const canManageMembers = board.role === "owner" || board.role === "admin";
   const canEdit =
     board.role === "owner" || board.role === "admin" || board.role === "editor";
+  const canDeleteBoard = board.role === "owner";
 
   return (
-    <main className="trello-board-page">
+    <main
+      className="trello-board-page"
+      style={{ background: board.background_color || BOARD_COLORS[0] }}
+    >
       <header className="trello-board-header">
         <div>
           <Link to={ROUTES.DASHBOARD} className="back-link">
@@ -531,6 +612,12 @@ export default function BoardPage() {
         </div>
 
         <div className="board-header-actions">
+          {canEdit && (
+            <Button type="button" variant="secondary" onClick={openBoardSettings}>
+              Board settings
+            </Button>
+          )}
+
           <Button
             type="button"
             variant="secondary"
@@ -547,18 +634,110 @@ export default function BoardPage() {
 
       {pageError && <div className="alert error">{pageError}</div>}
 
+      {isBoardSettingsOpen && (
+        <section className="board-settings-panel">
+          <div className="section-header">
+            <div>
+              <h2>Board settings</h2>
+              <p>Edit board title, description, and background.</p>
+            </div>
+
+            <button
+              type="button"
+              className="icon-button"
+              onClick={() => setIsBoardSettingsOpen(false)}
+            >
+              ×
+            </button>
+          </div>
+
+          <form className="auth-form" onSubmit={handleUpdateBoard}>
+            <Input
+              label="Board title"
+              value={boardTitle}
+              onChange={(event) => setBoardTitle(event.target.value)}
+              required
+            />
+
+            <div className="field-group">
+              <label htmlFor="board-description">Description</label>
+              <textarea
+                id="board-description"
+                value={boardDescription}
+                onChange={(event) => setBoardDescription(event.target.value)}
+              />
+            </div>
+
+            <div className="field-group">
+              <label>Background color</label>
+              <div className="color-palette">
+                {BOARD_COLORS.map((color) => (
+                  <button
+                    key={color}
+                    type="button"
+                    className={`color-dot ${boardColor === color ? "selected" : ""}`}
+                    style={{ backgroundColor: color }}
+                    onClick={() => setBoardColor(color)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="form-actions split-actions">
+              {canDeleteBoard && (
+                <Button
+                  type="button"
+                  variant="danger"
+                  onClick={() => setIsDeleteBoardOpen(true)}
+                >
+                  Delete board
+                </Button>
+              )}
+
+              <div className="right-actions">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setIsBoardSettingsOpen(false)}
+                >
+                  Cancel
+                </Button>
+
+                <Button type="submit" isLoading={updateBoardMutation.isPending}>
+                  Save changes
+                </Button>
+              </div>
+            </div>
+          </form>
+        </section>
+      )}
+
       {lists.length === 0 && (
         <section className="workflow-empty">
           <h2>No lists yet</h2>
-          <p>Create a Trello-like workflow to start managing cards.</p>
-          <Button
-            type="button"
-            onClick={handleCreateDefaultWorkflow}
-            isLoading={createListMutation.isPending}
-            disabled={!canEdit}
-          >
-            {t.boards.setupWorkflow}
-          </Button>
+
+          {canEdit ? (
+            <>
+              <p>Create a Trello-like workflow to start managing cards.</p>
+              <Button
+                type="button"
+                onClick={handleCreateDefaultWorkflow}
+                isLoading={createListMutation.isPending}
+              >
+                {t.boards.setupWorkflow}
+              </Button>
+            </>
+          ) : (
+            <>
+              <p>
+                You have viewer access on this board. You can view content, but
+                you cannot create lists or cards.
+              </p>
+              <span className="permission-note">
+                Ask the board owner for Editor access.
+              </span>
+            </>
+          )}
         </section>
       )}
 
@@ -625,7 +804,7 @@ export default function BoardPage() {
 
                             <button
                               type="button"
-                              onClick={() => handleDeleteList(list)}
+                              onClick={() => setListToDelete(list)}
                               title="Delete list"
                               className="danger-icon"
                             >
@@ -756,6 +935,39 @@ export default function BoardPage() {
           boardId={boardId}
           canManageMembers={canManageMembers}
           onClose={() => setIsMembersPanelOpen(false)}
+        />
+      )}
+
+      {listToDelete && (
+        <ConfirmModal
+          title="Delete list?"
+          description={`This will permanently delete "${listToDelete.title}" and all cards inside it.`}
+          confirmLabel="Delete list"
+          isLoading={deleteListMutation.isPending}
+          onCancel={() => setListToDelete(null)}
+          onConfirm={handleDeleteList}
+        />
+      )}
+
+      {cardToDelete && (
+        <ConfirmModal
+          title="Delete card?"
+          description={`This will permanently delete "${cardToDelete.title}".`}
+          confirmLabel="Delete card"
+          isLoading={deleteCardMutation.isPending}
+          onCancel={() => setCardToDelete(null)}
+          onConfirm={confirmDeleteCard}
+        />
+      )}
+
+      {isDeleteBoardOpen && (
+        <ConfirmModal
+          title="Delete board?"
+          description={`This will permanently delete "${board.title}" with all lists and cards.`}
+          confirmLabel="Delete board"
+          isLoading={deleteBoardMutation.isPending}
+          onCancel={() => setIsDeleteBoardOpen(false)}
+          onConfirm={handleDeleteBoard}
         />
       )}
     </main>

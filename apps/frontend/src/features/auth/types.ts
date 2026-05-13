@@ -19,6 +19,10 @@ export type SignupPayload = {
   password: string;
 };
 
+export type UpdateProfilePayload = {
+  name: string;
+};
+
 export type AuthResponse = {
   user: User;
   access_token: string;

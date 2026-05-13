@@ -5,12 +5,11 @@ import type {
   AuthResponse,
   LoginPayload,
   SignupPayload,
+  UpdateProfilePayload,
   User,
 } from "../types";
 
-export async function loginRequest(
-  payload: LoginPayload
-): Promise<AuthResponse> {
+export async function loginRequest(payload: LoginPayload): Promise<AuthResponse> {
   const response = await apiClient.post<ApiResponse<AuthResponse>>(
     API_ROUTES.AUTH.LOGIN,
     payload
@@ -32,7 +31,23 @@ export async function signupRequest(
 
 export async function getCurrentUserRequest(): Promise<User> {
   const response = await apiClient.get<ApiResponse<User>>(API_ROUTES.AUTH.ME);
+
   return response.data.data;
+}
+
+export async function updateProfileRequest(
+  payload: UpdateProfilePayload
+): Promise<User> {
+  const response = await apiClient.patch<ApiResponse<User>>(
+    API_ROUTES.AUTH.ME,
+    payload
+  );
+
+  return response.data.data;
+}
+
+export async function deleteAccountRequest(): Promise<void> {
+  await apiClient.delete(API_ROUTES.AUTH.ME);
 }
 
 export async function logoutRequest(): Promise<void> {
@@ -41,7 +56,7 @@ export async function logoutRequest(): Promise<void> {
 
 export async function verifyEmailRequest(token: string): Promise<User> {
   const response = await apiClient.post<ApiResponse<User>>(
-    `${API_ROUTES.AUTH.VERIFY_EMAIL}?token=${encodeURIComponent(token)}`
+    `${API_ROUTES.AUTH.VERIFY_EMAIL}?token=${token}`
   );
 
   return response.data.data;

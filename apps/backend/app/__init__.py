@@ -5,6 +5,7 @@ from app.constants.routes import AUTH_PREFIX, BOARDS_PREFIX, API_PREFIX
 from app.extensions import db, migrate, jwt, limiter, mail, init_redis, socketio
 from app.utils.error_handlers import register_error_handlers
 from app.utils.logger import configure_logging
+from app.constants.routes import AUTH_PREFIX, BOARDS_PREFIX, API_PREFIX, ADMIN_PREFIX
 
 
 def create_app():
@@ -48,6 +49,7 @@ def create_app():
     from app.routes.cards.label_routes import label_bp
     from app.routes.cards.comment_routes import comment_bp
     from app.routes import socket_routes
+    from app.routes.admin.admin_routes import admin_bp
 
     app.register_blueprint(auth_bp, url_prefix=AUTH_PREFIX)
     app.register_blueprint(board_bp, url_prefix=BOARDS_PREFIX)
@@ -57,6 +59,7 @@ def create_app():
     app.register_blueprint(assignee_bp, url_prefix=API_PREFIX)
     app.register_blueprint(label_bp, url_prefix=API_PREFIX)
     app.register_blueprint(comment_bp, url_prefix=API_PREFIX)
+    app.register_blueprint(admin_bp, url_prefix=ADMIN_PREFIX)
 
     register_error_handlers(app)
 

@@ -7,48 +7,40 @@ from app.models.boards.invitation import BoardInvitation
 from app.models.boards.invitation_status import InvitationStatus
 from app.models.boards.board_role import Permission
 from app.services.boards.board_permission_service import BoardPermissionService
-from app.utils.exceptions import (
-    ForbiddenError,
-    NotFoundError,
-    ConflictError,
-    BadRequestError,
-)
+from app.services.realtime_service import RealtimeService
+from app.utils.exceptions import NotFoundError, BadRequestError, ForbiddenError
 from app.utils.security import hash_token
 from app.constants.messages import Messages
 
 
 class InvitationService:
     @staticmethod
-    def _mark_expired_if_needed(invitation):
-        now = datetime.now(timezone.utc)
-
-        if invitation.status == InvitationStatus.PENDING and invitation.expires_at < now:
-            invitation.status = InvitationStatus.EXPIRED
-            invitation.responded_at = now
-            db.session.commit()
-            return True
-
-        return False
-
-    @staticmethod
-    def _get_invitation_by_raw_token(token):
+    def get_invitation_by_token(raw_token):
         invitation = BoardInvitation.query.filter_by(
-            token_hash=hash_token(token),
+            token_hash=hash_token(raw_token),
         ).first()
 
         if not invitation:
             raise NotFoundError(Messages.INVITATION_NOT_FOUND)
 
-        return invitation
+        if invitation.status != InvitationStatus.PENDING:
+            raise BadRequestError(Messages.INVITATION_NOT_PENDING)
 
-    @staticmethod
-    def get_invitation_by_token(token):
-        invitation = InvitationService._get_invitation_by_raw_token(token)
-
-        if InvitationService._mark_expired_if_needed(invitation):
+        if invitation.expires_at < datetime.now(timezone.utc):
+            invitation.status = InvitationStatus.EXPIRED
+            db.session.commit()
             raise BadRequestError(Messages.INVITATION_EXPIRED)
 
         return invitation
+
+    @staticmethod
+    def get_board_invitations(board_id):
+        return (
+            BoardInvitation.query
+            .filter_by(board_id=board_id)
+            .order_by(BoardInvitation.created_at.desc())
+            .all()
+        )
 
     @staticmethod
     def get_my_invitations(user_id):
@@ -57,7 +49,7 @@ class InvitationService:
         if not user:
             raise NotFoundError(Messages.USER_NOT_FOUND)
 
-        invitations = (
+        return (
             BoardInvitation.query
             .filter_by(
                 email=user.email.lower(),
@@ -67,50 +59,79 @@ class InvitationService:
             .all()
         )
 
-        for invitation in invitations:
-            InvitationService._mark_expired_if_needed(invitation)
-
-        return [
-            invitation
-            for invitation in invitations
-            if invitation.status == InvitationStatus.PENDING
-        ]
-
     @staticmethod
-    def get_board_invitations(request_user_id, board_id):
-        board = db.session.get(Board, board_id)
-
-        if not board:
-            raise NotFoundError(Messages.BOARD_NOT_FOUND)
-
-        if not BoardPermissionService.has_permission(
-            request_user_id,
-            board_id,
-            Permission.MANAGE_MEMBERS,
-        ):
-            raise ForbiddenError("You do not have permission to view invitations")
-
-        return (
-            BoardInvitation.query
-            .filter_by(board_id=board_id)
-            .order_by(BoardInvitation.created_at.desc())
-            .all()
-        )
-
-    @staticmethod
-    def accept_invitation(user_id, token):
+    def _validate_invitation_for_user(user_id, invitation_id):
         user = db.session.get(User, user_id)
 
         if not user:
             raise NotFoundError(Messages.USER_NOT_FOUND)
 
-        invitation = InvitationService._get_invitation_by_raw_token(token)
+        invitation = db.session.get(BoardInvitation, invitation_id)
 
-        if InvitationService._mark_expired_if_needed(invitation):
-            raise BadRequestError(Messages.INVITATION_EXPIRED)
+        if not invitation:
+            raise NotFoundError(Messages.INVITATION_NOT_FOUND)
+
+        if invitation.email.lower() != user.email.lower():
+            raise ForbiddenError(Messages.INVITATION_WRONG_ACCOUNT)
 
         if invitation.status != InvitationStatus.PENDING:
             raise BadRequestError(Messages.INVITATION_NOT_PENDING)
+
+        if invitation.expires_at < datetime.now(timezone.utc):
+            invitation.status = InvitationStatus.EXPIRED
+            db.session.commit()
+            raise BadRequestError(Messages.INVITATION_EXPIRED)
+
+        return user, invitation
+
+    @staticmethod
+    def accept_invitation(user_id, raw_token):
+        invitation = InvitationService.get_invitation_by_token(raw_token)
+
+        return InvitationService._accept_invitation_instance(
+            user_id,
+            invitation,
+        )
+
+    @staticmethod
+    def decline_invitation(user_id, raw_token):
+        invitation = InvitationService.get_invitation_by_token(raw_token)
+
+        return InvitationService._decline_invitation_instance(
+            user_id,
+            invitation,
+        )
+
+    @staticmethod
+    def accept_invitation_by_id(user_id, invitation_id):
+        user, invitation = InvitationService._validate_invitation_for_user(
+            user_id,
+            invitation_id,
+        )
+
+        return InvitationService._accept_invitation_instance(
+            user.id,
+            invitation,
+        )
+
+    @staticmethod
+    def decline_invitation_by_id(user_id, invitation_id):
+        user, invitation = InvitationService._validate_invitation_for_user(
+            user_id,
+            invitation_id,
+        )
+
+        return InvitationService._decline_invitation_instance(
+            user.id,
+            invitation,
+        )
+
+    @staticmethod
+    def _accept_invitation_instance(user_id, invitation):
+        user = db.session.get(User, user_id)
+
+        if not user:
+            raise NotFoundError(Messages.USER_NOT_FOUND)
 
         if invitation.email.lower() != user.email.lower():
             raise ForbiddenError(Messages.INVITATION_WRONG_ACCOUNT)
@@ -121,7 +142,28 @@ class InvitationService:
         ).first()
 
         if existing_member:
-            raise ConflictError(Messages.USER_ALREADY_MEMBER)
+            invitation.status = InvitationStatus.ACCEPTED
+            invitation.responded_at = datetime.now(timezone.utc)
+            db.session.commit()
+
+            RealtimeService.emit_board_event(
+                invitation.board_id,
+                "invitation.accepted",
+                {
+                    "email": invitation.email,
+                    "role": invitation.role.value,
+                },
+            )
+
+            RealtimeService.emit_user_event(
+                user.id,
+                "invitation.accepted",
+                {
+                    "board_id": str(invitation.board_id),
+                },
+            )
+
+            return existing_member
 
         member = BoardMember(
             board_id=invitation.board_id,
@@ -135,22 +177,31 @@ class InvitationService:
         db.session.add(member)
         db.session.commit()
 
+        RealtimeService.emit_board_event(
+            invitation.board_id,
+            "invitation.accepted",
+            {
+                "email": invitation.email,
+                "role": invitation.role.value,
+            },
+        )
+
+        RealtimeService.emit_user_event(
+            user.id,
+            "invitation.accepted",
+            {
+                "board_id": str(invitation.board_id),
+            },
+        )
+
         return member
 
     @staticmethod
-    def decline_invitation(user_id, token):
+    def _decline_invitation_instance(user_id, invitation):
         user = db.session.get(User, user_id)
 
         if not user:
             raise NotFoundError(Messages.USER_NOT_FOUND)
-
-        invitation = InvitationService._get_invitation_by_raw_token(token)
-
-        if InvitationService._mark_expired_if_needed(invitation):
-            raise BadRequestError(Messages.INVITATION_EXPIRED)
-
-        if invitation.status != InvitationStatus.PENDING:
-            raise BadRequestError(Messages.INVITATION_NOT_PENDING)
 
         if invitation.email.lower() != user.email.lower():
             raise ForbiddenError(Messages.INVITATION_WRONG_ACCOUNT)
@@ -160,10 +211,26 @@ class InvitationService:
 
         db.session.commit()
 
+        RealtimeService.emit_board_event(
+            invitation.board_id,
+            "invitation.declined",
+            {
+                "email": invitation.email,
+            },
+        )
+
+        RealtimeService.emit_user_event(
+            user.id,
+            "invitation.declined",
+            {
+                "board_id": str(invitation.board_id),
+            },
+        )
+
         return invitation
 
     @staticmethod
-    def cancel_invitation(request_user_id, board_id, token):
+    def cancel_invitation_by_id(request_user_id, board_id, invitation_id):
         board = db.session.get(Board, board_id)
 
         if not board:
@@ -176,12 +243,9 @@ class InvitationService:
         ):
             raise ForbiddenError("You do not have permission to cancel invitations")
 
-        invitation = BoardInvitation.query.filter_by(
-            board_id=board_id,
-            token_hash=hash_token(token),
-        ).first()
+        invitation = db.session.get(BoardInvitation, invitation_id)
 
-        if not invitation:
+        if not invitation or str(invitation.board_id) != str(board_id):
             raise NotFoundError(Messages.INVITATION_NOT_FOUND)
 
         if invitation.status != InvitationStatus.PENDING:
@@ -192,33 +256,12 @@ class InvitationService:
 
         db.session.commit()
 
+        RealtimeService.emit_board_event(
+            board_id,
+            "invitation.cancelled",
+            {
+                "email": invitation.email,
+            },
+        )
+
         return invitation
-
-        @staticmethod
-        def cancel_invitation_by_id(request_user_id, board_id, invitation_id):
-            board = db.session.get(Board, board_id)
-
-            if not board:
-                raise NotFoundError(Messages.BOARD_NOT_FOUND)
-
-            if not BoardPermissionService.has_permission(
-                request_user_id,
-                board_id,
-                Permission.MANAGE_MEMBERS,
-            ):
-                raise ForbiddenError("You do not have permission to cancel invitations")
-
-            invitation = db.session.get(BoardInvitation, invitation_id)
-
-            if not invitation or str(invitation.board_id) != str(board_id):
-                raise NotFoundError(Messages.INVITATION_NOT_FOUND)
-
-            if invitation.status != InvitationStatus.PENDING:
-                raise BadRequestError(Messages.INVITATION_NOT_PENDING)
-
-            invitation.status = InvitationStatus.CANCELLED
-            invitation.responded_at = datetime.now(timezone.utc)
-
-            db.session.commit()
-
-            return invitation

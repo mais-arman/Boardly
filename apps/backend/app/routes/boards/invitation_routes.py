@@ -5,6 +5,8 @@ from app.constants.routes import (
     INVITATION_PREVIEW,
     INVITATION_ACCEPT,
     INVITATION_DECLINE,
+    MY_INVITATION_ACCEPT,
+    MY_INVITATION_DECLINE,
 )
 from app.constants.messages import Messages
 from app.schemas.boards.member_schema import (
@@ -63,6 +65,34 @@ def decline_invitation(token):
     invitation = InvitationService.decline_invitation(
         get_jwt_identity(),
         token,
+    )
+
+    return success_response(
+        data=invitation_response_schema.dump(invitation),
+        message=Messages.INVITATION_DECLINED,
+    )
+
+
+@invitation_bp.post(MY_INVITATION_ACCEPT)
+@jwt_required()
+def accept_my_invitation(invitation_id):
+    member = InvitationService.accept_invitation_by_id(
+        get_jwt_identity(),
+        invitation_id,
+    )
+
+    return success_response(
+        data=member_response_schema.dump(member),
+        message=Messages.INVITATION_ACCEPTED,
+    )
+
+
+@invitation_bp.post(MY_INVITATION_DECLINE)
+@jwt_required()
+def decline_my_invitation(invitation_id):
+    invitation = InvitationService.decline_invitation_by_id(
+        get_jwt_identity(),
+        invitation_id,
     )
 
     return success_response(

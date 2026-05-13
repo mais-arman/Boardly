@@ -5,6 +5,8 @@ export const ROUTES = {
   VERIFY_EMAIL: "/verify-email",
   DASHBOARD: "/dashboard",
   BOARD: "/boards/:boardId",
+  PROFILE: "/profile",
+  ADMIN: "/admin",
 } as const;
 
 export function getBoardPath(boardId: string) {

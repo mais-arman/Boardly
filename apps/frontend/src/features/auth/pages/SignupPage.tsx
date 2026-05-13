@@ -1,17 +1,11 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { AxiosError } from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { ROUTES } from "../../../app/constants/routes";
-import { t } from "../../../app/constants/translations";
-import { UI } from "../../../app/constants/ui";
 import Button from "../../../shared/components/Button";
 import Input from "../../../shared/components/Input";
+import { getApiErrorMessage } from "../../../shared/api/getApiErrorMessage";
 import { useAuth } from "../hooks/useAuth";
-
-type ErrorResponse = {
-  message?: string;
-};
 
 export default function SignupPage() {
   const navigate = useNavigate();
@@ -30,31 +24,28 @@ export default function SignupPage() {
     try {
       await signup({ name, email, password });
       navigate(ROUTES.DASHBOARD);
-    } catch (error: unknown) {
-      if (error instanceof AxiosError) {
-        const data = error.response?.data as ErrorResponse | undefined;
-        setError(data?.message || t.auth.signupFailed);
-        return;
-      }
-
-      setError(t.auth.signupTryAgain);
+    } catch (error) {
+      setError(getApiErrorMessage(error, "Signup failed. Please try again."));
     }
   }
 
   return (
     <main className="auth-layout">
       <section className="auth-hero">
-        <div className="hero-badge">{t.auth.signupHeroBadge}</div>
-        <h1>{t.auth.signupHeroTitle}</h1>
-        <p>{t.auth.signupHeroDescription}</p>
+        <div className="hero-badge">Start Organized</div>
+        <h1>Create your Boardly workspace.</h1>
+        <p>
+          Build boards, manage roles, assign cards, and collaborate with your
+          team.
+        </p>
       </section>
 
       <section className="auth-card">
         <div className="auth-card-header">
           <span className="brand-mark">B</span>
           <div>
-            <h2>{t.auth.signupTitle}</h2>
-            <p>{t.auth.signupSubtitle}</p>
+            <h2>Create account</h2>
+            <p>You can start now and verify your email later</p>
           </div>
         </div>
 
@@ -62,41 +53,40 @@ export default function SignupPage() {
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <Input
-            label={t.auth.name}
+            label="Name"
             type="text"
-            placeholder={t.auth.namePlaceholder}
+            placeholder="Your name"
             value={name}
             onChange={(event) => setName(event.target.value)}
             required
           />
 
           <Input
-            label={t.auth.email}
+            label="Email"
             type="email"
-            placeholder={t.auth.emailPlaceholder}
+            placeholder="you@example.com"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             required
           />
 
           <Input
-            label={t.auth.password}
+            label="Password"
             type="password"
-            placeholder={t.auth.passwordPlaceholder}
+            placeholder="At least 8 characters"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            minLength={UI.PASSWORD_MIN_LENGTH}
+            minLength={8}
             required
           />
 
           <Button type="submit" fullWidth isLoading={isSigningUp}>
-            {t.auth.signup}
+            Create account
           </Button>
         </form>
 
         <p className="auth-footer">
-          {t.auth.alreadyHaveAccount}{" "}
-          <Link to={ROUTES.LOGIN}>{t.auth.login}</Link>
+          Already have an account? <Link to={ROUTES.LOGIN}>Login</Link>
         </p>
       </section>
     </main>

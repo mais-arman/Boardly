@@ -1,9 +1,12 @@
 export type BoardRole = "owner" | "admin" | "editor" | "viewer";
 
+export type ManageableBoardRole = "admin" | "editor" | "viewer";
+
 export type Board = {
   id: string;
   title: string;
   description: string | null;
+  background_color: string;
   owner_id: string;
   role: BoardRole | null;
   members_count: number;
@@ -57,86 +60,6 @@ export type Comment = {
   updated_at: string;
 };
 
-export type CreateBoardPayload = {
-  title: string;
-  description?: string | null;
-};
-
-export type CreateListPayload = {
-  title: string;
-};
-
-export type CreateCardPayload = {
-  title: string;
-  description?: string | null;
-  due_date?: string | null;
-};
-
-export type UpdateCardPayload = {
-  title?: string;
-  description?: string | null;
-  due_date?: string | null;
-};
-
-export type ReorderListsPayload = {
-  lists: {
-    id: string;
-    position: number;
-  }[];
-};
-
-export type MoveCardPayload = {
-  target_list_id: string;
-  position: number;
-};
-
-export type CreateCommentPayload = {
-  content: string;
-};
-
-export type ApiResponse<T> = {
-  success: boolean;
-  message: string;
-  data: T;
-};
-
-export type ManageableBoardRole = "admin" | "editor" | "viewer";
-
-
-export type BoardInvitation = {
-  id: string;
-  board_id: string;
-  invited_by_id: string;
-  email: string;
-  role: ManageableBoardRole;
-  status: "pending" | "accepted" | "declined" | "cancelled" | "expired";
-  expires_at: string;
-  created_at: string;
-  responded_at: string | null;
-};
-
-export type InviteMemberPayload = {
-  email: string;
-  role: ManageableBoardRole;
-};
-
-export type UpdateMemberRolePayload = {
-  role: ManageableBoardRole;
-};
-
-export type CreateLabelPayload = {
-  name: string;
-  color: string;
-};
-
-export type ApplyLabelPayload = {
-  label_id: string;
-};
-
-export type AddAssigneePayload = {
-  user_id: string;
-};
-
 export type BoardMemberUser = {
   id: string;
   name: string;
@@ -152,6 +75,94 @@ export type BoardMember = {
   created_at: string;
 };
 
+
+export type CreateBoardPayload = {
+  title: string;
+  description?: string | null;
+  background_color?: string;
+};
+
+export type UpdateBoardPayload = {
+  title?: string;
+  description?: string | null;
+  background_color?: string;
+};
+
+export type CreateListPayload = {
+  title: string;
+};
+
 export type UpdateListPayload = {
   title: string;
+};
+
+export type ReorderListsPayload = {
+  lists: {
+    id: string;
+    position: number;
+  }[];
+};
+
+export type CreateCardPayload = {
+  title: string;
+  description?: string | null;
+  due_date?: string | null;
+};
+
+export type UpdateCardPayload = {
+  title?: string;
+  description?: string | null;
+  due_date?: string | null;
+};
+
+export type MoveCardPayload = {
+  target_list_id: string;
+  position: number;
+};
+
+export type CreateCommentPayload = {
+  content: string;
+};
+
+export type CreateLabelPayload = {
+  name: string;
+  color: string;
+};
+
+export type ApplyLabelPayload = {
+  label_id: string;
+};
+
+export type AddAssigneePayload = {
+  user_id: string;
+};
+
+export type InviteMemberPayload = {
+  email: string;
+  role: ManageableBoardRole;
+};
+
+export type UpdateMemberRolePayload = {
+  role: ManageableBoardRole;
+};
+
+export type ApiResponse<T> = {
+  success: boolean;
+  message: string;
+  data: T;
+};
+
+export type BoardInvitation = {
+  id: string;
+  board_id: string;
+  invited_by_id: string;
+  email: string;
+  role: ManageableBoardRole;
+  status: "pending" | "accepted" | "declined" | "cancelled" | "expired";
+  expires_at: string;
+  created_at: string;
+  responded_at: string | null;
+  board_title: string | null;
+  invited_by_name: string | null;
+  invited_by_email: string | null;
 };

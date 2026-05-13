@@ -1,6 +1,11 @@
 import { API_ROUTES } from "../../../app/constants/apiRoutes";
 import { apiClient } from "../../../shared/api/client";
-import type { ApiResponse, Board, CreateBoardPayload } from "../types";
+import type {
+  ApiResponse,
+  Board,
+  CreateBoardPayload,
+  UpdateBoardPayload,
+} from "../types";
 
 export async function getBoardsRequest(): Promise<Board[]> {
   const response = await apiClient.get<ApiResponse<Board[]>>(
@@ -19,4 +24,20 @@ export async function createBoardRequest(
   );
 
   return response.data.data;
+}
+
+export async function updateBoardRequest(
+  boardId: string,
+  payload: UpdateBoardPayload
+): Promise<Board> {
+  const response = await apiClient.patch<ApiResponse<Board>>(
+    API_ROUTES.BOARDS.BY_ID(boardId),
+    payload
+  );
+
+  return response.data.data;
+}
+
+export async function deleteBoardRequest(boardId: string): Promise<void> {
+  await apiClient.delete(API_ROUTES.BOARDS.BY_ID(boardId));
 }

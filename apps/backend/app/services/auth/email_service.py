@@ -2,6 +2,7 @@ from flask import current_app
 from flask_mail import Message
 from app.extensions import mail
 
+
 class EmailService:
     @staticmethod
     def send_email_verification(user, raw_token):
@@ -22,8 +23,6 @@ Please verify your email:
 This link expires at:
 {user.email_verification_expires_at}
 
-If you did not create this account, you can ignore this email.
-
 Boardly Team
 """,
         )
@@ -34,15 +33,18 @@ Boardly Team
     def send_board_invitation(invitation, raw_token):
         frontend_url = current_app.config["FRONTEND_URL"]
         invitation_link = f"{frontend_url}/accept-invitation?token={raw_token}"
+        board_title = invitation.board.title if invitation.board else "Boardly board"
+        inviter_name = invitation.invited_by.name if invitation.invited_by else "A Boardly user"
 
         message = Message(
-            subject="You have been invited to Boardly",
+            subject=f"You have been invited to {board_title}",
             recipients=[invitation.email],
             body=f"""
 Hello,
 
-You have been invited to collaborate on a Boardly board.
+{inviter_name} invited you to collaborate on this Boardly board:
 
+Board: {board_title}
 Role: {invitation.role.value}
 
 Open this link to accept or decline the invitation:

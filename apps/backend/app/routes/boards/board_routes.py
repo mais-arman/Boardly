@@ -1,15 +1,14 @@
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
-
 from app.constants.routes import (
     BOARD_ROOT,
     BOARD_BY_ID,
     BOARD_INVITATIONS,
-    BOARD_INVITATION_BY_TOKEN,
+    BOARD_INVITATION_CANCEL,
     BOARD_MEMBERS,
     BOARD_MEMBER_BY_ID,
-    BOARD_INVITATION_CANCEL,
 )
+from app.constants.messages import Messages
 from app.models.boards.board_role import Permission
 from app.schemas.boards.board_schema import (
     BoardCreateSchema,
@@ -23,11 +22,10 @@ from app.schemas.boards.member_schema import (
     InvitationResponseSchema,
 )
 from app.services.boards.board_service import BoardService
-from app.services.boards.member_service import MemberService
 from app.services.boards.invitation_service import InvitationService
+from app.services.boards.member_service import MemberService
 from app.utils.permission_decorators import board_permission
 from app.utils.responses import success_response
-from app.constants.messages import Messages
 
 
 board_bp = Blueprint("boards", __name__)
@@ -38,11 +36,12 @@ board_response_schema = BoardResponseSchema()
 boards_response_schema = BoardResponseSchema(many=True)
 
 invite_member_schema = InviteMemberSchema()
-invitation_response_schema = InvitationResponseSchema()
-invitations_response_schema = InvitationResponseSchema(many=True)
 update_member_role_schema = UpdateMemberRoleSchema()
 member_response_schema = MemberResponseSchema()
 members_response_schema = MemberResponseSchema(many=True)
+
+invitation_response_schema = InvitationResponseSchema()
+invitations_response_schema = InvitationResponseSchema(many=True)
 
 
 @board_bp.get(BOARD_ROOT)
@@ -73,10 +72,7 @@ def create_board():
 @jwt_required()
 @board_permission(Permission.VIEW_BOARD)
 def get_board(board_id):
-    board = BoardService.get_board(
-        board_id,
-        get_jwt_identity(),
-    )
+    board = BoardService.get_board(board_id, get_jwt_identity())
 
     return success_response(
         data=board_response_schema.dump(board),
@@ -136,10 +132,7 @@ def invite_member(board_id):
 @jwt_required()
 @board_permission(Permission.MANAGE_MEMBERS)
 def get_board_invitations(board_id):
-    invitations = InvitationService.get_board_invitations(
-        get_jwt_identity(),
-        board_id,
-    )
+    invitations = InvitationService.get_board_invitations(board_id)
 
     return success_response(
         data=invitations_response_schema.dump(invitations),
@@ -147,14 +140,14 @@ def get_board_invitations(board_id):
     )
 
 
-@board_bp.delete(BOARD_INVITATION_BY_TOKEN)
+@board_bp.delete(BOARD_INVITATION_CANCEL)
 @jwt_required()
 @board_permission(Permission.MANAGE_MEMBERS)
-def cancel_invitation(board_id, token):
-    invitation = InvitationService.cancel_invitation(
+def cancel_invitation_by_id(board_id, invitation_id):
+    invitation = InvitationService.cancel_invitation_by_id(
         get_jwt_identity(),
         board_id,
-        token,
+        invitation_id,
     )
 
     return success_response(
@@ -180,12 +173,7 @@ def get_members(board_id):
 @board_permission(Permission.MANAGE_MEMBERS)
 def update_member_role(board_id, member_id):
     data = update_member_role_schema.load(request.get_json(silent=True) or {})
-
-    member = MemberService.update_member_role(
-        board_id,
-        member_id,
-        data,
-    )
+    member = MemberService.update_member_role(board_id, member_id, data)
 
     return success_response(
         data=member_response_schema.dump(member),
@@ -203,18 +191,3 @@ def remove_member(board_id, member_id):
         data=None,
         message="Member removed successfully",
     )
-
-@board_bp.delete(BOARD_INVITATION_CANCEL)
-@jwt_required()
-@board_permission(Permission.MANAGE_MEMBERS)
-def cancel_invitation_by_id(board_id, invitation_id):
-    invitation = InvitationService.cancel_invitation_by_id(
-        get_jwt_identity(),
-        board_id,
-        invitation_id,
-    )
-
-    return success_response(
-        data=invitation_response_schema.dump(invitation),
-        message=Messages.INVITATION_CANCELLED,
-    )    

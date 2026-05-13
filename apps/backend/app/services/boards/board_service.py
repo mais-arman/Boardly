@@ -5,14 +5,40 @@ from app.models.boards.board_member import BoardMember
 from app.models.boards.board_role import BoardRole
 from app.models.lists.board_list import BoardList
 from app.models.cards.card import Card
+from app.services.boards.board_permission_service import BoardPermissionService
+from app.services.realtime_service import RealtimeService
 from app.utils.exceptions import NotFoundError, BadRequestError
-
 class BoardService:
+    @staticmethod
+    def _attach_board_metadata(board, user_id):
+        board.current_user_role = BoardPermissionService.get_user_role(
+            user_id,
+            board.id,
+        )
+
+        board.members_count = BoardMember.query.filter_by(
+            board_id=board.id,
+        ).count()
+
+        board.lists_count = BoardList.query.filter_by(
+            board_id=board.id,
+        ).count()
+
+        board.cards_count = (
+            db.session.query(Card)
+            .join(BoardList, BoardList.id == Card.list_id)
+            .filter(BoardList.board_id == board.id)
+            .count()
+        )
+
+        return board
+
     @staticmethod
     def create_board(user_id, data):
         board = Board(
             title=data["title"].strip(),
             description=data.get("description"),
+            background_color=data.get("background_color", "#0f4c81"),
             owner_id=user_id,
         )
 
@@ -30,44 +56,7 @@ class BoardService:
             db.session.rollback()
             raise BadRequestError("Failed to create board")
 
-        return BoardService.get_board_summary(board.id, user_id)
-
-    @staticmethod
-    def get_board_summary(board_id, user_id):
-        board = db.session.get(Board, board_id)
-
-        if not board:
-            raise NotFoundError("Board not found")
-
-        member = BoardMember.query.filter_by(
-            board_id=board_id,
-            user_id=user_id,
-        ).first()
-
-        role = member.role.value if member else None
-
-        members_count = BoardMember.query.filter_by(board_id=board_id).count()
-        lists_count = BoardList.query.filter_by(board_id=board_id).count()
-
-        cards_count = (
-            db.session.query(Card.id)
-            .join(BoardList, Card.list_id == BoardList.id)
-            .filter(BoardList.board_id == board_id)
-            .count()
-        )
-
-        return {
-            "id": board.id,
-            "title": board.title,
-            "description": board.description,
-            "owner_id": board.owner_id,
-            "role": role,
-            "members_count": members_count,
-            "lists_count": lists_count,
-            "cards_count": cards_count,
-            "created_at": board.created_at,
-            "updated_at": board.updated_at,
-        }
+        return BoardService._attach_board_metadata(board, user_id)
 
     @staticmethod
     def get_user_boards(user_id):
@@ -75,26 +64,22 @@ class BoardService:
             Board.query
             .join(BoardMember, BoardMember.board_id == Board.id)
             .filter(BoardMember.user_id == user_id)
-            .order_by(Board.updated_at.desc())
             .all()
         )
 
         return [
-            BoardService.get_board_summary(board.id, user_id)
+            BoardService._attach_board_metadata(board, user_id)
             for board in boards
         ]
 
     @staticmethod
-    def get_board(board_id, user_id=None):
+    def get_board(board_id, user_id):
         board = db.session.get(Board, board_id)
 
         if not board:
             raise NotFoundError("Board not found")
 
-        if user_id:
-            return BoardService.get_board_summary(board_id, user_id)
-
-        return board
+        return BoardService._attach_board_metadata(board, user_id)
 
     @staticmethod
     def update_board(board_id, data, user_id=None):
@@ -109,10 +94,15 @@ class BoardService:
         if "description" in data:
             board.description = data["description"]
 
+        if "background_color" in data:
+            board.background_color = data["background_color"]
+
         db.session.commit()
 
+        RealtimeService.emit_board_event(board.id, "board.updated")
+
         if user_id:
-            return BoardService.get_board_summary(board_id, user_id)
+            return BoardService._attach_board_metadata(board, user_id)
 
         return board
 
@@ -123,5 +113,16 @@ class BoardService:
         if not board:
             raise NotFoundError("Board not found")
 
-        db.session.delete(board)
-        db.session.commit()
+        try:
+            BoardMember.query.filter_by(board_id=board.id).delete(
+                synchronize_session=False
+            )
+
+            db.session.delete(board)
+            db.session.commit()
+
+            RealtimeService.emit_board_event(board_id, "board.deleted")
+
+        except SQLAlchemyError:
+            db.session.rollback()
+            raise BadRequestError("Failed to delete board")

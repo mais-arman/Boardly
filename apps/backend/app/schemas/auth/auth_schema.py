@@ -1,5 +1,6 @@
 from marshmallow import Schema, fields, validate
 
+
 class SignupSchema(Schema):
     name = fields.String(
         required=True,
@@ -22,6 +23,13 @@ class LoginSchema(Schema):
         required=True,
         load_only=True,
         validate=validate.Length(min=8, max=128),
+    )
+
+
+class ProfileUpdateSchema(Schema):
+    name = fields.String(
+        required=False,
+        validate=validate.Length(min=2, max=120),
     )
 
 

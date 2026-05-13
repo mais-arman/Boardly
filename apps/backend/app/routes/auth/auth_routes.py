@@ -13,17 +13,24 @@ from app.constants.routes import (
 from app.constants.messages import Messages
 from app.extensions import db, get_redis
 from app.models.auth.user import User
-from app.schemas.auth.auth_schema import SignupSchema, LoginSchema, UserResponseSchema
+from app.schemas.auth.auth_schema import (
+    SignupSchema,
+    LoginSchema,
+    UserResponseSchema,
+    ProfileUpdateSchema,
+)
 from app.services.auth.auth_service import AuthService
+from app.services.auth.profile_service import ProfileService
 from app.utils.jwt_handlers import JWT_BLOCKLIST_PREFIX
 from app.utils.responses import success_response
-from app.utils.exceptions import UnauthorizedError, BadRequestError
+from app.utils.exceptions import UnauthorizedError
 
 
 auth_bp = Blueprint("auth", __name__)
 
 signup_schema = SignupSchema()
 login_schema = LoginSchema()
+profile_update_schema = ProfileUpdateSchema()
 user_response_schema = UserResponseSchema()
 
 
@@ -99,12 +106,35 @@ def me():
     )
 
 
+@auth_bp.patch(AUTH_ME)
+@jwt_required()
+def update_me():
+    data = profile_update_schema.load(request.get_json(silent=True) or {})
+    user = ProfileService.update_profile(get_jwt_identity(), data)
+
+    return success_response(
+        data=user_response_schema.dump(user),
+        message="Profile updated successfully",
+    )
+
+
+@auth_bp.delete(AUTH_ME)
+@jwt_required()
+def delete_me():
+    ProfileService.delete_account(get_jwt_identity())
+
+    return success_response(
+        data=None,
+        message="Account deleted successfully",
+    )
+
+
 @auth_bp.post(AUTH_VERIFY_EMAIL)
 def verify_email():
     token = request.args.get("token")
 
     if not token:
-        raise BadRequestError(Messages.VERIFICATION_TOKEN_REQUIRED)
+        raise UnauthorizedError("Verification token is required")
 
     user = AuthService.verify_email(token)
 

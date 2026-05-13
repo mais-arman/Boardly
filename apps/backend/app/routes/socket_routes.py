@@ -3,9 +3,9 @@ from flask_socketio import join_room, leave_room
 from flask_jwt_extended import decode_token
 from app.extensions import db, socketio
 from app.models.boards.board import Board
+from app.models.boards.board_role import Permission
 from app.services.boards.board_permission_service import BoardPermissionService
 from app.services.realtime_service import RealtimeService
-from app.models.boards.board_role import Permission
 
 
 def _get_user_id_from_socket():
@@ -27,6 +27,16 @@ def handle_connect():
 
     if not user_id:
         return False
+
+    join_room(RealtimeService.user_room(user_id))
+
+
+@socketio.on("disconnect")
+def handle_disconnect():
+    user_id = _get_user_id_from_socket()
+
+    if user_id:
+        leave_room(RealtimeService.user_room(user_id))
 
 
 @socketio.on("join_board")

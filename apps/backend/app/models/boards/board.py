@@ -2,6 +2,7 @@ from uuid import uuid4
 from datetime import datetime, timezone
 from app.extensions import db
 
+
 class Board(db.Model):
     __tablename__ = "boards"
 
@@ -10,6 +11,12 @@ class Board(db.Model):
     title = db.Column(db.String(160), nullable=False)
 
     description = db.Column(db.Text, nullable=True)
+
+    background_color = db.Column(
+        db.String(20),
+        nullable=False,
+        default="#0f4c81",
+    )
 
     owner_id = db.Column(
         db.UUID(as_uuid=True),

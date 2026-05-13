@@ -43,4 +43,20 @@ export const API_ROUTES = {
     LABEL_BY_ID: (cardId: string, labelId: string) =>
       `/cards/${cardId}/labels/${labelId}`,
   },
+  ADMIN: {
+    USERS: "/admin/users",
+    USER_BY_ID: (userId: string) => `/admin/users/${userId}`,
+    BOARDS: "/admin/boards",
+    BOARD_BY_ID: (boardId: string) => `/admin/boards/${boardId}`,
+  },
+  INVITATIONS: {
+    MY: "/invitations/me",
+    PREVIEW: (token: string) => `/invitations/${token}`,
+    ACCEPT: (token: string) => `/invitations/${token}/accept`,
+    DECLINE: (token: string) => `/invitations/${token}/decline`,
+    ACCEPT_MY: (invitationId: string) =>
+      `/invitations/me/${invitationId}/accept`,
+    DECLINE_MY: (invitationId: string) =>
+      `/invitations/me/${invitationId}/decline`,
+  },
 } as const;
