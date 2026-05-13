@@ -3,6 +3,7 @@ export const API_ROUTES = {
     LOGIN: "/auth/login",
     SIGNUP: "/auth/signup",
     ME: "/auth/me",
+    REFRESH: "/auth/refresh",
     LOGOUT: "/auth/logout",
     VERIFY_EMAIL: "/auth/verify-email",
     RESEND_VERIFICATION: "/auth/resend-verification",
@@ -43,12 +44,14 @@ export const API_ROUTES = {
     LABEL_BY_ID: (cardId: string, labelId: string) =>
       `/cards/${cardId}/labels/${labelId}`,
   },
+
   ADMIN: {
     USERS: "/admin/users",
     USER_BY_ID: (userId: string) => `/admin/users/${userId}`,
     BOARDS: "/admin/boards",
     BOARD_BY_ID: (boardId: string) => `/admin/boards/${boardId}`,
   },
+
   INVITATIONS: {
     MY: "/invitations/me",
     PREVIEW: (token: string) => `/invitations/${token}`,

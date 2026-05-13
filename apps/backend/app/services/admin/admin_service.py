@@ -6,7 +6,9 @@ from app.models.boards.board_member import BoardMember
 from app.models.boards.invitation import BoardInvitation
 from app.models.cards.comment import Comment
 from app.models.cards.card import Card
+from app.models.cards.label import Label
 from app.models.cards.card_assignee import card_assignees
+from app.models.cards.card_label import card_labels
 from app.models.lists.board_list import BoardList
 from app.services.realtime_service import RealtimeService
 from app.utils.exceptions import NotFoundError, BadRequestError
@@ -27,6 +29,56 @@ class AdminService:
         )
 
         return board
+
+    @staticmethod
+    def _delete_board_graph(board):
+        card_ids = (
+            db.session.query(Card.id)
+            .join(BoardList, BoardList.id == Card.list_id)
+            .filter(BoardList.board_id == board.id)
+            .all()
+        )
+
+        card_ids = [item[0] for item in card_ids]
+
+        if card_ids:
+            Comment.query.filter(Comment.card_id.in_(card_ids)).delete(
+                synchronize_session=False
+            )
+
+            db.session.execute(
+                card_assignees.delete().where(
+                    card_assignees.c.card_id.in_(card_ids)
+                )
+            )
+
+            db.session.execute(
+                card_labels.delete().where(
+                    card_labels.c.card_id.in_(card_ids)
+                )
+            )
+
+            Card.query.filter(Card.id.in_(card_ids)).delete(
+                synchronize_session=False
+            )
+
+        Label.query.filter_by(board_id=board.id).delete(
+            synchronize_session=False
+        )
+
+        BoardList.query.filter_by(board_id=board.id).delete(
+            synchronize_session=False
+        )
+
+        BoardInvitation.query.filter_by(board_id=board.id).delete(
+            synchronize_session=False
+        )
+
+        BoardMember.query.filter_by(board_id=board.id).delete(
+            synchronize_session=False
+        )
+
+        db.session.delete(board)
 
     @staticmethod
     def get_users():
@@ -61,14 +113,24 @@ class AdminService:
             owned_boards = Board.query.filter_by(owner_id=user.id).all()
 
             for board in owned_boards:
-                db.session.delete(board)
+                AdminService._delete_board_graph(board)
 
-            BoardMember.query.filter_by(user_id=user.id).delete()
-            BoardInvitation.query.filter_by(invited_by_id=user.id).delete()
-            Comment.query.filter_by(user_id=user.id).delete()
+            BoardMember.query.filter_by(user_id=user.id).delete(
+                synchronize_session=False
+            )
+
+            BoardInvitation.query.filter_by(invited_by_id=user.id).delete(
+                synchronize_session=False
+            )
+
+            Comment.query.filter_by(user_id=user.id).delete(
+                synchronize_session=False
+            )
 
             db.session.execute(
-                card_assignees.delete().where(card_assignees.c.user_id == user.id)
+                card_assignees.delete().where(
+                    card_assignees.c.user_id == user.id
+                )
             )
 
             db.session.delete(user)
@@ -83,23 +145,19 @@ class AdminService:
         boards = Board.query.order_by(Board.created_at.desc()).all()
         return [AdminService._attach_board_counts(board) for board in boards]
 
-        @staticmethod
-        def delete_board(board_id):
-            board = db.session.get(Board, board_id)
+    @staticmethod
+    def delete_board(board_id):
+        board = db.session.get(Board, board_id)
 
-            if not board:
-                raise NotFoundError("Board not found")
+        if not board:
+            raise NotFoundError("Board not found")
 
-            try:
-                BoardMember.query.filter_by(board_id=board.id).delete(
-                    synchronize_session=False
-                )
+        try:
+            AdminService._delete_board_graph(board)
+            db.session.commit()
 
-                db.session.delete(board)
-                db.session.commit()
+            RealtimeService.emit_board_event(board_id, "admin.board.deleted")
 
-                RealtimeService.emit_board_event(board_id, "admin.board.deleted")
-
-            except Exception:
-                db.session.rollback()
-                raise BadRequestError("Failed to delete board")
+        except Exception:
+            db.session.rollback()
+            raise BadRequestError("Failed to delete board")

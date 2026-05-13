@@ -51,10 +51,17 @@ export type Card = {
   updated_at: string;
 };
 
+export type CommentUser = {
+  id: string;
+  name: string;
+  email: string;
+};
+
 export type Comment = {
   id: string;
   card_id: string;
   user_id: string;
+  user?: CommentUser;
   content: string;
   created_at: string;
   updated_at: string;
@@ -75,6 +82,20 @@ export type BoardMember = {
   created_at: string;
 };
 
+export type BoardInvitation = {
+  id: string;
+  board_id: string;
+  invited_by_id: string;
+  email: string;
+  role: ManageableBoardRole;
+  status: "pending" | "accepted" | "declined" | "cancelled" | "expired";
+  expires_at: string;
+  created_at: string;
+  responded_at: string | null;
+  board_title: string | null;
+  invited_by_name: string | null;
+  invited_by_email: string | null;
+};
 
 export type CreateBoardPayload = {
   title: string;
@@ -150,19 +171,4 @@ export type ApiResponse<T> = {
   success: boolean;
   message: string;
   data: T;
-};
-
-export type BoardInvitation = {
-  id: string;
-  board_id: string;
-  invited_by_id: string;
-  email: string;
-  role: ManageableBoardRole;
-  status: "pending" | "accepted" | "declined" | "cancelled" | "expired";
-  expires_at: string;
-  created_at: string;
-  responded_at: string | null;
-  board_title: string | null;
-  invited_by_name: string | null;
-  invited_by_email: string | null;
 };

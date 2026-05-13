@@ -2,12 +2,14 @@ from datetime import datetime, timezone, timedelta
 from flask_jwt_extended import create_access_token, create_refresh_token
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import generate_password_hash, check_password_hash
+
 from app.extensions import db
 from app.models.auth.user import User
 from app.services.auth.email_service import EmailService
 from app.utils.exceptions import UnauthorizedError, ConflictError, BadRequestError
 from app.utils.security import generate_secure_token, hash_token
 from app.constants.messages import Messages
+
 
 class AuthService:
     @staticmethod
@@ -34,7 +36,8 @@ class AuthService:
             password_hash=generate_password_hash(data["password"]),
             is_email_verified=False,
             email_verification_token_hash=hash_token(raw_token),
-            email_verification_expires_at=datetime.now(timezone.utc) + timedelta(hours=24),
+            email_verification_expires_at=datetime.now(timezone.utc)
+            + timedelta(hours=24),
         )
 
         try:
@@ -44,9 +47,11 @@ class AuthService:
             EmailService.send_email_verification(user, raw_token)
 
             db.session.commit()
+
         except IntegrityError:
             db.session.rollback()
             raise ConflictError(Messages.EMAIL_EXISTS)
+
         except Exception:
             db.session.rollback()
             raise BadRequestError(Messages.EMAIL_SEND_FAILED)
@@ -63,8 +68,13 @@ class AuthService:
 
         user = User.query.filter_by(email=email).first()
 
-        if not user or not check_password_hash(user.password_hash, password):
-            raise UnauthorizedError(Messages.INVALID_CREDENTIALS)
+        if not user:
+            raise UnauthorizedError(
+                "This account does not exist. Please sign up first."
+            )
+
+        if not check_password_hash(user.password_hash, password):
+            raise UnauthorizedError("Incorrect password. Please try again.")
 
         return {
             "user": user,
@@ -122,11 +132,14 @@ class AuthService:
         raw_token = generate_secure_token()
 
         user.email_verification_token_hash = hash_token(raw_token)
-        user.email_verification_expires_at = datetime.now(timezone.utc) + timedelta(hours=24)
+        user.email_verification_expires_at = datetime.now(timezone.utc) + timedelta(
+            hours=24
+        )
 
         try:
             EmailService.send_email_verification(user, raw_token)
             db.session.commit()
+
         except Exception:
             db.session.rollback()
             raise BadRequestError(Messages.EMAIL_SEND_FAILED)

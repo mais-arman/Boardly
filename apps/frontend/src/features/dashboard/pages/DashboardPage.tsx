@@ -34,10 +34,7 @@ const BOARD_COLORS = [
 ];
 
 function getRoleLabel(role: BoardRole | null) {
-  if (!role) {
-    return "";
-  }
-
+  if (!role) return "";
   return role.charAt(0).toUpperCase() + role.slice(1);
 }
 
@@ -178,9 +175,7 @@ export default function DashboardPage() {
   }
 
   async function handleDeleteBoard() {
-    if (!deletingBoard) {
-      return;
-    }
+    if (!deletingBoard) return;
 
     try {
       await deleteBoardMutation.mutateAsync(deletingBoard.id);
@@ -195,9 +190,7 @@ export default function DashboardPage() {
     navigate(ROUTES.LOGIN, { replace: true });
   }
 
-  if (isLoading) {
-    return <Loader />;
-  }
+  if (isLoading) return <Loader />;
 
   const isBoardFormOpen = isCreateOpen || Boolean(editingBoard);
 
@@ -315,15 +308,15 @@ export default function DashboardPage() {
               <div className="field-group">
                 <label>Background color</label>
 
-                <div className="color-palette">
+                <div className="color-picker-grid">
                   {BOARD_COLORS.map((color) => (
                     <button
                       key={color}
                       type="button"
-                      className={`color-dot ${
+                      className={`color-option ${
                         boardColor === color ? "selected" : ""
                       }`}
-                      style={{ backgroundColor: color }}
+                      style={{ background: color }}
                       onClick={() => setBoardColor(color)}
                       aria-label={`Choose ${color}`}
                     />
@@ -371,6 +364,7 @@ export default function DashboardPage() {
               <div className="empty-icon">📋</div>
               <h3>No boards yet</h3>
               <p>Create your first Kanban board and start organizing work.</p>
+
               <Button type="button" onClick={openCreateBoard}>
                 Create board
               </Button>
@@ -389,7 +383,7 @@ export default function DashboardPage() {
 
                     <div className="board-card-body">
                       <div className="board-card-top">
-                        <span className="board-icon">▦</span>
+                        <h3>{board.title}</h3>
 
                         {board.role && (
                           <span className={`role-pill ${board.role}`}>
@@ -398,7 +392,6 @@ export default function DashboardPage() {
                         )}
                       </div>
 
-                      <h3>{board.title}</h3>
                       <p>{board.description || "No description provided."}</p>
 
                       <div className="board-meta">
@@ -408,8 +401,7 @@ export default function DashboardPage() {
                       </div>
 
                       <div className="board-date">
-                        Created:{" "}
-                        {new Date(board.created_at).toLocaleDateString()}
+                        Created: {new Date(board.created_at).toLocaleDateString()}
                       </div>
                     </div>
                   </Link>

@@ -22,6 +22,7 @@ card_bp = Blueprint("cards", __name__)
 card_create_schema = CardCreateSchema()
 card_update_schema = CardUpdateSchema()
 card_move_schema = CardMoveSchema()
+
 card_response_schema = CardResponseSchema()
 cards_response_schema = CardResponseSchema(many=True)
 
@@ -66,7 +67,7 @@ def get_card(card_id):
 
 @card_bp.patch(CARD_BY_ID)
 @jwt_required()
-@board_permission(Permission.CREATE_CARD)
+@board_permission(Permission.EDIT_CARD)
 def update_card(card_id):
     data = card_update_schema.load(request.get_json(silent=True) or {})
     card = CardService.update_card(card_id, data)
@@ -79,7 +80,7 @@ def update_card(card_id):
 
 @card_bp.delete(CARD_BY_ID)
 @jwt_required()
-@board_permission(Permission.CREATE_CARD)
+@board_permission(Permission.DELETE_CARD)
 def delete_card(card_id):
     CardService.delete_card(card_id)
 

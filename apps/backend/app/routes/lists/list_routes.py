@@ -22,6 +22,7 @@ list_bp = Blueprint("lists", __name__)
 list_create_schema = ListCreateSchema()
 list_update_schema = ListUpdateSchema()
 list_reorder_schema = ListReorderSchema()
+
 list_response_schema = ListResponseSchema()
 lists_response_schema = ListResponseSchema(many=True)
 
@@ -66,7 +67,7 @@ def get_list(list_id):
 
 @list_bp.patch(LIST_BY_ID)
 @jwt_required()
-@board_permission(Permission.CREATE_LIST)
+@board_permission(Permission.MANAGE_LISTS)
 def update_list(list_id):
     data = list_update_schema.load(request.get_json(silent=True) or {})
     board_list = ListService.update_list(list_id, data)
@@ -79,7 +80,7 @@ def update_list(list_id):
 
 @list_bp.delete(LIST_BY_ID)
 @jwt_required()
-@board_permission(Permission.CREATE_LIST)
+@board_permission(Permission.MANAGE_LISTS)
 def delete_list(list_id):
     ListService.delete_list(list_id)
 
@@ -91,7 +92,7 @@ def delete_list(list_id):
 
 @list_bp.patch(BOARD_LISTS_REORDER)
 @jwt_required()
-@board_permission(Permission.CREATE_LIST)
+@board_permission(Permission.MANAGE_LISTS)
 def reorder_lists(board_id):
     data = list_reorder_schema.load(request.get_json(silent=True) or {})
     lists = ListService.reorder_lists(board_id, data)

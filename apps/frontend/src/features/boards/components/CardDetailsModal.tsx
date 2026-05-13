@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { AxiosError } from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { t } from "../../../app/constants/translations";
 import Button from "../../../shared/components/Button";
 import Input from "../../../shared/components/Input";
 import type { BoardMember, Card, CardLabel, Comment } from "../types";
@@ -15,6 +14,7 @@ import {
   removeLabelFromCardRequest,
 } from "../api/cardMetaApi";
 import { getBoardMembersRequest } from "../api/boardMembersApi";
+import CommentList from "./CommentList";
 
 type ErrorResponse = {
   message?: string;
@@ -29,6 +29,8 @@ type CardDetailsModalProps = {
   isDeleting: boolean;
   error: string;
   canEdit: boolean;
+  canComment: boolean;
+  roleLabel: string;
   onClose: () => void;
   onUpdate: (payload: {
     cardId: string;
@@ -62,6 +64,8 @@ export default function CardDetailsModal({
   isDeleting,
   error,
   canEdit,
+  canComment,
+  roleLabel,
   onClose,
   onUpdate,
   onDelete,
@@ -78,11 +82,12 @@ export default function CardDetailsModal({
   const [comment, setComment] = useState("");
 
   const [labelName, setLabelName] = useState("");
-  const [labelColor, setLabelColor] = useState("#4f46e5");
+  const [labelColor, setLabelColor] = useState("#22c55e");
 
   const [draftLabelIds, setDraftLabelIds] = useState<string[]>(
     card.labels.map((label) => label.id)
   );
+
   const [draftAssigneeIds, setDraftAssigneeIds] = useState<string[]>(
     card.assignees.map((assignee) => assignee.id)
   );
@@ -107,7 +112,7 @@ export default function CardDetailsModal({
       }),
     onSuccess: (createdLabel) => {
       setLabelName("");
-      setLabelColor("#4f46e5");
+      setLabelColor("#22c55e");
       setDraftLabelIds((current) => [...current, createdLabel.id]);
 
       queryClient.invalidateQueries({
@@ -124,7 +129,8 @@ export default function CardDetailsModal({
   });
 
   const removeLabelMutation = useMutation({
-    mutationFn: (labelId: string) => removeLabelFromCardRequest(card.id, labelId),
+    mutationFn: (labelId: string) =>
+      removeLabelFromCardRequest(card.id, labelId),
   });
 
   const addAssigneeMutation = useMutation({
@@ -135,21 +141,27 @@ export default function CardDetailsModal({
   });
 
   const removeAssigneeMutation = useMutation({
-    mutationFn: (userId: string) => removeAssigneeFromCardRequest(card.id, userId),
+    mutationFn: (userId: string) =>
+      removeAssigneeFromCardRequest(card.id, userId),
   });
 
-  const boardLabels = useMemo(() => labelsQuery.data ?? [], [labelsQuery.data]);
-  const boardMembers = useMemo(() => membersQuery.data ?? [], [membersQuery.data]);
+  const boardLabels = useMemo(
+    () => labelsQuery.data ?? [],
+    [labelsQuery.data]
+  );
 
-  const selectedLabels = useMemo(() => {
-    return boardLabels.filter((label) => draftLabelIds.includes(label.id));
-  }, [boardLabels, draftLabelIds]);
+  const boardMembers = useMemo(
+    () => membersQuery.data ?? [],
+    [membersQuery.data]
+  );
 
-  const selectedAssignees = useMemo(() => {
-    return boardMembers.filter((member) =>
-      draftAssigneeIds.includes(member.user_id)
-    );
-  }, [boardMembers, draftAssigneeIds]);
+  const selectedLabels = boardLabels.filter((label) =>
+    draftLabelIds.includes(label.id)
+  );
+
+  const selectedAssignees = boardMembers.filter((member) =>
+    draftAssigneeIds.includes(member.user_id)
+  );
 
   function toggleDraftLabel(label: CardLabel) {
     if (!canEdit) return;
@@ -219,24 +231,26 @@ export default function CardDetailsModal({
     return updatedCard;
   }
 
-  async function handleSave(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
+  async function handleSaveChanges() {
     if (!canEdit) return;
 
     setLocalError("");
 
+    if (title.trim().length < 2) {
+      setLocalError("Card title must be at least 2 characters.");
+      return;
+    }
+
     try {
       await onUpdate({
         cardId: card.id,
-        title,
+        title: title.trim(),
         description,
         dueDate,
       });
 
       const labelsUpdatedCard = await syncLabels();
       const assigneesUpdatedCard = await syncAssignees();
-
       const latestCard = assigneesUpdatedCard || labelsUpdatedCard;
 
       if (latestCard) {
@@ -250,7 +264,7 @@ export default function CardDetailsModal({
   async function handleCreateLabel() {
     setLocalError("");
 
-    if (!labelName.trim()) return;
+    if (!labelName.trim() || !canEdit) return;
 
     try {
       await createLabelMutation.mutateAsync();
@@ -262,12 +276,18 @@ export default function CardDetailsModal({
   async function handleAddComment(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
+    if (!canComment) return;
+
     const content = comment.trim();
 
     if (!content) return;
 
-    await onCreateComment(card.id, content);
-    setComment("");
+    try {
+      await onCreateComment(card.id, content);
+      setComment("");
+    } catch (error) {
+      setLocalError(getErrorMessage(error, "Failed to add comment."));
+    }
   }
 
   const isSavingMeta =
@@ -277,12 +297,15 @@ export default function CardDetailsModal({
     removeAssigneeMutation.isPending;
 
   return (
-    <div className="modal-backdrop">
-      <section className="card-modal trello-modal">
-        <header className="card-modal-header">
+    <div className="modal-backdrop trello-modal-backdrop">
+      <section className="trello-card-modal">
+        <header className="trello-modal-header">
           <div>
-            <p className="eyebrow">{t.boards.cardDetails}</p>
+            <p className="trello-modal-eyebrow">Card details</p>
             <h2>{card.title}</h2>
+            <span className="viewer-role-note">
+              Current access: {roleLabel}
+            </span>
           </div>
 
           <button type="button" className="icon-button" onClick={onClose}>
@@ -295,206 +318,189 @@ export default function CardDetailsModal({
 
         {!canEdit && (
           <div className="alert warning">
-            You have viewer access. Editing is disabled.
+            Viewer mode: you can read card details, labels, members, and activity.
+            Editing is disabled.
           </div>
         )}
 
-        <form className="card-modal-form" onSubmit={handleSave}>
-          <Input
-            label={t.boards.title}
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-            disabled={!canEdit}
-            required
-          />
+        <div className="trello-modal-grid">
+          <section className="trello-main-column">
+            <section className="trello-section">
+              <Input
+                label="Title"
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
+                disabled={!canEdit}
+                required
+              />
 
-          <div className="field-group">
-            <label htmlFor="card-description">{t.boards.description}</label>
-            <textarea
-              id="card-description"
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
-              disabled={!canEdit}
-            />
-          </div>
-
-          <Input
-            label={t.boards.dueDate}
-            type="date"
-            value={dueDate}
-            onChange={(event) => setDueDate(event.target.value)}
-            disabled={!canEdit}
-          />
-
-          <section className="modal-section">
-            <h3>Labels</h3>
-
-            {selectedLabels.length > 0 && (
-              <div className="selected-labels-preview">
-                {selectedLabels.map((label) => (
-                  <span
-                    key={label.id}
-                    className="selected-label-chip"
-                    style={{ background: label.color }}
-                  >
-                    {label.name}
-                  </span>
-                ))}
+              <div className="field-group">
+                <label htmlFor="card-description">Description</label>
+                <textarea
+                  id="card-description"
+                  value={description}
+                  onChange={(event) => setDescription(event.target.value)}
+                  disabled={!canEdit}
+                  placeholder="Add a more detailed description..."
+                />
               </div>
-            )}
 
-            {labelsQuery.isLoading ? (
-              <p className="muted-text">Loading labels...</p>
-            ) : (
-              <div className="labels-picker">
-                {boardLabels.map((label) => (
-                  <button
+              <Input
+                label="Due date"
+                type="date"
+                value={dueDate}
+                onChange={(event) => setDueDate(event.target.value)}
+                disabled={!canEdit}
+              />
+
+              {canEdit && (
+                <div className="card-save-actions">
+                  <Button
                     type="button"
-                    key={label.id}
-                    className={`label-option ${
-                      draftLabelIds.includes(label.id) ? "selected" : ""
-                    }`}
-                    onClick={() => toggleDraftLabel(label)}
-                    disabled={!canEdit}
+                    variant="danger"
+                    isLoading={isDeleting}
+                    onClick={() => onDelete(card)}
                   >
-                    <span style={{ background: label.color }} />
-                    {label.name}
-                  </button>
-                ))}
-              </div>
-            )}
+                    Delete card
+                  </Button>
 
-            {canEdit && (
-              <div className="create-label-form">
-                <Input
-                  label="New label"
-                  value={labelName}
-                  onChange={(event) => setLabelName(event.target.value)}
-                  placeholder="Frontend"
-                />
+                  <Button
+                    type="button"
+                    isLoading={isUpdating || isSavingMeta}
+                    onClick={handleSaveChanges}
+                  >
+                    Save changes
+                  </Button>
+                </div>
+              )}
+            </section>
 
-                <input
-                  className="color-input"
-                  type="color"
-                  value={labelColor}
-                  onChange={(event) => setLabelColor(event.target.value)}
-                  aria-label="Label color"
-                />
+            <section className="trello-section trello-activity-section">
+              <h3>Activity</h3>
 
-                <Button
-                  type="button"
-                  isLoading={createLabelMutation.isPending}
-                  onClick={handleCreateLabel}
-                >
-                  Create label
-                </Button>
-              </div>
-            )}
+              {canComment ? (
+                <form className="trello-comment-form" onSubmit={handleAddComment}>
+                  <textarea
+                    value={comment}
+                    onChange={(event) => setComment(event.target.value)}
+                    placeholder="Write a comment..."
+                  />
+
+                  <Button type="submit" isLoading={isAddingComment}>
+                    Add comment
+                  </Button>
+                </form>
+              ) : (
+                <p className="viewer-note">
+                  Viewer access: commenting is disabled.
+                </p>
+              )}
+
+              <CommentList comments={comments} />
+            </section>
           </section>
 
-          <section className="modal-section">
-            <h3>Assignees</h3>
+          <aside className="trello-side-column">
+            <section className="trello-section">
+              <h3>Labels</h3>
 
-            {selectedAssignees.length === 0 ? (
-              <p className="muted-text">No assignees selected.</p>
-            ) : (
-              <div className="assignee-list">
-                {selectedAssignees.map((member) => (
-                  <span key={member.id} className="assignee-chip removable">
-                    {member.user?.name || member.user?.email || member.user_id}
+              {selectedLabels.length > 0 && (
+                <div className="selected-meta-list">
+                  {selectedLabels.map((label) => (
+                    <span
+                      key={label.id}
+                      className="label-chip"
+                      style={{
+                        backgroundColor: label.color,
+                        color: "white",
+                      }}
+                    >
+                      {label.name}
+                    </span>
+                  ))}
+                </div>
+              )}
 
-                    {canEdit && (
+              {canEdit && (
+                <>
+                  <div className="label-picker">
+                    {boardLabels.map((label) => (
                       <button
+                        key={label.id}
                         type="button"
-                        onClick={() => toggleDraftAssignee(member)}
+                        className={
+                          draftLabelIds.includes(label.id) ? "selected" : ""
+                        }
+                        onClick={() => toggleDraftLabel(label)}
                       >
-                        ×
+                        <span style={{ backgroundColor: label.color }} />
+                        {label.name}
                       </button>
-                    )}
-                  </span>
-                ))}
-              </div>
-            )}
+                    ))}
+                  </div>
 
-            {canEdit && (
-              <div className="assignee-picker">
-                {boardMembers.map((member) => (
-                  <button
-                    type="button"
-                    key={member.id}
-                    className={`assignee-option ${
-                      draftAssigneeIds.includes(member.user_id) ? "selected" : ""
-                    }`}
-                    onClick={() => toggleDraftAssignee(member)}
-                  >
-                    <span className="avatar mini">
-                      {(member.user?.name || member.user?.email || "U")
-                        .charAt(0)
-                        .toUpperCase()}
+                  <div className="create-label-row">
+                    <input
+                      value={labelName}
+                      onChange={(event) => setLabelName(event.target.value)}
+                      placeholder="New label"
+                    />
+
+                    <input
+                      type="color"
+                      value={labelColor}
+                      onChange={(event) => setLabelColor(event.target.value)}
+                    />
+
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      isLoading={createLabelMutation.isPending}
+                      onClick={handleCreateLabel}
+                    >
+                      Create
+                    </Button>
+                  </div>
+                </>
+              )}
+            </section>
+
+            <section className="trello-section">
+              <h3>Members</h3>
+
+              {selectedAssignees.length > 0 ? (
+                <div className="selected-meta-list">
+                  {selectedAssignees.map((member) => (
+                    <span key={member.id} className="assignee-chip">
+                      {member.user?.name || member.user?.email}
                     </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="muted-text">No assignees.</p>
+              )}
 
-                    <span>
-                      {member.user?.name || member.user_id}
-                      <small>{member.user?.email}</small>
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </section>
-
-          {canEdit && (
-            <div className="form-actions split-actions">
-              <Button
-                type="button"
-                variant="danger"
-                isLoading={isDeleting}
-                onClick={() => onDelete(card)}
-              >
-                Delete card
-              </Button>
-
-              <div className="right-actions">
-                <Button type="button" variant="secondary" onClick={onClose}>
-                  {t.boards.cancel}
-                </Button>
-
-                <Button type="submit" isLoading={isUpdating || isSavingMeta}>
-                  {t.boards.saveChanges}
-                </Button>
-              </div>
-            </div>
-          )}
-        </form>
-
-        <section className="comments-section">
-          <h3>{t.boards.comments}</h3>
-
-          <form className="comment-form" onSubmit={handleAddComment}>
-            <textarea
-              value={comment}
-              onChange={(event) => setComment(event.target.value)}
-              placeholder={t.boards.writeComment}
-            />
-
-            <Button type="submit" isLoading={isAddingComment}>
-              {t.boards.addComment}
-            </Button>
-          </form>
-
-          <div className="comments-list">
-            {comments.length === 0 ? (
-              <p className="muted-text">{t.boards.noComments}</p>
-            ) : (
-              comments.map((item) => (
-                <article className="comment-item" key={item.id}>
-                  <p>{item.content}</p>
-                  <small>{new Date(item.created_at).toLocaleString()}</small>
-                </article>
-              ))
-            )}
-          </div>
-        </section>
+              {canEdit && (
+                <div className="assignee-picker">
+                  {boardMembers.map((member) => (
+                    <button
+                      key={member.id}
+                      type="button"
+                      className={
+                        draftAssigneeIds.includes(member.user_id)
+                          ? "selected"
+                          : ""
+                      }
+                      onClick={() => toggleDraftAssignee(member)}
+                    >
+                      {member.user?.name || member.user?.email}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </section>
+          </aside>
+        </div>
       </section>
     </div>
   );

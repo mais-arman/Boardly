@@ -3,7 +3,6 @@ from flask_jwt_extended import get_jwt_identity
 from app.extensions import db
 from app.models.boards.board import Board
 from app.models.boards.board_member import BoardMember
-from app.models.boards.invitation import BoardInvitation
 from app.models.lists.board_list import BoardList
 from app.models.cards.card import Card
 from app.models.cards.comment import Comment
@@ -61,14 +60,6 @@ def _resolve_board_id_from_kwargs(kwargs):
 
         return member.board_id
 
-    if "token" in kwargs:
-        invitation = BoardInvitation.query.filter_by(token=kwargs["token"]).first()
-
-        if not invitation:
-            raise NotFoundError("Invitation not found")
-
-        return invitation.board_id
-
     raise BadRequestError("Cannot resolve board context for permission check")
 
 
@@ -84,7 +75,9 @@ def board_permission(permission):
                 board_id,
                 permission,
             ):
-                raise ForbiddenError("You do not have permission to perform this action")
+                raise ForbiddenError(
+                    "You do not have permission to perform this action"
+                )
 
             return fn(*args, **kwargs)
 
