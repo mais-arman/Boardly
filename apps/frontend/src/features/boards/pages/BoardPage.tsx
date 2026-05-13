@@ -10,13 +10,8 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import {
-  horizontalListSortingStrategy,
-  SortableContext,
-} from "@dnd-kit/sortable";
 
 import { ROUTES } from "../../../app/constants/routes";
-import Button from "../../../shared/components/Button";
 import ConfirmModal from "../../../shared/components/ConfirmModal";
 import Loader from "../../../shared/components/Loader";
 import { getApiErrorMessage } from "../../../shared/api/getApiErrorMessage";
@@ -24,7 +19,10 @@ import { getApiErrorMessage } from "../../../shared/api/getApiErrorMessage";
 import BoardMembersPanel from "../components/BoardMembersPanel";
 import CardDetailsModal from "../components/CardDetailsModal";
 import CardPreview from "../components/CardPreview";
-import SortableList from "../components/SortableList";
+
+import BoardPageHeader from "../components/board-page/BoardPageHeader";
+import EmptyBoardState from "../components/board-page/EmptyBoardState";
+import BoardLanes from "../components/board-page/BoardLanes";
 
 import {
   BOARD_QUERY_KEY,
@@ -448,96 +446,27 @@ export default function BoardPage() {
         background: boardData.board.background_color,
       }}
     >
-      <header className="trello-board-header">
-        <div>
-          <Link to={ROUTES.DASHBOARD} className="back-link">
-            ← Back to boards
-          </Link>
-
-          <h1>{boardData.board.title}</h1>
-
-          <div className="role-explainer">
-            <span className={`role-pill ${permissions.role}`}>
-              {permissions.role}
-            </span>
-
-            {permissions.isOwner && (
-              <small>
-                Owner: full control over the board, members, and deletion.
-              </small>
-            )}
-
-            {permissions.isAdmin && (
-              <small>
-                Admin: can edit the board and manage members.
-              </small>
-            )}
-
-            {permissions.isEditor && (
-              <small>
-                Editor: can manage lists, cards, labels, and comments.
-              </small>
-            )}
-
-            {permissions.isViewer && (
-              <small>
-                Viewer: read-only access. You can view cards but cannot edit.
-              </small>
-            )}
-          </div>
-        </div>
-
-        <div className="board-header-actions">
-          {permissions.canManageMembers && (
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => setIsMembersPanelOpen(true)}
-            >
-              Members & roles
-            </Button>
-          )}
-
-          {permissions.canDeleteBoard && (
-            <Button
-              type="button"
-              variant="danger"
-              onClick={() => setIsDeleteBoardOpen(true)}
-            >
-              Delete board
-            </Button>
-          )}
-        </div>
-      </header>
+      <BoardPageHeader
+        board={boardData.board}
+        role={permissions.role}
+        isOwner={permissions.isOwner}
+        isAdmin={permissions.isAdmin}
+        isEditor={permissions.isEditor}
+        isViewer={permissions.isViewer}
+        canManageMembers={permissions.canManageMembers}
+        canDeleteBoard={permissions.canDeleteBoard}
+        onOpenMembers={() => setIsMembersPanelOpen(true)}
+        onOpenDeleteBoard={() => setIsDeleteBoardOpen(true)}
+      />
 
       {pageError && <div className="alert error">{pageError}</div>}
 
       {boardData.lists.length === 0 && (
-        <section className="workflow-empty">
-          <h2>No lists yet</h2>
-
-          {permissions.canManageLists ? (
-            <>
-              <p>Create a Trello-like workflow to start managing cards.</p>
-
-              <Button
-                type="button"
-                onClick={handleCreateDefaultWorkflow}
-                isLoading={createListMutation.isPending}
-              >
-                Create default workflow
-              </Button>
-            </>
-          ) : (
-            <>
-              <p>You have viewer access. You can view board content only.</p>
-
-              <span className="permission-note">
-                Ask the owner or admin for Editor access.
-              </span>
-            </>
-          )}
-        </section>
+        <EmptyBoardState
+          canManageLists={permissions.canManageLists}
+          isCreating={createListMutation.isPending}
+          onCreateDefaultWorkflow={handleCreateDefaultWorkflow}
+        />
       )}
 
       <DndContext
@@ -548,63 +477,36 @@ export default function BoardPage() {
         onDragEnd={drag.handleDragEnd}
         onDragCancel={drag.handleDragCancel}
       >
-        <SortableContext
-          items={boardData.lists.map((list) => list.id)}
-          strategy={horizontalListSortingStrategy}
-        >
-          <section className="trello-lanes">
-            {boardData.lists.map((list) => (
-              <SortableList
-                key={list.id}
-                list={list}
-                cards={boardData.cardsByList[list.id] || []}
-                canEdit={permissions.canManageCards}
-                editingListId={editingListId}
-                editingListTitle={editingListTitle}
-                cardTitle={cardTitleByList[list.id] || ""}
-                isCreatingCard={createCardMutation.isPending}
-                onOpenCard={setSelectedCard}
-                onStartEditList={startEditingList}
-                onCancelEditList={() => {
-                  setEditingListId(null);
-                  setEditingListTitle("");
-                }}
-                onEditingListTitleChange={setEditingListTitle}
-                onUpdateList={handleUpdateList}
-                onDeleteList={setListToDelete}
-                onCardTitleChange={(listId, value) =>
-                  setCardTitleByList((current) => ({
-                    ...current,
-                    [listId]: value,
-                  }))
-                }
-                onCreateCard={handleCreateCard}
-              />
-            ))}
-
-            {permissions.canManageLists && (
-              <article className="trello-list add-list-panel">
-                <form onSubmit={handleCreateList}>
-                  <input
-                    value={newListTitle}
-                    onChange={(event) =>
-                      setNewListTitle(event.target.value)
-                    }
-                    placeholder="Add another list"
-                  />
-
-                  <Button
-                    type="submit"
-                    variant="secondary"
-                    isLoading={createListMutation.isPending}
-                  >
-                    Add list
-                  </Button>
-                </form>
-              </article>
-            )}
-          </section>
-        </SortableContext>
+        <BoardLanes
+          lists={boardData.lists}
+          cardsByList={boardData.cardsByList}
+          canManageCards={permissions.canManageCards}
+          canManageLists={permissions.canManageLists}
+          editingListId={editingListId}
+          editingListTitle={editingListTitle}
+          cardTitleByList={cardTitleByList}
+          newListTitle={newListTitle}
+          isCreatingCard={createCardMutation.isPending}
+          isCreatingList={createListMutation.isPending}
+          onOpenCard={setSelectedCard}
+          onStartEditList={startEditingList}
+          onCancelEditList={() => {
+            setEditingListId(null);
+            setEditingListTitle("");
+          }}
+          onEditingListTitleChange={setEditingListTitle}
+          onUpdateList={handleUpdateList}
+          onDeleteList={setListToDelete}
+          onCardTitleChange={(listId, value) =>
+            setCardTitleByList((current) => ({
+              ...current,
+              [listId]: value,
+            }))
+          }
+          onCreateCard={handleCreateCard}
+          onNewListTitleChange={setNewListTitle}
+          onCreateList={handleCreateList}
+        />
 
         <DragOverlay>
           {drag.activeCard ? (

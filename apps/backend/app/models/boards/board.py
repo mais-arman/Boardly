@@ -2,7 +2,6 @@ from uuid import uuid4
 from datetime import datetime, timezone
 from app.extensions import db
 
-
 class Board(db.Model):
     __tablename__ = "boards"
 
@@ -20,7 +19,7 @@ class Board(db.Model):
 
     owner_id = db.Column(
         db.UUID(as_uuid=True),
-        db.ForeignKey("users.id"),
+        db.ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
@@ -41,4 +40,37 @@ class Board(db.Model):
     owner = db.relationship(
         "User",
         backref=db.backref("owned_boards", lazy="selectin"),
+    )
+
+    members = db.relationship(
+        "BoardMember",
+        back_populates="board",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        lazy="selectin",
+    )
+
+    lists = db.relationship(
+        "BoardList",
+        back_populates="board",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        lazy="selectin",
+        order_by="BoardList.position",
+    )
+
+    invitations = db.relationship(
+        "BoardInvitation",
+        back_populates="board",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        lazy="selectin",
+    )
+
+    labels = db.relationship(
+        "Label",
+        back_populates="board",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        lazy="selectin",
     )

@@ -64,11 +64,7 @@ class BoardInvitation(db.Model):
 
     board = db.relationship(
         "Board",
-        backref=db.backref(
-            "invitations",
-            lazy="selectin",
-            cascade="all, delete-orphan",
-        ),
+        back_populates="invitations",
     )
 
     invited_by = db.relationship(

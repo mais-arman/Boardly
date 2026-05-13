@@ -10,13 +10,13 @@ class BoardMember(db.Model):
 
     board_id = db.Column(
         db.UUID(as_uuid=True),
-        db.ForeignKey("boards.id"),
+        db.ForeignKey("boards.id", ondelete="CASCADE"),
         nullable=False,
     )
 
     user_id = db.Column(
         db.UUID(as_uuid=True),
-        db.ForeignKey("users.id"),
+        db.ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
     )
 
@@ -34,7 +34,7 @@ class BoardMember(db.Model):
 
     board = db.relationship(
         "Board",
-        backref=db.backref("members", lazy="selectin"),
+        back_populates="members",
     )
 
     user = db.relationship(

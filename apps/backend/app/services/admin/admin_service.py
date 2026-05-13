@@ -1,25 +1,33 @@
+import logging
+
+from sqlalchemy.exc import SQLAlchemyError
+
 from app.extensions import db
 from app.models.auth.user import User
 from app.models.auth.user_role import UserRole
 from app.models.boards.board import Board
 from app.models.boards.board_member import BoardMember
 from app.models.boards.invitation import BoardInvitation
-from app.models.cards.comment import Comment
 from app.models.cards.card import Card
-from app.models.cards.label import Label
+from app.models.cards.comment import Comment
 from app.models.cards.card_assignee import card_assignees
-from app.models.cards.card_label import card_labels
 from app.models.lists.board_list import BoardList
 from app.services.realtime_service import RealtimeService
 from app.utils.exceptions import NotFoundError, BadRequestError
+
+logger = logging.getLogger(__name__)
 
 
 class AdminService:
     @staticmethod
     def _attach_board_counts(board):
-        board.members_count = BoardMember.query.filter_by(board_id=board.id).count()
+        board.members_count = BoardMember.query.filter_by(
+            board_id=board.id,
+        ).count()
 
-        board.lists_count = BoardList.query.filter_by(board_id=board.id).count()
+        board.lists_count = BoardList.query.filter_by(
+            board_id=board.id,
+        ).count()
 
         board.cards_count = (
             db.session.query(Card)
@@ -29,56 +37,6 @@ class AdminService:
         )
 
         return board
-
-    @staticmethod
-    def _delete_board_graph(board):
-        card_ids = (
-            db.session.query(Card.id)
-            .join(BoardList, BoardList.id == Card.list_id)
-            .filter(BoardList.board_id == board.id)
-            .all()
-        )
-
-        card_ids = [item[0] for item in card_ids]
-
-        if card_ids:
-            Comment.query.filter(Comment.card_id.in_(card_ids)).delete(
-                synchronize_session=False
-            )
-
-            db.session.execute(
-                card_assignees.delete().where(
-                    card_assignees.c.card_id.in_(card_ids)
-                )
-            )
-
-            db.session.execute(
-                card_labels.delete().where(
-                    card_labels.c.card_id.in_(card_ids)
-                )
-            )
-
-            Card.query.filter(Card.id.in_(card_ids)).delete(
-                synchronize_session=False
-            )
-
-        Label.query.filter_by(board_id=board.id).delete(
-            synchronize_session=False
-        )
-
-        BoardList.query.filter_by(board_id=board.id).delete(
-            synchronize_session=False
-        )
-
-        BoardInvitation.query.filter_by(board_id=board.id).delete(
-            synchronize_session=False
-        )
-
-        BoardMember.query.filter_by(board_id=board.id).delete(
-            synchronize_session=False
-        )
-
-        db.session.delete(board)
 
     @staticmethod
     def get_users():
@@ -113,7 +71,7 @@ class AdminService:
             owned_boards = Board.query.filter_by(owner_id=user.id).all()
 
             for board in owned_boards:
-                AdminService._delete_board_graph(board)
+                db.session.delete(board)
 
             BoardMember.query.filter_by(user_id=user.id).delete(
                 synchronize_session=False
@@ -136,14 +94,19 @@ class AdminService:
             db.session.delete(user)
             db.session.commit()
 
-        except Exception:
+        except SQLAlchemyError as error:
             db.session.rollback()
-            raise BadRequestError("Failed to delete user")
+            logger.exception("Failed to delete user from admin panel")
+            raise BadRequestError(f"Failed to delete user: {str(error)}")
 
     @staticmethod
     def get_boards():
         boards = Board.query.order_by(Board.created_at.desc()).all()
-        return [AdminService._attach_board_counts(board) for board in boards]
+
+        return [
+            AdminService._attach_board_counts(board)
+            for board in boards
+        ]
 
     @staticmethod
     def delete_board(board_id):
@@ -153,11 +116,15 @@ class AdminService:
             raise NotFoundError("Board not found")
 
         try:
-            AdminService._delete_board_graph(board)
+            db.session.delete(board)
             db.session.commit()
 
-            RealtimeService.emit_board_event(board_id, "admin.board.deleted")
+            RealtimeService.emit_board_event(
+                board_id,
+                "admin.board.deleted",
+            )
 
-        except Exception:
+        except SQLAlchemyError as error:
             db.session.rollback()
-            raise BadRequestError("Failed to delete board")
+            logger.exception("Failed to delete board from admin panel")
+            raise BadRequestError(f"Failed to delete board: {str(error)}")

@@ -28,11 +28,7 @@ class Label(db.Model):
 
     board = db.relationship(
         "Board",
-        backref=db.backref(
-            "labels",
-            lazy="selectin",
-            cascade="all, delete-orphan",
-        ),
+        back_populates="labels",
     )
 
     cards = db.relationship(

@@ -1,6 +1,5 @@
 from marshmallow import Schema, fields, validate
 
-
 class CommentCreateSchema(Schema):
     content = fields.String(
         required=True,

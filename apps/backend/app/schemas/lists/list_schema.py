@@ -1,6 +1,5 @@
 from marshmallow import Schema, fields, validate
 
-
 class ListCreateSchema(Schema):
     title = fields.String(
         required=True,

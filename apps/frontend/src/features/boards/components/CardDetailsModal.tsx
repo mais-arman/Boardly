@@ -2,8 +2,6 @@ import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { AxiosError } from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import Button from "../../../shared/components/Button";
-import Input from "../../../shared/components/Input";
 import type { BoardMember, Card, CardLabel, Comment } from "../types";
 import {
   addAssigneeToCardRequest,
@@ -14,7 +12,11 @@ import {
   removeLabelFromCardRequest,
 } from "../api/cardMetaApi";
 import { getBoardMembersRequest } from "../api/boardMembersApi";
-import CommentList from "./CommentList";
+import CardDetailsHeader from "./card-details/CardDetailsHeader";
+import CardDetailsForm from "./card-details/CardDetailsForm";
+import CardLabelsPanel from "./card-details/CardLabelsPanel";
+import CardMembersPanel from "./card-details/CardMembersPanel";
+import CardActivity from "./card-details/CardActivity";
 
 type ErrorResponse = {
   message?: string;
@@ -79,8 +81,8 @@ export default function CardDetailsModal({
   const [dueDate, setDueDate] = useState(
     card.due_date ? card.due_date.slice(0, 10) : ""
   );
-  const [comment, setComment] = useState("");
 
+  const [comment, setComment] = useState("");
   const [labelName, setLabelName] = useState("");
   const [labelColor, setLabelColor] = useState("#22c55e");
 
@@ -208,7 +210,9 @@ export default function CardDetailsModal({
   }
 
   async function syncAssignees() {
-    const originalAssigneeIds = card.assignees.map((assignee) => assignee.id);
+    const originalAssigneeIds = card.assignees.map(
+      (assignee) => assignee.id
+    );
 
     const assigneesToAdd = draftAssigneeIds.filter(
       (userId) => !originalAssigneeIds.includes(userId)
@@ -299,206 +303,71 @@ export default function CardDetailsModal({
   return (
     <div className="modal-backdrop trello-modal-backdrop">
       <section className="trello-card-modal">
-        <header className="trello-modal-header">
-          <div>
-            <p className="trello-modal-eyebrow">Card details</p>
-            <h2>{card.title}</h2>
-            <span className="viewer-role-note">
-              Current access: {roleLabel}
-            </span>
-          </div>
-
-          <button type="button" className="icon-button" onClick={onClose}>
-            ×
-          </button>
-        </header>
+        <CardDetailsHeader
+          title={card.title}
+          roleLabel={roleLabel}
+          onClose={onClose}
+        />
 
         {error && <div className="alert error">{error}</div>}
         {localError && <div className="alert error">{localError}</div>}
 
         {!canEdit && (
           <div className="alert warning">
-            Viewer mode: you can read card details, labels, members, and activity.
-            Editing is disabled.
+            Viewer mode: you can read card details, labels, members, and
+            activity. Editing is disabled.
           </div>
         )}
 
         <div className="trello-modal-grid">
           <section className="trello-main-column">
-            <section className="trello-section">
-              <Input
-                label="Title"
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                disabled={!canEdit}
-                required
-              />
+            <CardDetailsForm
+              card={card}
+              title={title}
+              description={description}
+              dueDate={dueDate}
+              canEdit={canEdit}
+              isDeleting={isDeleting}
+              isSaving={isUpdating || isSavingMeta}
+              onTitleChange={setTitle}
+              onDescriptionChange={setDescription}
+              onDueDateChange={setDueDate}
+              onSave={handleSaveChanges}
+              onDelete={onDelete}
+            />
 
-              <div className="field-group">
-                <label htmlFor="card-description">Description</label>
-                <textarea
-                  id="card-description"
-                  value={description}
-                  onChange={(event) => setDescription(event.target.value)}
-                  disabled={!canEdit}
-                  placeholder="Add a more detailed description..."
-                />
-              </div>
-
-              <Input
-                label="Due date"
-                type="date"
-                value={dueDate}
-                onChange={(event) => setDueDate(event.target.value)}
-                disabled={!canEdit}
-              />
-
-              {canEdit && (
-                <div className="card-save-actions">
-                  <Button
-                    type="button"
-                    variant="danger"
-                    isLoading={isDeleting}
-                    onClick={() => onDelete(card)}
-                  >
-                    Delete card
-                  </Button>
-
-                  <Button
-                    type="button"
-                    isLoading={isUpdating || isSavingMeta}
-                    onClick={handleSaveChanges}
-                  >
-                    Save changes
-                  </Button>
-                </div>
-              )}
-            </section>
-
-            <section className="trello-section trello-activity-section">
-              <h3>Activity</h3>
-
-              {canComment ? (
-                <form className="trello-comment-form" onSubmit={handleAddComment}>
-                  <textarea
-                    value={comment}
-                    onChange={(event) => setComment(event.target.value)}
-                    placeholder="Write a comment..."
-                  />
-
-                  <Button type="submit" isLoading={isAddingComment}>
-                    Add comment
-                  </Button>
-                </form>
-              ) : (
-                <p className="viewer-note">
-                  Viewer access: commenting is disabled.
-                </p>
-              )}
-
-              <CommentList comments={comments} />
-            </section>
+            <CardActivity
+              comments={comments}
+              comment={comment}
+              canComment={canComment}
+              isAddingComment={isAddingComment}
+              onCommentChange={setComment}
+              onSubmitComment={handleAddComment}
+            />
           </section>
 
           <aside className="trello-side-column">
-            <section className="trello-section">
-              <h3>Labels</h3>
+            <CardLabelsPanel
+              labels={boardLabels}
+              selectedLabelIds={draftLabelIds}
+              selectedLabels={selectedLabels}
+              labelName={labelName}
+              labelColor={labelColor}
+              canEdit={canEdit}
+              isCreatingLabel={createLabelMutation.isPending}
+              onToggleLabel={toggleDraftLabel}
+              onLabelNameChange={setLabelName}
+              onLabelColorChange={setLabelColor}
+              onCreateLabel={handleCreateLabel}
+            />
 
-              {selectedLabels.length > 0 && (
-                <div className="selected-meta-list">
-                  {selectedLabels.map((label) => (
-                    <span
-                      key={label.id}
-                      className="label-chip"
-                      style={{
-                        backgroundColor: label.color,
-                        color: "white",
-                      }}
-                    >
-                      {label.name}
-                    </span>
-                  ))}
-                </div>
-              )}
-
-              {canEdit && (
-                <>
-                  <div className="label-picker">
-                    {boardLabels.map((label) => (
-                      <button
-                        key={label.id}
-                        type="button"
-                        className={
-                          draftLabelIds.includes(label.id) ? "selected" : ""
-                        }
-                        onClick={() => toggleDraftLabel(label)}
-                      >
-                        <span style={{ backgroundColor: label.color }} />
-                        {label.name}
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="create-label-row">
-                    <input
-                      value={labelName}
-                      onChange={(event) => setLabelName(event.target.value)}
-                      placeholder="New label"
-                    />
-
-                    <input
-                      type="color"
-                      value={labelColor}
-                      onChange={(event) => setLabelColor(event.target.value)}
-                    />
-
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      isLoading={createLabelMutation.isPending}
-                      onClick={handleCreateLabel}
-                    >
-                      Create
-                    </Button>
-                  </div>
-                </>
-              )}
-            </section>
-
-            <section className="trello-section">
-              <h3>Members</h3>
-
-              {selectedAssignees.length > 0 ? (
-                <div className="selected-meta-list">
-                  {selectedAssignees.map((member) => (
-                    <span key={member.id} className="assignee-chip">
-                      {member.user?.name || member.user?.email}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <p className="muted-text">No assignees.</p>
-              )}
-
-              {canEdit && (
-                <div className="assignee-picker">
-                  {boardMembers.map((member) => (
-                    <button
-                      key={member.id}
-                      type="button"
-                      className={
-                        draftAssigneeIds.includes(member.user_id)
-                          ? "selected"
-                          : ""
-                      }
-                      onClick={() => toggleDraftAssignee(member)}
-                    >
-                      {member.user?.name || member.user?.email}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </section>
+            <CardMembersPanel
+              members={boardMembers}
+              selectedAssigneeIds={draftAssigneeIds}
+              selectedAssignees={selectedAssignees}
+              canEdit={canEdit}
+              onToggleAssignee={toggleDraftAssignee}
+            />
           </aside>
         </div>
       </section>

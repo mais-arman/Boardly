@@ -2,7 +2,6 @@ from uuid import uuid4
 from datetime import datetime, timezone
 from app.extensions import db
 
-
 class BoardList(db.Model):
     __tablename__ = "board_lists"
 
@@ -34,11 +33,7 @@ class BoardList(db.Model):
 
     board = db.relationship(
         "Board",
-        backref=db.backref(
-            "lists",
-            lazy="selectin",
-            cascade="all, delete-orphan",
-        ),
+        back_populates="lists",
     )
 
     __table_args__ = (

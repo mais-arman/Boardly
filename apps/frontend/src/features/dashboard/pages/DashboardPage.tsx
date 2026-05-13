@@ -1,16 +1,14 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getBoardPath, ROUTES } from "../../../app/constants/routes";
+import { ROUTES } from "../../../app/constants/routes";
 import Button from "../../../shared/components/Button";
 import ConfirmModal from "../../../shared/components/ConfirmModal";
-import Input from "../../../shared/components/Input";
 import Loader from "../../../shared/components/Loader";
 import { getApiErrorMessage } from "../../../shared/api/getApiErrorMessage";
 import { resendVerificationEmailRequest } from "../../auth/api/authApi";
 import { useAuth } from "../../auth/hooks/useAuth";
-import { isSuperAdmin } from "../../auth/utils/roles";
 import MyInvitationsPanel from "../components/MyInvitationsPanel";
 import { useDashboardRealtime } from "../hooks/useDashboardRealtime";
 import {
@@ -19,7 +17,11 @@ import {
   getBoardsRequest,
   updateBoardRequest,
 } from "../../boards/api/boardsApi";
-import type { Board, BoardRole } from "../../boards/types";
+import type { Board } from "../../boards/types";
+import DashboardSidebar from "../components/DashboardSidebar";
+import VerificationBanner from "../components/VerificationBanner";
+import BoardFormPanel from "../components/BoardFormPanel";
+import BoardsSection from "../components/BoardsSection";
 
 const BOARDS_QUERY_KEY = ["boards"];
 
@@ -32,11 +34,6 @@ const BOARD_COLORS = [
   "#b45309",
   "#334155",
 ];
-
-function getRoleLabel(role: BoardRole | null) {
-  if (!role) return "";
-  return role.charAt(0).toUpperCase() + role.slice(1);
-}
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -71,7 +68,10 @@ export default function DashboardPage() {
     onSuccess: () => {
       resetBoardForm();
       setIsCreateOpen(false);
-      queryClient.invalidateQueries({ queryKey: BOARDS_QUERY_KEY });
+
+      queryClient.invalidateQueries({
+        queryKey: BOARDS_QUERY_KEY,
+      });
     },
   });
 
@@ -95,7 +95,10 @@ export default function DashboardPage() {
     onSuccess: () => {
       resetBoardForm();
       setEditingBoard(null);
-      queryClient.invalidateQueries({ queryKey: BOARDS_QUERY_KEY });
+
+      queryClient.invalidateQueries({
+        queryKey: BOARDS_QUERY_KEY,
+      });
     },
   });
 
@@ -103,7 +106,10 @@ export default function DashboardPage() {
     mutationFn: (boardId: string) => deleteBoardRequest(boardId),
     onSuccess: () => {
       setDeletingBoard(null);
-      queryClient.invalidateQueries({ queryKey: BOARDS_QUERY_KEY });
+
+      queryClient.invalidateQueries({
+        queryKey: BOARDS_QUERY_KEY,
+      });
     },
   });
 
@@ -143,6 +149,12 @@ export default function DashboardPage() {
     setFormError("");
   }
 
+  function closeBoardForm() {
+    resetBoardForm();
+    setIsCreateOpen(false);
+    setEditingBoard(null);
+  }
+
   async function handleBoardSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setFormError("");
@@ -162,13 +174,15 @@ export default function DashboardPage() {
           description: boardDescription,
           backgroundColor: boardColor,
         });
-      } else {
-        await createBoardMutation.mutateAsync({
-          title,
-          description: boardDescription || null,
-          background_color: boardColor,
-        });
+
+        return;
       }
+
+      await createBoardMutation.mutateAsync({
+        title,
+        description: boardDescription || null,
+        background_color: boardColor,
+      });
     } catch (error) {
       setFormError(getApiErrorMessage(error, "Failed to save board."));
     }
@@ -187,76 +201,36 @@ export default function DashboardPage() {
 
   async function handleLogout() {
     await logout();
-    navigate(ROUTES.LOGIN, { replace: true });
+
+    navigate(ROUTES.LOGIN, {
+      replace: true,
+    });
   }
 
-  if (isLoading) return <Loader />;
+  if (isLoading) {
+    return <Loader />;
+  }
 
   const isBoardFormOpen = isCreateOpen || Boolean(editingBoard);
+  const isSavingBoard =
+    createBoardMutation.isPending || updateBoardMutation.isPending;
 
   return (
     <main className="dashboard-shell">
-      <aside className="sidebar">
-        <div className="brand">
-          <span className="brand-mark">B</span>
-          <div>
-            <span>Boardly</span>
-            <small>Kanban Workspace</small>
-          </div>
-        </div>
-
-        <Link to={ROUTES.PROFILE} className="sidebar-user clickable">
-          <span className="avatar">{user?.name?.charAt(0).toUpperCase()}</span>
-          <div>
-            <strong>{user?.name}</strong>
-            <span>{user?.email}</span>
-          </div>
-        </Link>
-
-        <div className="sidebar-actions">
-          {isSuperAdmin(user) && (
-            <Button
-              type="button"
-              variant="secondary"
-              fullWidth
-              onClick={() => navigate(ROUTES.ADMIN)}
-            >
-              Admin panel
-            </Button>
-          )}
-
-          <Button
-            type="button"
-            variant="danger"
-            fullWidth
-            isLoading={isLoggingOut}
-            onClick={handleLogout}
-          >
-            Logout
-          </Button>
-        </div>
-      </aside>
+      <DashboardSidebar
+        user={user}
+        isLoggingOut={isLoggingOut}
+        onLogout={handleLogout}
+      />
 
       <section className="dashboard-content">
         {!user?.is_email_verified && (
-          <div className="alert warning verification-banner">
-            <div>
-              <strong>Email verification required</strong>
-              <p>We sent a verification email. Please verify your account.</p>
-
-              {bannerMessage && <p>{bannerMessage}</p>}
-              {bannerError && <p>{bannerError}</p>}
-            </div>
-
-            <Button
-              type="button"
-              variant="secondary"
-              isLoading={resendVerificationMutation.isPending}
-              onClick={() => resendVerificationMutation.mutate()}
-            >
-              Resend email
-            </Button>
-          </div>
+          <VerificationBanner
+            bannerMessage={bannerMessage}
+            bannerError={bannerError}
+            isLoading={resendVerificationMutation.isPending}
+            onResend={() => resendVerificationMutation.mutate()}
+          />
         )}
 
         <header className="dashboard-header">
@@ -279,157 +253,28 @@ export default function DashboardPage() {
         <MyInvitationsPanel onError={setFormError} />
 
         {isBoardFormOpen && (
-          <section className="section-block create-board-panel">
-            <div className="section-header">
-              <div>
-                <h2>{editingBoard ? "Edit board" : "Create board"}</h2>
-                <p>Choose title, description, and board background.</p>
-              </div>
-            </div>
-
-            <form className="auth-form" onSubmit={handleBoardSubmit}>
-              <Input
-                label="Board title"
-                value={boardTitle}
-                onChange={(event) => setBoardTitle(event.target.value)}
-                required
-              />
-
-              <div className="field-group">
-                <label htmlFor="board-description">Description</label>
-                <textarea
-                  id="board-description"
-                  value={boardDescription}
-                  onChange={(event) => setBoardDescription(event.target.value)}
-                  placeholder="Optional board description"
-                />
-              </div>
-
-              <div className="field-group">
-                <label>Background color</label>
-
-                <div className="color-picker-grid">
-                  {BOARD_COLORS.map((color) => (
-                    <button
-                      key={color}
-                      type="button"
-                      className={`color-option ${
-                        boardColor === color ? "selected" : ""
-                      }`}
-                      style={{ background: color }}
-                      onClick={() => setBoardColor(color)}
-                      aria-label={`Choose ${color}`}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              <div className="form-actions">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => {
-                    resetBoardForm();
-                    setIsCreateOpen(false);
-                    setEditingBoard(null);
-                  }}
-                >
-                  Cancel
-                </Button>
-
-                <Button
-                  type="submit"
-                  isLoading={
-                    createBoardMutation.isPending ||
-                    updateBoardMutation.isPending
-                  }
-                >
-                  {editingBoard ? "Save changes" : "Create board"}
-                </Button>
-              </div>
-            </form>
-          </section>
+          <BoardFormPanel
+            editingBoard={editingBoard}
+            boardTitle={boardTitle}
+            boardDescription={boardDescription}
+            boardColor={boardColor}
+            boardColors={BOARD_COLORS}
+            isSaving={isSavingBoard}
+            onTitleChange={setBoardTitle}
+            onDescriptionChange={setBoardDescription}
+            onColorChange={setBoardColor}
+            onSubmit={handleBoardSubmit}
+            onCancel={closeBoardForm}
+          />
         )}
 
-        <section className="section-block">
-          <div className="section-header">
-            <div>
-              <h2>Your boards</h2>
-              <p>Boards you own or collaborate on.</p>
-            </div>
-          </div>
-
-          {boards.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon">📋</div>
-              <h3>No boards yet</h3>
-              <p>Create your first Kanban board and start organizing work.</p>
-
-              <Button type="button" onClick={openCreateBoard}>
-                Create board
-              </Button>
-            </div>
-          ) : (
-            <div className="boards-grid">
-              {boards.map((board) => (
-                <article className="board-card" key={board.id}>
-                  <Link to={getBoardPath(board.id)} className="board-card-link">
-                    <div
-                      className="board-cover"
-                      style={{
-                        background: board.background_color || BOARD_COLORS[0],
-                      }}
-                    />
-
-                    <div className="board-card-body">
-                      <div className="board-card-top">
-                        <h3>{board.title}</h3>
-
-                        {board.role && (
-                          <span className={`role-pill ${board.role}`}>
-                            {getRoleLabel(board.role)}
-                          </span>
-                        )}
-                      </div>
-
-                      <p>{board.description || "No description provided."}</p>
-
-                      <div className="board-meta">
-                        <span>{board.members_count} members</span>
-                        <span>{board.lists_count} lists</span>
-                        <span>{board.cards_count} cards</span>
-                      </div>
-
-                      <div className="board-date">
-                        Created: {new Date(board.created_at).toLocaleDateString()}
-                      </div>
-                    </div>
-                  </Link>
-
-                  {board.role === "owner" && (
-                    <div className="board-actions">
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        onClick={() => openEditBoard(board)}
-                      >
-                        Edit
-                      </Button>
-
-                      <Button
-                        type="button"
-                        variant="danger"
-                        onClick={() => setDeletingBoard(board)}
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  )}
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
+        <BoardsSection
+          boards={boards}
+          fallbackColor={BOARD_COLORS[0]}
+          onCreateBoard={openCreateBoard}
+          onEditBoard={openEditBoard}
+          onDeleteBoard={setDeletingBoard}
+        />
       </section>
 
       {deletingBoard && (
