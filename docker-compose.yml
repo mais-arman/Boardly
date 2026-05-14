@@ -1,5 +1,4 @@
 services:
-
   db:
     image: postgres:16
     container_name: boardly_postgres
@@ -7,16 +6,14 @@ services:
       POSTGRES_DB: boardly
       POSTGRES_USER: boardly_user
       POSTGRES_PASSWORD: boardly_password000
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
 
   redis:
     image: redis:7
     container_name: boardly_redis
-    ports:
-      - "6380:6379"
+    restart: unless-stopped
 
   backend:
     build:
@@ -31,20 +28,19 @@ services:
     depends_on:
       - db
       - redis
+    restart: unless-stopped
 
   frontend:
     build:
       context: ./apps/frontend
     container_name: boardly_frontend
     ports:
-      - "5173:5173"
-    volumes:
-      - ./apps/frontend:/app
-      - /app/node_modules
+      - "80:80"
     env_file:
       - ./apps/frontend/.env
     depends_on:
       - backend
+    restart: unless-stopped
 
 volumes:
   postgres_data:
