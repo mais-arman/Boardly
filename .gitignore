@@ -1,12 +1,19 @@
+# Python
 __pycache__/
 *.pyc
 
+# Virtual Environment
 venv/
-apps/frontend/.env.production
-apps/frontend/.env.development
-apps/backend/.env.production
-apps/backend/.env.development
+.venv/
 
+# Environment Variables
+/.env
+apps/frontend/.env
+apps/backend/.env
+
+# Node.js
 node_modules/
-dist/
 
+# Build files
+dist/
+build/
