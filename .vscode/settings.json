@@ -5,6 +5,7 @@
         "blocklist",
         "Boardly",
         "colorama",
+        "Dockerized",
         "eirn",
         "eventlet",
         "itsdangerous",
