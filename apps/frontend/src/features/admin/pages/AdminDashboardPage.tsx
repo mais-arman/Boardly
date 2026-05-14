@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ROUTES } from "../../../app/constants/routes";
+import { ROUTES, getBoardPath } from "../../../app/constants/routes";
 import Button from "../../../shared/components/Button";
 import ConfirmModal from "../../../shared/components/ConfirmModal";
 import Loader from "../../../shared/components/Loader";
@@ -45,6 +45,7 @@ export default function AdminDashboardPage() {
       userId: string;
       role: AdminUserRole;
     }) => updateAdminUserRoleRequest(userId, { role }),
+
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ADMIN_USERS_QUERY_KEY });
     },
@@ -52,6 +53,7 @@ export default function AdminDashboardPage() {
 
   const deleteUserMutation = useMutation({
     mutationFn: (userId: string) => deleteAdminUserRequest(userId),
+
     onSuccess: () => {
       setUserToDelete(null);
       queryClient.invalidateQueries({ queryKey: ADMIN_USERS_QUERY_KEY });
@@ -61,6 +63,7 @@ export default function AdminDashboardPage() {
 
   const deleteBoardMutation = useMutation({
     mutationFn: (boardId: string) => deleteAdminBoardRequest(boardId),
+
     onSuccess: () => {
       setBoardToDelete(null);
       queryClient.invalidateQueries({ queryKey: ADMIN_BOARDS_QUERY_KEY });
@@ -144,7 +147,9 @@ export default function AdminDashboardPage() {
           </article>
 
           <article>
-            <strong>{users.filter((item) => item.role === "super_admin").length}</strong>
+            <strong>
+              {users.filter((item) => item.role === "super_admin").length}
+            </strong>
             <span>Super admins</span>
           </article>
         </section>
@@ -176,6 +181,7 @@ export default function AdminDashboardPage() {
                     <td>{item.name}</td>
                     <td>{item.email}</td>
                     <td>{item.is_email_verified ? "Yes" : "No"}</td>
+
                     <td>
                       <select
                         value={item.role}
@@ -191,7 +197,9 @@ export default function AdminDashboardPage() {
                         <option value="super_admin">super_admin</option>
                       </select>
                     </td>
+
                     <td>{new Date(item.created_at).toLocaleDateString()}</td>
+
                     <td>
                       <Button
                         type="button"
@@ -213,7 +221,7 @@ export default function AdminDashboardPage() {
           <div className="section-header">
             <div>
               <h2>Boards</h2>
-              <p>View and moderate all boards.</p>
+              <p>View, open, and moderate all boards.</p>
             </div>
           </div>
 
@@ -241,22 +249,34 @@ export default function AdminDashboardPage() {
                       />
                       {board.title}
                     </td>
+
                     <td>
                       {board.owner_name || "Unknown"}
                       <small>{board.owner_email}</small>
                     </td>
+
                     <td>{board.members_count}</td>
                     <td>{board.lists_count}</td>
                     <td>{board.cards_count}</td>
                     <td>{new Date(board.created_at).toLocaleDateString()}</td>
+
                     <td>
-                      <Button
-                        type="button"
-                        variant="danger"
-                        onClick={() => setBoardToDelete(board)}
-                      >
-                        Delete
-                      </Button>
+                      <div className="admin-actions">
+                        <Link
+                          to={getBoardPath(board.id)}
+                          className="button button-secondary"
+                        >
+                          Open
+                        </Link>
+
+                        <Button
+                          type="button"
+                          variant="danger"
+                          onClick={() => setBoardToDelete(board)}
+                        >
+                          Delete
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}
