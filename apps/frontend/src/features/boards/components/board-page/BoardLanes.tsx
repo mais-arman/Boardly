@@ -5,7 +5,7 @@ import {
 } from "@dnd-kit/sortable";
 import type { BoardList, Card } from "../../types";
 import SortableList from "../SortableList";
-import AddListPanel from "./AddListPanel";
+import CreateListPanel from "../CreateListPanel";
 
 type BoardLanesProps = {
   lists: BoardList[];
@@ -85,7 +85,7 @@ export default function BoardLanes({
         ))}
 
         {canManageLists && (
-          <AddListPanel
+          <CreateListPanel
             title={newListTitle}
             isCreating={isCreatingList}
             onTitleChange={onNewListTitleChange}
