@@ -1,0 +1,174 @@
+import type { FormEvent } from "react";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import type { BoardList, Card } from "../types";
+import Button from "../../../shared/components/Button";
+import SortableCard from "./SortableCard";
+
+type SortableListProps = {
+  list: BoardList;
+  cards: Card[];
+  canEdit: boolean;
+
+  editingListId: string | null;
+  editingListTitle: string;
+  cardTitle: string;
+  isCreatingCard: boolean;
+
+  onOpenCard: (card: Card) => void;
+  onStartEditList: (list: BoardList) => void;
+  onCancelEditList: () => void;
+  onEditingListTitleChange: (title: string) => void;
+  onUpdateList: (event: FormEvent<HTMLFormElement>) => void;
+  onDeleteList: (list: BoardList) => void;
+
+  onCardTitleChange: (listId: string, title: string) => void;
+  onCreateCard: (
+    event: FormEvent<HTMLFormElement>,
+    listId: string
+  ) => void;
+};
+
+export default function SortableList({
+  list,
+  cards,
+  canEdit,
+  editingListId,
+  editingListTitle,
+  cardTitle,
+  isCreatingCard,
+  onOpenCard,
+  onStartEditList,
+  onCancelEditList,
+  onEditingListTitleChange,
+  onUpdateList,
+  onDeleteList,
+  onCardTitleChange,
+  onCreateCard,
+}: SortableListProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: list.id,
+    disabled: !canEdit || editingListId === list.id,
+    data: {
+      type: "list",
+      list,
+    },
+  });
+
+  return (
+    <article
+      ref={setNodeRef}
+      className={`trello-list ${isDragging ? "dragging" : ""}`}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+      }}
+    >
+      <header
+        className="trello-list-header"
+        {...attributes}
+        {...listeners}
+      >
+        {editingListId === list.id ? (
+          <form className="list-title-edit-form" onSubmit={onUpdateList}>
+            <input
+              value={editingListTitle}
+              onChange={(event) =>
+                onEditingListTitleChange(event.target.value)
+              }
+              autoFocus
+            />
+
+            <div className="list-edit-actions">
+              <button type="submit">Save</button>
+
+              <button type="button" onClick={onCancelEditList}>
+                Cancel
+              </button>
+            </div>
+          </form>
+        ) : (
+          <>
+            <h2>{list.title}</h2>
+
+            <div className="list-header-actions">
+              <span>{cards.length}</span>
+
+              {canEdit && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => onStartEditList(list)}
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => onDeleteList(list)}
+                  >
+                    Delete
+                  </button>
+                </>
+              )}
+            </div>
+          </>
+        )}
+      </header>
+
+      <SortableContext
+        items={cards.map((card) => card.id)}
+        strategy={verticalListSortingStrategy}
+      >
+        <div className="trello-cards" data-list-id={list.id}>
+          {cards.map((card) => (
+            <SortableCard
+              key={card.id}
+              card={card}
+              disabled={!canEdit}
+              onOpen={onOpenCard}
+            />
+          ))}
+        </div>
+      </SortableContext>
+
+      {canEdit ? (
+        <form
+          className="add-card-form"
+          onSubmit={(event) => onCreateCard(event, list.id)}
+        >
+          <input
+            value={cardTitle}
+            onChange={(event) =>
+              onCardTitleChange(list.id, event.target.value)
+            }
+            placeholder="Add a card"
+          />
+
+          <Button
+            type="submit"
+            variant="secondary"
+            isLoading={isCreatingCard}
+          >
+            Add card
+          </Button>
+        </form>
+      ) : (
+        <p className="viewer-note">
+          Viewer mode: you can open cards but cannot edit or move them.
+        </p>
+      )}
+    </article>
+  );
+}

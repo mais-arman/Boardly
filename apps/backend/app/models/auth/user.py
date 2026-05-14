@@ -1,0 +1,57 @@
+from uuid import uuid4
+from datetime import datetime, timezone
+from app.extensions import db
+from app.models.auth.user_role import UserRole
+
+class User(db.Model):
+    __tablename__ = "users"
+
+    id = db.Column(db.UUID(as_uuid=True), primary_key=True, default=uuid4)
+
+    name = db.Column(db.String(120), nullable=False)
+
+    email = db.Column(
+        db.String(255),
+        unique=True,
+        nullable=False,
+        index=True,
+    )
+
+    password_hash = db.Column(db.String(255), nullable=False)
+
+    role = db.Column(
+        db.Enum(UserRole, values_callable=lambda enum: [e.value for e in enum]),
+        nullable=False,
+        default=UserRole.USER,
+    )
+
+    is_email_verified = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=False,
+    )
+
+    email_verification_token_hash = db.Column(
+        db.String(64),
+        unique=True,
+        nullable=True,
+        index=True,
+    )
+
+    email_verification_expires_at = db.Column(
+        db.DateTime(timezone=True),
+        nullable=True,
+    )
+
+    created_at = db.Column(
+        db.DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
+
+    updated_at = db.Column(
+        db.DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
