@@ -17,6 +17,7 @@ socketio = SocketIO(
     cors_allowed_origins=[
         "http://localhost:5173",
         "http://127.0.0.1:5173",
+        "http://18.207.113.226:5173",
     ],
     async_mode="eventlet",
 )
