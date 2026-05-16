@@ -4,16 +4,19 @@ import type { ApiResponse } from "../../../shared/api/types";
 import type {
   Board,
   BoardList,
+  CreateListPayload,
+  ReorderListsPayload,
+  UpdateListPayload,
+} from "../types";
+
+import type {
   Card,
   Comment,
   CreateCardPayload,
   CreateCommentPayload,
-  CreateListPayload,
   MoveCardPayload,
-  ReorderListsPayload,
   UpdateCardPayload,
-  UpdateListPayload,
-} from "../types";
+} from "../../cards/types";
 
 export async function getBoardRequest(boardId: string): Promise<Board> {
   const response = await apiClient.get<ApiResponse<Board>>(

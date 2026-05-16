@@ -6,9 +6,10 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { BoardList, Card } from "../types";
-import Button from "../../../shared/components/Button";
-import SortableCard from "./SortableCard";
+import type { BoardList } from "../../types";
+import type { Card } from "../../../cards/types";
+import Button from "../../../../shared/components/Button";
+import SortableCard from "../../../cards/components/SortableCard";
 
 type SortableListProps = {
   list: BoardList;

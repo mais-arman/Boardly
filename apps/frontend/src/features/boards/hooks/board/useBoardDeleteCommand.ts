@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
-import { ROUTES } from "../../../app/constants/routes";
-import { deleteBoardRequest } from "../api/boardsApi";
+import { ROUTES } from "../../../../app/constants/routes";
+import { deleteBoardRequest } from "../../api/boardsApi";
 
 type UseBoardDeleteCommandParams = {
   boardId: string | undefined;

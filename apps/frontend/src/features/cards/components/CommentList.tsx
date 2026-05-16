@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import type { Comment } from "../types";
+import type { Comment } from "../../cards/types";
 
 type CommentListProps = {
   comments: Comment[];

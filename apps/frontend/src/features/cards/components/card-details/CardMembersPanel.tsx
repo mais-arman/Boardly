@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import type { BoardMember } from "../../types";
+import type { BoardMember } from "../../../boards/types";
 
 type CardMembersPanelProps = {
   members: BoardMember[];

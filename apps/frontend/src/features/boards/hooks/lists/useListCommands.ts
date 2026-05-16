@@ -2,14 +2,14 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { QUERY_KEYS } from "../../../app/constants/queryKeys";
-import { getApiErrorMessage } from "../../../shared/api/getApiErrorMessage";
-import type { BoardList } from "../types";
+import { QUERY_KEYS } from "../../../../app/constants/queryKeys";
+import { getApiErrorMessage } from "../../../../shared/api/getApiErrorMessage";
+import type { BoardList } from "../../types";
 import {
   createListRequest,
   deleteListRequest,
   updateListRequest,
-} from "../api/boardPageApi";
+} from "../../api/boardPageApi";
 
 type UseListCommandsParams = {
   boardId: string | undefined;

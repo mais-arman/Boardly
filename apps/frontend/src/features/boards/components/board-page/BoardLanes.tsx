@@ -3,9 +3,10 @@ import {
   horizontalListSortingStrategy,
   SortableContext,
 } from "@dnd-kit/sortable";
-import type { BoardList, Card } from "../../types";
-import SortableList from "../SortableList";
-import CreateListPanel from "../CreateListPanel";
+import type { Card } from "../../../cards/types";
+import type { BoardList } from "../../../boards/types";
+import SortableList from "../lists/SortableList";
+import CreateListPanel from "../lists/CreateListPanel";
 
 type BoardLanesProps = {
   lists: BoardList[];

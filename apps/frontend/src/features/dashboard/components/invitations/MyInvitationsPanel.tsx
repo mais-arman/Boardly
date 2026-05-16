@@ -1,13 +1,13 @@
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { QUERY_KEYS } from "../../../app/constants/queryKeys";
-import Button from "../../../shared/components/Button";
-import { getApiErrorMessage } from "../../../shared/api/getApiErrorMessage";
+import { QUERY_KEYS } from "../../../../app/constants/queryKeys";
+import Button from "../../../../shared/components/Button";
+import { getApiErrorMessage } from "../../../../shared/api/getApiErrorMessage";
 import {
   acceptMyInvitationRequest,
   declineMyInvitationRequest,
   getMyInvitationsRequest,
-} from "../../boards/api/invitationsApi";
+} from "../../../boards/api/invitationsApi";
 
 type MyInvitationsPanelProps = {
   onError: (message: string) => void;

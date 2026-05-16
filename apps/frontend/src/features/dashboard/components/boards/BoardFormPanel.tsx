@@ -1,8 +1,9 @@
 import type { FormEvent } from "react";
 import { useTranslation } from "react-i18next";
-import Button from "../../../shared/components/Button";
-import Input from "../../../shared/components/Input";
-import type { Board } from "../../boards/types";
+import type { Board } from "../../../boards/types";
+import Input from "../../../../shared/components/Input";
+import Button from "../../../../shared/components/Button";
+
 
 type BoardFormPanelProps = {
   editingBoard: Board | null;

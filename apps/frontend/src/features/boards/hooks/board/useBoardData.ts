@@ -1,13 +1,14 @@
 import { useMemo } from "react";
 import { useQueries, useQuery } from "@tanstack/react-query";
-import { QUERY_KEYS } from "../../../app/constants/queryKeys";
-import type { BoardList, Card } from "../types";
+import { QUERY_KEYS } from "../../../../app/constants/queryKeys";
+import type { Card } from "../../../cards/types";
+import type { BoardList } from "../../../boards/types";
 import {
   getBoardListsRequest,
   getBoardRequest,
   getCardCommentsRequest,
   getListCardsRequest,
-} from "../api/boardPageApi";
+} from "../../api/boardPageApi";
 
 export function useBoardData(
   boardId: string | undefined,

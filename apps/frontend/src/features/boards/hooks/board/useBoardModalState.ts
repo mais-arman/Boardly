@@ -1,5 +1,6 @@
 import { useState } from "react";
-import type { BoardList, Card } from "../types";
+import type { Card } from "../../../cards/types";
+import type { BoardList } from "../../../boards/types";
 
 export function useBoardModalState() {
   const [listToDelete, setListToDelete] = useState<BoardList | null>(null);

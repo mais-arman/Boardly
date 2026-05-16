@@ -1,10 +1,11 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ROUTES } from "../../../app/constants/routes";
-import Button from "../../../shared/components/Button";
-import LanguageSwitcher from "../../../shared/components/LanguageSwitcher";
-import { isSuperAdmin } from "../../auth/utils/roles";
-import type { User } from "../../auth/types";
+import { ROUTES } from "../../../../app/constants/routes";
+import type { User } from "../../../auth/types";
+import LanguageSwitcher from "../../../../shared/components/LanguageSwitcher";
+import { isSuperAdmin } from "../../../auth/utils/roles";
+import Button from "../../../../shared/components/Button";
+
 
 type DashboardSidebarProps = {
   user: User | null;

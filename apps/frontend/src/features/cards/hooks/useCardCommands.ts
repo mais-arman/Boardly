@@ -4,13 +4,13 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { QUERY_KEYS } from "../../../app/constants/queryKeys";
 import { getApiErrorMessage } from "../../../shared/api/getApiErrorMessage";
-import type { Card } from "../types";
+import type { Card } from "../../cards/types";
 import {
   createCardRequest,
   createCommentRequest,
   deleteCardRequest,
   updateCardRequest,
-} from "../api/boardPageApi";
+} from "../../boards/api/boardPageApi";
 
 export type UpdateCardFormPayload = {
   cardId: string;

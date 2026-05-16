@@ -1,4 +1,4 @@
-import type { Board, BoardRole } from "../types";
+import type { Board, BoardRole } from "../../types";
 
 function isEditorRole(role: BoardRole) {
   return role === "owner" || role === "admin" || role === "editor";

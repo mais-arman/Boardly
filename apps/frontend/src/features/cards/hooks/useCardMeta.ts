@@ -2,8 +2,9 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "../../../app/constants/queryKeys";
 import { getApiErrorMessage } from "../../../shared/api/getApiErrorMessage";
-import type { BoardMember, Card, CardLabel } from "../types";
-import { getBoardMembersRequest } from "../api/boardMembersApi";
+import type { Card, CardLabel } from "../../cards/types";
+import type { BoardMember } from "../../boards/types";
+import { getBoardMembersRequest } from "../../boards/api/boardMembersApi";
 import {
   addAssigneeToCardRequest,
   applyLabelToCardRequest,

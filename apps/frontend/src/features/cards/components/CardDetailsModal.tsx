@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { useTranslation } from "react-i18next";
-import type { Card, Comment } from "../types";
+import type { Card, Comment } from "../../cards/types";
 import { useCardMeta } from "../hooks/useCardMeta";
 import CardDetailsHeader from "./card-details/CardDetailsHeader";
 import CardDetailsForm from "./card-details/CardDetailsForm";

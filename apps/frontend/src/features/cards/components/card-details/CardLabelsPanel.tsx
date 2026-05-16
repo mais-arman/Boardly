@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import Button from "../../../../shared/components/Button";
-import type { CardLabel } from "../../types";
+import type { CardLabel } from "../../../cards/types";
 
 type CardLabelsPanelProps = {
   labels: CardLabel[];

@@ -1,6 +1,6 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { Card } from "../types";
+import type { Card } from "../../cards/types";
 import CardPreview from "./CardPreview";
 
 type SortableCardProps = {

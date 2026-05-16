@@ -7,10 +7,10 @@ import type {
   DragStartEvent,
 } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
-import { QUERY_KEYS } from "../../../app/constants/queryKeys";
-import { getApiErrorMessage } from "../../../shared/api/getApiErrorMessage";
-import type { BoardList, Card } from "../types";
-import { moveCardRequest, reorderListsRequest } from "../api/boardPageApi";
+import { QUERY_KEYS } from "../../../../app/constants/queryKeys";
+import { getApiErrorMessage } from "../../../../shared/api/getApiErrorMessage";
+import type { BoardList, Card } from "../../../cards/types";
+import { moveCardRequest, reorderListsRequest } from "../../api/boardPageApi";
 
 type UseBoardDragAndDropParams = {
   boardId: string;

@@ -1,4 +1,4 @@
-import type { Card } from "../types";
+import type { Card } from "../../cards/types";
 
 type CardPreviewProps = {
   card: Card;

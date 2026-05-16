@@ -1,8 +1,8 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { getBoardPath } from "../../../app/constants/routes";
-import Button from "../../../shared/components/Button";
-import type { Board } from "../../boards/types";
+import { getBoardPath } from "../../../../app/constants/routes";
+import Button from "../../../../shared/components/Button";
+import type { Board } from "../../../boards/types";
 
 type BoardCardProps = {
   board: Board;

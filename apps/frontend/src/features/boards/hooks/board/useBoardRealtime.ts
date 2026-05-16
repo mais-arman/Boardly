@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { QUERY_KEYS } from "../../../app/constants/queryKeys";
-import { getSocket } from "../../../shared/realtime/socket";
+import { QUERY_KEYS } from "../../../../app/constants/queryKeys";
+import { getSocket } from "../../../../shared/realtime/socket";
 
 type BoardRealtimeEvent = {
   type: string;

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useBoardModalState } from "./useBoardModalState";
-import { useListCommands } from "./useListCommands";
-import { useCardCommands } from "./useCardCommands";
+import { useListCommands } from "../lists/useListCommands";
+import { useCardCommands } from "../../../cards/hooks/useCardCommands";
 import { useBoardDeleteCommand } from "./useBoardDeleteCommand";
 
 type UseBoardCommandsParams = {

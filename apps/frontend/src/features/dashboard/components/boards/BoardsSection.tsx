@@ -1,7 +1,8 @@
 import { useTranslation } from "react-i18next";
-import Button from "../../../shared/components/Button";
-import type { Board } from "../../boards/types";
+import type { Board } from "../../../boards/types";
+import Button from "../../../../shared/components/Button";
 import BoardCard from "./BoardCard";
+
 
 type BoardsSectionProps = {
   boards: Board[];

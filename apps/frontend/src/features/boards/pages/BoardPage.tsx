@@ -15,16 +15,16 @@ import Loader from "../../../shared/components/Loader";
 
 import BoardHeader from "../components/BoardHeader";
 import BoardMembersPanel from "../components/BoardMembersPanel";
-import CardDetailsModal from "../components/CardDetailsModal";
-import CardPreview from "../components/CardPreview";
+import CardDetailsModal from "../../cards/components/CardDetailsModal";
+import CardPreview from "../../cards/components/CardPreview";
 import EmptyBoardState from "../components/board-page/EmptyBoardState";
 import BoardLanes from "../components/board-page/BoardLanes";
 
-import { useBoardCommands } from "../hooks/useBoardCommands";
-import { useBoardData } from "../hooks/useBoardData";
-import { useBoardDragAndDrop } from "../hooks/useBoardDragAndDrop";
-import { useBoardPermissions } from "../hooks/useBoardPermissions";
-import { useBoardRealtime } from "../hooks/useBoardRealtime";
+import { useBoardCommands } from "../hooks/board/useBoardCommands";
+import { useBoardData } from "../hooks/board/useBoardData";
+import { useBoardDragAndDrop } from "../hooks/dnd/useBoardDragAndDrop";
+import { useBoardPermissions } from "../hooks/board/useBoardPermissions";
+import { useBoardRealtime } from "../hooks/board/useBoardRealtime";
 
 export default function BoardPage() {
   const { t } = useTranslation();

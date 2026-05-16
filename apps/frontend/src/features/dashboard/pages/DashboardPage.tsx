@@ -9,13 +9,13 @@ import Loader from "../../../shared/components/Loader";
 import { getApiErrorMessage } from "../../../shared/api/getApiErrorMessage";
 import { resendVerificationEmailRequest } from "../../auth/api/authApi";
 import { useAuth } from "../../auth/hooks/useAuth";
-import MyInvitationsPanel from "../components/MyInvitationsPanel";
+import MyInvitationsPanel from "../components/invitations/MyInvitationsPanel";
 import { useDashboardRealtime } from "../hooks/useDashboardRealtime";
-import DashboardSidebar from "../components/DashboardSidebar";
-import VerificationBanner from "../components/VerificationBanner";
-import BoardFormPanel from "../components/BoardFormPanel";
-import BoardsSection from "../components/BoardsSection";
 import { BOARD_COLORS, useDashboardBoards } from "../hooks/useDashboardBoards";
+import DashboardSidebar from "../components/layout/DashboardSidebar";
+import VerificationBanner from "../components/VerificationBanner";
+import BoardsSection from "../components/boards/BoardsSection";
+import BoardFormPanel from "../components/boards/BoardFormPanel";
 
 export default function DashboardPage() {
   const { t } = useTranslation();
