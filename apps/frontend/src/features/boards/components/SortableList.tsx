@@ -69,17 +69,19 @@ export default function SortableList({
     },
   });
 
+  const isEditing = editingListId === list.id;
+
   return (
     <article
       ref={setNodeRef}
-      className={`trello-list ${isDragging ? "dragging" : ""}`}
+      className={`trello-list ${isDragging ? "dragging" : ""}`.trim()}
       style={{
         transform: CSS.Transform.toString(transform),
         transition,
       }}
     >
       <header className="trello-list-header" {...attributes} {...listeners}>
-        {editingListId === list.id ? (
+        {isEditing ? (
           <form className="list-title-edit-form" onSubmit={onUpdateList}>
             <input
               value={editingListTitle}

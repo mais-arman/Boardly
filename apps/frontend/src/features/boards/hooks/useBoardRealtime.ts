@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { QUERY_KEYS } from "../../../app/constants/queryKeys";
 import { getSocket } from "../../../shared/realtime/socket";
 
 type BoardRealtimeEvent = {
@@ -12,14 +13,6 @@ type UseBoardRealtimeParams = {
   boardId: string | undefined;
   listIds: string[];
 };
-
-const BOARD_QUERY_KEY = "board";
-const LISTS_QUERY_KEY = "board-lists";
-const CARDS_QUERY_KEY = "list-cards";
-const COMMENTS_QUERY_KEY = "card-comments";
-const LABELS_QUERY_KEY = "board-labels";
-const MEMBERS_QUERY_KEY = "board-members";
-const INVITATIONS_QUERY_KEY = "board-invitations";
 
 export function useBoardRealtime({
   boardId,
@@ -48,33 +41,33 @@ export function useBoardRealtime({
       }
 
       queryClient.invalidateQueries({
-        queryKey: [BOARD_QUERY_KEY, boardId],
+        queryKey: QUERY_KEYS.BOARDS.DETAIL(boardId),
       });
 
       queryClient.invalidateQueries({
-        queryKey: [LISTS_QUERY_KEY, boardId],
+        queryKey: QUERY_KEYS.BOARDS.LISTS(boardId),
       });
 
       queryClient.invalidateQueries({
-        queryKey: [LABELS_QUERY_KEY, boardId],
+        queryKey: QUERY_KEYS.BOARDS.LABELS(boardId),
       });
 
       queryClient.invalidateQueries({
-        queryKey: [MEMBERS_QUERY_KEY, boardId],
+        queryKey: QUERY_KEYS.BOARDS.MEMBERS(boardId),
       });
 
       queryClient.invalidateQueries({
-        queryKey: [INVITATIONS_QUERY_KEY, boardId],
+        queryKey: QUERY_KEYS.BOARDS.INVITATIONS(boardId),
       });
 
       listIds.forEach((listId) => {
         queryClient.invalidateQueries({
-          queryKey: [CARDS_QUERY_KEY, listId],
+          queryKey: QUERY_KEYS.BOARDS.LIST_CARDS(listId),
         });
       });
 
       queryClient.invalidateQueries({
-        queryKey: [COMMENTS_QUERY_KEY],
+        queryKey: ["card-comments"],
         exact: false,
       });
     }

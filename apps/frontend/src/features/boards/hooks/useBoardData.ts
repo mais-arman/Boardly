@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useQueries, useQuery } from "@tanstack/react-query";
+import { QUERY_KEYS } from "../../../app/constants/queryKeys";
 import type { BoardList, Card } from "../types";
 import {
   getBoardListsRequest,
@@ -8,23 +9,18 @@ import {
   getListCardsRequest,
 } from "../api/boardPageApi";
 
-export const BOARD_QUERY_KEY = "board";
-export const LISTS_QUERY_KEY = "board-lists";
-export const CARDS_QUERY_KEY = "list-cards";
-export const COMMENTS_QUERY_KEY = "card-comments";
-
 export function useBoardData(
   boardId: string | undefined,
   selectedCardId?: string
 ) {
   const boardQuery = useQuery({
-    queryKey: [BOARD_QUERY_KEY, boardId],
+    queryKey: QUERY_KEYS.BOARDS.DETAIL(boardId),
     queryFn: () => getBoardRequest(boardId as string),
     enabled: Boolean(boardId),
   });
 
   const listsQuery = useQuery({
-    queryKey: [LISTS_QUERY_KEY, boardId],
+    queryKey: QUERY_KEYS.BOARDS.LISTS(boardId),
     queryFn: () => getBoardListsRequest(boardId as string),
     enabled: Boolean(boardId),
   });
@@ -36,7 +32,7 @@ export function useBoardData(
 
   const cardQueries = useQueries({
     queries: lists.map((list) => ({
-      queryKey: [CARDS_QUERY_KEY, list.id],
+      queryKey: QUERY_KEYS.BOARDS.LIST_CARDS(list.id),
       queryFn: () => getListCardsRequest(list.id),
       enabled: Boolean(list.id),
     })),
@@ -50,7 +46,7 @@ export function useBoardData(
   }, [lists, cardQueries]);
 
   const commentsQuery = useQuery({
-    queryKey: [COMMENTS_QUERY_KEY, selectedCardId],
+    queryKey: QUERY_KEYS.BOARDS.CARD_COMMENTS(selectedCardId),
     queryFn: () => getCardCommentsRequest(selectedCardId as string),
     enabled: Boolean(selectedCardId),
   });

@@ -83,10 +83,6 @@ export default function BoardPage() {
       <BoardHeader
         board={boardData.board}
         role={permissions.role}
-        isOwner={permissions.isOwner}
-        isAdmin={permissions.isAdmin}
-        isEditor={permissions.isEditor}
-        isViewer={permissions.isViewer}
         canManageMembers={permissions.canManageMembers}
         canDeleteBoard={permissions.canDeleteBoard}
         onOpenMembers={() => actions.setIsMembersPanelOpen(true)}
@@ -135,9 +131,7 @@ export default function BoardPage() {
         />
 
         <DragOverlay>
-          {drag.activeCard ? (
-            <CardPreview card={drag.activeCard} isOverlay />
-          ) : null}
+          {drag.activeCard ? <CardPreview card={drag.activeCard} isOverlay /> : null}
         </DragOverlay>
       </DndContext>
 

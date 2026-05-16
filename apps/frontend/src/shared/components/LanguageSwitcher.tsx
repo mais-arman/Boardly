@@ -1,13 +1,12 @@
 import { useTranslation } from "react-i18next";
-import {
-  supportedLanguages,
-  type SupportedLanguage,
-} from "../../app/i18n";
+import { supportedLanguages, type SupportedLanguage } from "../../app/i18n";
 
 export default function LanguageSwitcher() {
   const { i18n } = useTranslation();
 
-  const currentLanguage = i18n.language.startsWith("ar") ? "ar" : "en";
+  const currentLanguage: SupportedLanguage = i18n.language.startsWith("ar")
+    ? "ar"
+    : "en";
 
   function handleChangeLanguage(language: SupportedLanguage) {
     i18n.changeLanguage(language);

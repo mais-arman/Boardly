@@ -7,6 +7,7 @@ import Button from "../../../shared/components/Button";
 import Input from "../../../shared/components/Input";
 import { getApiErrorMessage } from "../../../shared/api/getApiErrorMessage";
 import { useAuth } from "../hooks/useAuth";
+import AuthLayout from "../components/AuthLayout";
 
 export default function LoginPage() {
   const { t } = useTranslation();
@@ -15,6 +16,7 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   const [error, setError] = useState("");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -22,61 +24,62 @@ export default function LoginPage() {
     setError("");
 
     try {
-      await login({ email, password });
-      navigate(ROUTES.DASHBOARD);
+      await login({
+        email: email.trim(),
+        password,
+      });
+
+      navigate(ROUTES.DASHBOARD, {
+        replace: true,
+      });
     } catch (error) {
       setError(getApiErrorMessage(error, t("auth.loginFailed")));
     }
   }
 
   return (
-    <main className="auth-layout">
-      <section className="auth-hero">
-        <div className="hero-badge">{t("auth.loginHeroBadge")}</div>
-        <h1>{t("auth.loginHeroTitle")}</h1>
-        <p>{t("auth.loginHeroDescription")}</p>
-      </section>
-
-      <section className="auth-card">
-        <div className="auth-card-header">
-          <span className="brand-mark">B</span>
-          <div>
-            <h2>{t("auth.welcomeBack")}</h2>
-            <p>{t("auth.loginSubtitle")}</p>
-          </div>
-        </div>
-
-        {error && <div className="alert error">{error}</div>}
-
-        <form className="auth-form" onSubmit={handleSubmit}>
-          <Input
-            label={t("auth.email")}
-            type="email"
-            placeholder={t("auth.emailPlaceholder")}
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            required
-          />
-
-          <Input
-            label={t("auth.password")}
-            type="password"
-            placeholder={t("auth.loginPasswordPlaceholder")}
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            required
-          />
-
-          <Button type="submit" fullWidth isLoading={isLoggingIn}>
-            {t("auth.login")}
-          </Button>
-        </form>
-
-        <p className="auth-footer">
+    <AuthLayout
+      badge={t("auth.loginHeroBadge")}
+      title={t("auth.loginHeroTitle")}
+      description={t("auth.loginHeroDescription")}
+      cardTitle={t("auth.welcomeBack")}
+      cardSubtitle={t("auth.loginSubtitle")}
+      footer={
+        <>
           {t("auth.noAccount")}{" "}
           <Link to={ROUTES.SIGNUP}>{t("auth.createAccount")}</Link>
-        </p>
-      </section>
-    </main>
+        </>
+      }
+    >
+      {error && <div className="alert error">{error}</div>}
+
+      <form className="auth-form" onSubmit={handleSubmit}>
+        <Input
+          id="login-email"
+          label={t("auth.email")}
+          type="email"
+          placeholder={t("auth.emailPlaceholder")}
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          autoComplete="email"
+          required
+        />
+
+        <Input
+          id="login-password"
+          label={t("auth.password")}
+          type="password"
+          placeholder={t("auth.loginPasswordPlaceholder")}
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          autoComplete="current-password"
+          required
+        />
+
+        <Button type="submit" fullWidth isLoading={isLoggingIn}>
+          {t("auth.login")}
+        </Button>
+      </form>
+    </AuthLayout>
   );
 }

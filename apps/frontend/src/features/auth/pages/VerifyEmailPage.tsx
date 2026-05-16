@@ -11,12 +11,12 @@ type VerificationStatus = "loading" | "success" | "error";
 export default function VerifyEmailPage() {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
-  const token = searchParams.get("token");
 
+  const token = searchParams.get("token");
   const hasVerifiedRef = useRef(false);
 
   const [status, setStatus] = useState<VerificationStatus>("loading");
-  const [message, setMessage] = useState(() => t("verification.loading"));
+  const [message, setMessage] = useState(t("verification.loading"));
 
   useEffect(() => {
     async function verifyEmail() {

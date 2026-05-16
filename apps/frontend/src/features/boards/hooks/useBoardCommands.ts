@@ -1,432 +1,98 @@
 import { useState } from "react";
-import type { FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
-
-import { ROUTES } from "../../../app/constants/routes";
-import { getApiErrorMessage } from "../../../shared/api/getApiErrorMessage";
-
-import type { BoardList, Card } from "../types";
-import {
-  createCardRequest,
-  createCommentRequest,
-  createListRequest,
-  deleteCardRequest,
-  deleteListRequest,
-  updateCardRequest,
-  updateListRequest,
-} from "../api/boardPageApi";
-import { deleteBoardRequest } from "../api/boardsApi";
-
-import {
-  BOARD_QUERY_KEY,
-  CARDS_QUERY_KEY,
-  COMMENTS_QUERY_KEY,
-  LISTS_QUERY_KEY,
-} from "./useBoardData";
+import { useBoardModalState } from "./useBoardModalState";
+import { useListCommands } from "./useListCommands";
+import { useCardCommands } from "./useCardCommands";
+import { useBoardDeleteCommand } from "./useBoardDeleteCommand";
 
 type UseBoardCommandsParams = {
   boardId: string | undefined;
 };
 
 export function useBoardCommands({ boardId }: UseBoardCommandsParams) {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-
-  const [newListTitle, setNewListTitle] = useState("");
-
-  const [cardTitleByList, setCardTitleByList] = useState<
-    Record<string, string>
-  >({});
-
-  const [editingListId, setEditingListId] = useState<string | null>(null);
-  const [editingListTitle, setEditingListTitle] = useState("");
-
-  const [listToDelete, setListToDelete] = useState<BoardList | null>(null);
-  const [cardToDelete, setCardToDelete] = useState<Card | null>(null);
-  const [selectedCard, setSelectedCard] = useState<Card | null>(null);
-
   const [pageError, setPageError] = useState("");
   const [modalError, setModalError] = useState("");
 
-  const [isMembersPanelOpen, setIsMembersPanelOpen] = useState(false);
-  const [isDeleteBoardOpen, setIsDeleteBoardOpen] = useState(false);
+  const modalState = useBoardModalState();
 
-  const createListMutation = useMutation({
-    mutationFn: (title: string) =>
-      createListRequest(boardId as string, {
-        title,
-      }),
-
-    onSuccess: () => {
-      setNewListTitle("");
-
-      queryClient.invalidateQueries({
-        queryKey: [LISTS_QUERY_KEY, boardId],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: [BOARD_QUERY_KEY, boardId],
-      });
-    },
+  const listCommands = useListCommands({
+    boardId,
+    listToDelete: modalState.listToDelete,
+    setListToDelete: modalState.setListToDelete,
+    setPageError,
   });
 
-  const updateListMutation = useMutation({
-    mutationFn: ({ listId, title }: { listId: string; title: string }) =>
-      updateListRequest(listId, {
-        title,
-      }),
-
-    onSuccess: () => {
-      setEditingListId(null);
-      setEditingListTitle("");
-
-      queryClient.invalidateQueries({
-        queryKey: [LISTS_QUERY_KEY, boardId],
-      });
-    },
+  const cardCommands = useCardCommands({
+    boardId,
+    cardToDelete: modalState.cardToDelete,
+    setCardToDelete: modalState.setCardToDelete,
+    selectedCard: modalState.selectedCard,
+    setSelectedCard: modalState.setSelectedCard,
+    setPageError,
+    setModalError,
   });
 
-  const deleteListMutation = useMutation({
-    mutationFn: (listId: string) => deleteListRequest(listId),
-
-    onSuccess: () => {
-      setListToDelete(null);
-
-      queryClient.invalidateQueries({
-        queryKey: [LISTS_QUERY_KEY, boardId],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: [BOARD_QUERY_KEY, boardId],
-      });
-    },
+  const boardDeleteCommand = useBoardDeleteCommand({
+    boardId,
   });
-
-  const createCardMutation = useMutation({
-    mutationFn: ({ listId, title }: { listId: string; title: string }) =>
-      createCardRequest(listId, {
-        title,
-        description: null,
-        due_date: null,
-      }),
-
-    onSuccess: (_, variables) => {
-      setCardTitleByList((current) => ({
-        ...current,
-        [variables.listId]: "",
-      }));
-
-      queryClient.invalidateQueries({
-        queryKey: [CARDS_QUERY_KEY, variables.listId],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: [BOARD_QUERY_KEY, boardId],
-      });
-    },
-  });
-
-  const updateCardMutation = useMutation({
-    mutationFn: ({
-      cardId,
-      title,
-      description,
-      dueDate,
-    }: {
-      cardId: string;
-      title: string;
-      description: string;
-      dueDate: string;
-    }) =>
-      updateCardRequest(cardId, {
-        title,
-        description: description || null,
-        due_date: dueDate ? new Date(dueDate).toISOString() : null,
-      }),
-
-    onSuccess: (updatedCard) => {
-      setSelectedCard(updatedCard);
-
-      queryClient.invalidateQueries({
-        queryKey: [CARDS_QUERY_KEY, updatedCard.list_id],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: [BOARD_QUERY_KEY, boardId],
-      });
-    },
-  });
-
-  const deleteCardMutation = useMutation({
-    mutationFn: (cardId: string) => deleteCardRequest(cardId),
-
-    onSuccess: (_, deletedCardId) => {
-      setSelectedCard(null);
-      setCardToDelete(null);
-      setModalError("");
-
-      queryClient.invalidateQueries({
-        queryKey: [BOARD_QUERY_KEY, boardId],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: [CARDS_QUERY_KEY],
-        exact: false,
-      });
-
-      queryClient.removeQueries({
-        queryKey: [COMMENTS_QUERY_KEY, deletedCardId],
-      });
-    },
-  });
-
-  const createCommentMutation = useMutation({
-    mutationFn: ({ cardId, content }: { cardId: string; content: string }) =>
-      createCommentRequest(cardId, {
-        content,
-      }),
-
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: [COMMENTS_QUERY_KEY, variables.cardId],
-      });
-    },
-  });
-
-  const deleteBoardMutation = useMutation({
-    mutationFn: () => deleteBoardRequest(boardId as string),
-
-    onSuccess: () => {
-      navigate(ROUTES.DASHBOARD, {
-        replace: true,
-      });
-    },
-  });
-
-  async function handleCreateList(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setPageError("");
-
-    const title = newListTitle.trim();
-
-    if (title.length < 2) {
-      setPageError(t("errors.listTitleTooShort"));
-      return;
-    }
-
-    try {
-      await createListMutation.mutateAsync(title);
-    } catch (error) {
-      setPageError(getApiErrorMessage(error, t("errors.failedCreateList")));
-    }
-  }
-
-  async function handleCreateDefaultWorkflow() {
-    setPageError("");
-
-    const defaultLists = [
-      t("boards.todo"),
-      t("boards.inProgress"),
-      t("boards.doing"),
-      t("boards.done"),
-    ];
-
-    try {
-      for (const title of defaultLists) {
-        await createListMutation.mutateAsync(title);
-      }
-    } catch (error) {
-      setPageError(getApiErrorMessage(error, t("errors.failedCreateWorkflow")));
-    }
-  }
-
-  function startEditingList(list: BoardList) {
-    setEditingListId(list.id);
-    setEditingListTitle(list.title);
-  }
-
-  function cancelEditingList() {
-    setEditingListId(null);
-    setEditingListTitle("");
-  }
-
-  async function handleUpdateList(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    if (!editingListId) return;
-
-    setPageError("");
-
-    const title = editingListTitle.trim();
-
-    if (title.length < 2) {
-      setPageError(t("errors.listTitleTooShort"));
-      return;
-    }
-
-    try {
-      await updateListMutation.mutateAsync({
-        listId: editingListId,
-        title,
-      });
-    } catch (error) {
-      setPageError(getApiErrorMessage(error, t("errors.failedUpdateList")));
-    }
-  }
-
-  async function confirmDeleteList() {
-    if (!listToDelete) return;
-
-    setPageError("");
-
-    try {
-      await deleteListMutation.mutateAsync(listToDelete.id);
-    } catch (error) {
-      setPageError(getApiErrorMessage(error, t("errors.failedDeleteList")));
-      setListToDelete(null);
-    }
-  }
-
-  async function handleCreateCard(
-    event: FormEvent<HTMLFormElement>,
-    listId: string
-  ) {
-    event.preventDefault();
-    setPageError("");
-
-    const title = cardTitleByList[listId]?.trim();
-
-    if (!title || title.length < 2) {
-      setPageError(t("errors.cardTitleTooShort"));
-      return;
-    }
-
-    try {
-      await createCardMutation.mutateAsync({
-        listId,
-        title,
-      });
-    } catch (error) {
-      setPageError(getApiErrorMessage(error, t("errors.failedCreateCard")));
-    }
-  }
-
-  async function handleUpdateCard(payload: {
-    cardId: string;
-    title: string;
-    description: string;
-    dueDate: string;
-  }) {
-    setModalError("");
-
-    if (payload.title.trim().length < 2) {
-      setModalError(t("errors.cardTitleTooShort"));
-      return;
-    }
-
-    try {
-      await updateCardMutation.mutateAsync(payload);
-    } catch (error) {
-      setModalError(getApiErrorMessage(error, t("errors.failedUpdateCard")));
-    }
-  }
-
-  async function confirmDeleteCard() {
-    if (!cardToDelete) return;
-
-    setModalError("");
-
-    try {
-      await deleteCardMutation.mutateAsync(cardToDelete.id);
-    } catch (error) {
-      setModalError(getApiErrorMessage(error, t("errors.failedDeleteCard")));
-      setCardToDelete(null);
-    }
-  }
-
-  async function handleCreateComment(cardId: string, content: string) {
-    setModalError("");
-
-    try {
-      await createCommentMutation.mutateAsync({
-        cardId,
-        content,
-      });
-    } catch (error) {
-      setModalError(getApiErrorMessage(error, t("errors.failedAddComment")));
-    }
-  }
-
-  function handleCardChanged(updatedCard: Card) {
-    setSelectedCard(updatedCard);
-
-    queryClient.invalidateQueries({
-      queryKey: [CARDS_QUERY_KEY, updatedCard.list_id],
-    });
-
-    queryClient.invalidateQueries({
-      queryKey: [BOARD_QUERY_KEY, boardId],
-    });
-  }
-
-  function handleCardTitleChange(listId: string, value: string) {
-    setCardTitleByList((current) => ({
-      ...current,
-      [listId]: value,
-    }));
-  }
 
   return {
     state: {
-      newListTitle,
-      cardTitleByList,
-      editingListId,
-      editingListTitle,
-      listToDelete,
-      cardToDelete,
-      selectedCard,
+      newListTitle: listCommands.state.newListTitle,
+      cardTitleByList: cardCommands.state.cardTitleByList,
+      editingListId: listCommands.state.editingListId,
+      editingListTitle: listCommands.state.editingListTitle,
+
+      listToDelete: modalState.listToDelete,
+      cardToDelete: modalState.cardToDelete,
+      selectedCard: modalState.selectedCard,
+
       pageError,
       modalError,
-      isMembersPanelOpen,
-      isDeleteBoardOpen,
+
+      isMembersPanelOpen: modalState.isMembersPanelOpen,
+      isDeleteBoardOpen: modalState.isDeleteBoardOpen,
     },
 
     mutations: {
-      createListMutation,
-      updateListMutation,
-      deleteListMutation,
-      createCardMutation,
-      updateCardMutation,
-      deleteCardMutation,
-      createCommentMutation,
-      deleteBoardMutation,
+      createListMutation: listCommands.mutations.createListMutation,
+      updateListMutation: listCommands.mutations.updateListMutation,
+      deleteListMutation: listCommands.mutations.deleteListMutation,
+
+      createCardMutation: cardCommands.mutations.createCardMutation,
+      updateCardMutation: cardCommands.mutations.updateCardMutation,
+      deleteCardMutation: cardCommands.mutations.deleteCardMutation,
+      createCommentMutation: cardCommands.mutations.createCommentMutation,
+
+      deleteBoardMutation: boardDeleteCommand.mutations.deleteBoardMutation,
     },
 
     actions: {
-      setNewListTitle,
-      setEditingListTitle,
-      setListToDelete,
-      setCardToDelete,
-      setSelectedCard,
-      setPageError,
-      setIsMembersPanelOpen,
-      setIsDeleteBoardOpen,
+      setNewListTitle: listCommands.actions.setNewListTitle,
+      setEditingListTitle: listCommands.actions.setEditingListTitle,
 
-      handleCreateList,
-      handleCreateDefaultWorkflow,
-      startEditingList,
-      cancelEditingList,
-      handleUpdateList,
-      confirmDeleteList,
-      handleCreateCard,
-      handleUpdateCard,
-      confirmDeleteCard,
-      handleCreateComment,
-      handleCardChanged,
-      handleCardTitleChange,
+      setListToDelete: modalState.setListToDelete,
+      setCardToDelete: modalState.setCardToDelete,
+      setSelectedCard: modalState.setSelectedCard,
+
+      setPageError,
+
+      setIsMembersPanelOpen: modalState.setIsMembersPanelOpen,
+      setIsDeleteBoardOpen: modalState.setIsDeleteBoardOpen,
+
+      handleCreateList: listCommands.actions.handleCreateList,
+      handleCreateDefaultWorkflow:
+        listCommands.actions.handleCreateDefaultWorkflow,
+      startEditingList: listCommands.actions.startEditingList,
+      cancelEditingList: listCommands.actions.cancelEditingList,
+      handleUpdateList: listCommands.actions.handleUpdateList,
+      confirmDeleteList: listCommands.actions.confirmDeleteList,
+
+      handleCreateCard: cardCommands.actions.handleCreateCard,
+      handleUpdateCard: cardCommands.actions.handleUpdateCard,
+      confirmDeleteCard: cardCommands.actions.confirmDeleteCard,
+      handleCreateComment: cardCommands.actions.handleCreateComment,
+      handleCardChanged: cardCommands.actions.handleCardChanged,
+      handleCardTitleChange: cardCommands.actions.handleCardTitleChange,
     },
   };
 }

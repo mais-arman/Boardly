@@ -2,15 +2,11 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ROUTES } from "../../../app/constants/routes";
 import Button from "../../../shared/components/Button";
-import type { Board } from "../types";
+import type { Board, BoardRole } from "../types";
 
 type BoardHeaderProps = {
   board: Board;
-  role: string;
-  isOwner: boolean;
-  isAdmin: boolean;
-  isEditor: boolean;
-  isViewer: boolean;
+  role: BoardRole;
   canManageMembers: boolean;
   canDeleteBoard: boolean;
   onOpenMembers: () => void;
@@ -37,9 +33,7 @@ export default function BoardHeader({
         <h1>{board.title}</h1>
 
         <div className="role-explainer">
-          <span className={`role-pill ${role}`}>
-            {t(`roles.${role}`)}
-          </span>
+          <span className={`role-pill ${role}`}>{t(`roles.${role}`)}</span>
         </div>
       </div>
 

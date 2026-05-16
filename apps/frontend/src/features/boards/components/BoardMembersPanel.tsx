@@ -2,8 +2,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import Button from "../../../shared/components/Button";
-import Input from "../../../shared/components/Input";
+import { QUERY_KEYS } from "../../../app/constants/queryKeys";
 import { getApiErrorMessage } from "../../../shared/api/getApiErrorMessage";
 import type { BoardInvitation, BoardMember, ManageableBoardRole } from "../types";
 import {
@@ -14,6 +13,9 @@ import {
   removeBoardMemberRequest,
   updateBoardMemberRoleRequest,
 } from "../api/boardMembersApi";
+import InviteMemberForm from "./members/InviteMemberForm";
+import BoardMembersList from "./members/BoardMembersList";
+import PendingInvitationsList from "./members/PendingInvitationsList";
 
 type BoardMembersPanelProps = {
   boardId: string;
@@ -21,14 +23,7 @@ type BoardMembersPanelProps = {
   onClose: () => void;
 };
 
-const MEMBERS_QUERY_KEY = "board-members";
-const INVITATIONS_QUERY_KEY = "board-invitations";
-
 const ROLE_OPTIONS: ManageableBoardRole[] = ["admin", "editor", "viewer"];
-
-function getMemberDisplayName(member: BoardMember) {
-  return member.user?.name || member.user?.email || member.user_id;
-}
 
 export default function BoardMembersPanel({
   boardId,
@@ -44,12 +39,12 @@ export default function BoardMembersPanel({
   const [successMessage, setSuccessMessage] = useState("");
 
   const membersQuery = useQuery({
-    queryKey: [MEMBERS_QUERY_KEY, boardId],
+    queryKey: QUERY_KEYS.BOARDS.MEMBERS(boardId),
     queryFn: () => getBoardMembersRequest(boardId),
   });
 
   const invitationsQuery = useQuery({
-    queryKey: [INVITATIONS_QUERY_KEY, boardId],
+    queryKey: QUERY_KEYS.BOARDS.INVITATIONS(boardId),
     queryFn: () => getBoardInvitationsRequest(boardId),
     enabled: canManageMembers,
   });
@@ -57,20 +52,21 @@ export default function BoardMembersPanel({
   const inviteMutation = useMutation({
     mutationFn: () =>
       inviteBoardMemberRequest(boardId, {
-        email,
+        email: email.trim(),
         role,
       }),
+
     onSuccess: () => {
       setEmail("");
       setRole("viewer");
       setSuccessMessage(t("members.invitationSent"));
 
       queryClient.invalidateQueries({
-        queryKey: [INVITATIONS_QUERY_KEY, boardId],
+        queryKey: QUERY_KEYS.BOARDS.INVITATIONS(boardId),
       });
 
       queryClient.invalidateQueries({
-        queryKey: [MEMBERS_QUERY_KEY, boardId],
+        queryKey: QUERY_KEYS.BOARDS.MEMBERS(boardId),
       });
     },
   });
@@ -86,9 +82,10 @@ export default function BoardMembersPanel({
       updateBoardMemberRoleRequest(boardId, memberId, {
         role: nextRole,
       }),
+
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [MEMBERS_QUERY_KEY, boardId],
+        queryKey: QUERY_KEYS.BOARDS.MEMBERS(boardId),
       });
     },
   });
@@ -96,9 +93,10 @@ export default function BoardMembersPanel({
   const removeMemberMutation = useMutation({
     mutationFn: (memberId: string) =>
       removeBoardMemberRequest(boardId, memberId),
+
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [MEMBERS_QUERY_KEY, boardId],
+        queryKey: QUERY_KEYS.BOARDS.MEMBERS(boardId),
       });
     },
   });
@@ -106,9 +104,10 @@ export default function BoardMembersPanel({
   const cancelInvitationMutation = useMutation({
     mutationFn: (invitationId: string) =>
       cancelBoardInvitationRequest(boardId, invitationId),
+
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [INVITATIONS_QUERY_KEY, boardId],
+        queryKey: QUERY_KEYS.BOARDS.INVITATIONS(boardId),
       });
     },
   });
@@ -180,123 +179,34 @@ export default function BoardMembersPanel({
         {successMessage && <div className="alert success">{successMessage}</div>}
 
         {canManageMembers && (
-          <form className="invite-form" onSubmit={handleInvite}>
-            <Input
-              label={t("members.inviteByEmail")}
-              type="email"
-              placeholder="teammate@example.com"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              required
-            />
-
-            <div className="field-group">
-              <label htmlFor="invite-role">{t("profile.role")}</label>
-
-              <select
-                id="invite-role"
-                value={role}
-                onChange={(event) =>
-                  setRole(event.target.value as ManageableBoardRole)
-                }
-              >
-                {ROLE_OPTIONS.map((item) => (
-                  <option key={item} value={item}>
-                    {t(`roles.${item}`)}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <Button type="submit" fullWidth isLoading={inviteMutation.isPending}>
-              {t("members.sendInvitation")}
-            </Button>
-          </form>
+          <InviteMemberForm
+            email={email}
+            role={role}
+            roleOptions={ROLE_OPTIONS}
+            isLoading={inviteMutation.isPending}
+            onEmailChange={setEmail}
+            onRoleChange={setRole}
+            onSubmit={handleInvite}
+          />
         )}
 
-        <section className="members-section">
-          <h3>{t("members.boardMembers")}</h3>
-
-          {membersQuery.isLoading ? (
-            <p className="muted-text">{t("members.loadingMembers")}</p>
-          ) : (
-            <div className="members-list">
-              {(membersQuery.data || []).map((member) => (
-                <article className="member-row" key={member.id}>
-                  <div>
-                    <strong>{getMemberDisplayName(member)}</strong>
-                    <span>
-                      {member.user?.email || member.user_id} ·{" "}
-                      {t(`roles.${member.role}`)}
-                    </span>
-                  </div>
-
-                  {canManageMembers && member.role !== "owner" && (
-                    <div className="member-actions">
-                      <select
-                        value={member.role}
-                        onChange={(event) =>
-                          handleRoleChange(member, event.target.value)
-                        }
-                      >
-                        {ROLE_OPTIONS.map((item) => (
-                          <option key={item} value={item}>
-                            {t(`roles.${item}`)}
-                          </option>
-                        ))}
-                      </select>
-
-                      <Button
-                        type="button"
-                        variant="danger"
-                        isLoading={removeMemberMutation.isPending}
-                        onClick={() => handleRemoveMember(member)}
-                      >
-                        {t("members.remove")}
-                      </Button>
-                    </div>
-                  )}
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
+        <BoardMembersList
+          members={membersQuery.data || []}
+          roleOptions={ROLE_OPTIONS}
+          canManageMembers={canManageMembers}
+          isLoading={membersQuery.isLoading}
+          isRemoving={removeMemberMutation.isPending}
+          onRoleChange={handleRoleChange}
+          onRemoveMember={handleRemoveMember}
+        />
 
         {canManageMembers && (
-          <section className="members-section">
-            <h3>{t("members.pendingInvitations")}</h3>
-
-            {invitationsQuery.isLoading ? (
-              <p className="muted-text">{t("members.loadingInvitations")}</p>
-            ) : (invitationsQuery.data || []).length === 0 ? (
-              <p className="muted-text">{t("members.noPendingInvitations")}</p>
-            ) : (
-              <div className="members-list">
-                {(invitationsQuery.data || []).map((invitation) => (
-                  <article className="member-row" key={invitation.id}>
-                    <div>
-                      <strong>{invitation.email}</strong>
-                      <span>
-                        {t(`roles.${invitation.role}`)} ·{" "}
-                        {t(`invitationStatus.${invitation.status}`)}
-                      </span>
-                    </div>
-
-                    {invitation.status === "pending" && (
-                      <Button
-                        type="button"
-                        variant="danger"
-                        isLoading={cancelInvitationMutation.isPending}
-                        onClick={() => handleCancelInvitation(invitation)}
-                      >
-                        {t("common.cancel")}
-                      </Button>
-                    )}
-                  </article>
-                ))}
-              </div>
-            )}
-          </section>
+          <PendingInvitationsList
+            invitations={invitationsQuery.data || []}
+            isLoading={invitationsQuery.isLoading}
+            isCancelling={cancelInvitationMutation.isPending}
+            onCancelInvitation={handleCancelInvitation}
+          />
         )}
       </aside>
     </div>

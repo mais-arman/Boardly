@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ROUTES, getBoardPath } from "../../../app/constants/routes";
+import { ROUTES } from "../../../app/constants/routes";
+import { QUERY_KEYS } from "../../../app/constants/queryKeys";
 import Button from "../../../shared/components/Button";
 import ConfirmModal from "../../../shared/components/ConfirmModal";
 import Loader from "../../../shared/components/Loader";
@@ -16,9 +17,9 @@ import {
   getAdminUsersRequest,
   updateAdminUserRoleRequest,
 } from "../api/adminApi";
-
-const ADMIN_USERS_QUERY_KEY = ["admin", "users"];
-const ADMIN_BOARDS_QUERY_KEY = ["admin", "boards"];
+import AdminStats from "../components/AdminStats";
+import AdminUsersTable from "../components/AdminUsersTable";
+import AdminBoardsTable from "../components/AdminBoardsTable";
 
 export default function AdminDashboardPage() {
   const { t } = useTranslation();
@@ -30,12 +31,12 @@ export default function AdminDashboardPage() {
   const [boardToDelete, setBoardToDelete] = useState<AdminBoard | null>(null);
 
   const usersQuery = useQuery({
-    queryKey: ADMIN_USERS_QUERY_KEY,
+    queryKey: QUERY_KEYS.ADMIN.USERS,
     queryFn: getAdminUsersRequest,
   });
 
   const boardsQuery = useQuery({
-    queryKey: ADMIN_BOARDS_QUERY_KEY,
+    queryKey: QUERY_KEYS.ADMIN.BOARDS,
     queryFn: getAdminBoardsRequest,
   });
 
@@ -49,7 +50,9 @@ export default function AdminDashboardPage() {
     }) => updateAdminUserRoleRequest(userId, { role }),
 
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ADMIN_USERS_QUERY_KEY });
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.ADMIN.USERS,
+      });
     },
   });
 
@@ -58,8 +61,14 @@ export default function AdminDashboardPage() {
 
     onSuccess: () => {
       setUserToDelete(null);
-      queryClient.invalidateQueries({ queryKey: ADMIN_USERS_QUERY_KEY });
-      queryClient.invalidateQueries({ queryKey: ADMIN_BOARDS_QUERY_KEY });
+
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.ADMIN.USERS,
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.ADMIN.BOARDS,
+      });
     },
   });
 
@@ -68,7 +77,10 @@ export default function AdminDashboardPage() {
 
     onSuccess: () => {
       setBoardToDelete(null);
-      queryClient.invalidateQueries({ queryKey: ADMIN_BOARDS_QUERY_KEY });
+
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.ADMIN.BOARDS,
+      });
     },
   });
 
@@ -137,159 +149,19 @@ export default function AdminDashboardPage() {
 
         {error && <div className="alert error">{error}</div>}
 
-        <section className="admin-stats-grid">
-          <article>
-            <strong>{users.length}</strong>
-            <span>{t("admin.users")}</span>
-          </article>
+        <AdminStats users={users} boards={boards} />
 
-          <article>
-            <strong>{boards.length}</strong>
-            <span>{t("admin.boards")}</span>
-          </article>
+        <AdminUsersTable
+          users={users}
+          currentUser={user}
+          onRoleChange={handleRoleChange}
+          onDeleteUser={setUserToDelete}
+        />
 
-          <article>
-            <strong>
-              {users.filter((item) => item.role === "super_admin").length}
-            </strong>
-            <span>{t("admin.superAdmins")}</span>
-          </article>
-        </section>
-
-        <section className="admin-section">
-          <div className="section-header">
-            <div>
-              <h2>{t("admin.users")}</h2>
-              <p>{t("admin.changeRoles")}</p>
-            </div>
-          </div>
-
-          <div className="admin-table-wrapper">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>{t("admin.user")}</th>
-                  <th>{t("auth.email")}</th>
-                  <th>{t("admin.verified")}</th>
-                  <th>{t("profile.role")}</th>
-                  <th>{t("common.created")}</th>
-                  <th />
-                </tr>
-              </thead>
-
-              <tbody>
-                {users.map((item) => (
-                  <tr key={item.id}>
-                    <td>{item.name}</td>
-                    <td>{item.email}</td>
-                    <td>{item.is_email_verified ? t("common.yes") : t("common.no")}</td>
-
-                    <td>
-                      <select
-                        value={item.role}
-                        disabled={item.id === user?.id}
-                        onChange={(event) =>
-                          handleRoleChange(
-                            item,
-                            event.target.value as AdminUserRole
-                          )
-                        }
-                      >
-                        <option value="user">
-                          {t("admin.userRole")}
-                        </option>
-                        <option value="super_admin">
-                          {t("admin.superAdminRole")}
-                        </option>
-                      </select>
-                    </td>
-
-                    <td>{new Date(item.created_at).toLocaleDateString()}</td>
-
-                    <td>
-                      <Button
-                        type="button"
-                        variant="danger"
-                        disabled={item.id === user?.id}
-                        onClick={() => setUserToDelete(item)}
-                      >
-                        {t("common.delete")}
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <section className="admin-section">
-          <div className="section-header">
-            <div>
-              <h2>{t("admin.boards")}</h2>
-              <p>{t("admin.viewBoards")}</p>
-            </div>
-          </div>
-
-          <div className="admin-table-wrapper">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>{t("admin.board")}</th>
-                  <th>{t("admin.owner")}</th>
-                  <th>{t("common.members")}</th>
-                  <th>{t("common.lists")}</th>
-                  <th>{t("common.cards")}</th>
-                  <th>{t("common.created")}</th>
-                  <th />
-                </tr>
-              </thead>
-
-              <tbody>
-                {boards.map((board) => (
-                  <tr key={board.id}>
-                    <td>
-                      <span
-                        className="admin-board-color"
-                        style={{ backgroundColor: board.background_color }}
-                      />
-                      {board.title}
-                    </td>
-
-                    <td>
-                      {board.owner_name || t("admin.unknownOwner")}
-                      <small>{board.owner_email}</small>
-                    </td>
-
-                    <td>{board.members_count}</td>
-                    <td>{board.lists_count}</td>
-                    <td>{board.cards_count}</td>
-                    <td>{new Date(board.created_at).toLocaleDateString()}</td>
-
-                    <td>
-                      <div className="admin-actions">
-                        <Link
-                          to={getBoardPath(board.id)}
-                          className="button button-secondary"
-                        >
-                          {t("common.open")}
-                        </Link>
-
-                        <Button
-                          type="button"
-                          variant="danger"
-                          onClick={() => setBoardToDelete(board)}
-                        >
-                          {t("common.delete")}
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
+        <AdminBoardsTable
+          boards={boards}
+          onDeleteBoard={setBoardToDelete}
+        />
       </section>
 
       {userToDelete && (

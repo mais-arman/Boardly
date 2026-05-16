@@ -1,6 +1,7 @@
 import { API_ROUTES } from "../../../app/constants/apiRoutes";
 import { apiClient } from "../../../shared/api/client";
-import type { ApiResponse, BoardInvitation, BoardMember } from "../types";
+import type { ApiResponse } from "../../../shared/api/types";
+import type { BoardInvitation, BoardMember } from "../types";
 
 export async function getMyInvitationsRequest(): Promise<BoardInvitation[]> {
   const response = await apiClient.get<ApiResponse<BoardInvitation[]>>(

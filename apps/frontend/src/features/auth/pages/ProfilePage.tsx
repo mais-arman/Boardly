@@ -3,6 +3,8 @@ import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { AUTH_VALIDATION } from "../../../app/constants/authValidation";
+import { QUERY_KEYS } from "../../../app/constants/queryKeys";
 import { ROUTES } from "../../../app/constants/routes";
 import Button from "../../../shared/components/Button";
 import ConfirmModal from "../../../shared/components/ConfirmModal";
@@ -10,8 +12,6 @@ import Input from "../../../shared/components/Input";
 import { getApiErrorMessage } from "../../../shared/api/getApiErrorMessage";
 import { deleteAccountRequest, updateProfileRequest } from "../api/authApi";
 import { useAuth } from "../hooks/useAuth";
-
-const AUTH_QUERY_KEY = ["auth", "me"];
 
 export default function ProfilePage() {
   const { t } = useTranslation();
@@ -27,7 +27,7 @@ export default function ProfilePage() {
   const updateMutation = useMutation({
     mutationFn: updateProfileRequest,
     onSuccess: (updatedUser) => {
-      queryClient.setQueryData(AUTH_QUERY_KEY, updatedUser);
+      queryClient.setQueryData(QUERY_KEYS.AUTH.ME, updatedUser);
       setSuccessMessage(t("profile.updateSuccess"));
     },
   });
@@ -36,7 +36,10 @@ export default function ProfilePage() {
     mutationFn: deleteAccountRequest,
     onSuccess: async () => {
       await logout();
-      navigate(ROUTES.SIGNUP, { replace: true });
+
+      navigate(ROUTES.SIGNUP, {
+        replace: true,
+      });
     },
   });
 
@@ -45,14 +48,16 @@ export default function ProfilePage() {
     setError("");
     setSuccessMessage("");
 
-    if (name.trim().length < 2) {
+    const trimmedName = name.trim();
+
+    if (trimmedName.length < AUTH_VALIDATION.NAME_MIN_LENGTH) {
       setError(t("profile.nameTooShort"));
       return;
     }
 
     try {
       await updateMutation.mutateAsync({
-        name: name.trim(),
+        name: trimmedName,
       });
     } catch (error) {
       setError(getApiErrorMessage(error, t("profile.updateFailed")));
@@ -94,17 +99,31 @@ export default function ProfilePage() {
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <Input
+            id="profile-name"
             label={t("auth.name")}
             value={name}
             onChange={(event) => setName(event.target.value)}
+            minLength={AUTH_VALIDATION.NAME_MIN_LENGTH}
+            maxLength={AUTH_VALIDATION.NAME_MAX_LENGTH}
             required
           />
 
-          <Input label={t("auth.email")} value={user?.email || ""} disabled />
-
-          <Input label={t("profile.role")} value={user?.role || ""} disabled />
+          <Input
+            id="profile-email"
+            label={t("auth.email")}
+            value={user?.email || ""}
+            disabled
+          />
 
           <Input
+            id="profile-role"
+            label={t("profile.role")}
+            value={user?.role || ""}
+            disabled
+          />
+
+          <Input
+            id="profile-email-verified"
             label={t("profile.emailVerified")}
             value={
               user?.is_email_verified

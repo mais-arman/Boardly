@@ -37,6 +37,7 @@ export default function CardDetailsForm({
   return (
     <section className="trello-section">
       <Input
+        id="card-title"
         label={t("boards.title")}
         value={title}
         onChange={(event) => onTitleChange(event.target.value)}
@@ -57,6 +58,7 @@ export default function CardDetailsForm({
       </div>
 
       <Input
+        id="card-due-date"
         label={t("boards.dueDate")}
         type="date"
         value={dueDate}

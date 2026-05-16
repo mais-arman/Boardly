@@ -14,7 +14,7 @@ export default function CardPreview({
   return (
     <button
       type="button"
-      className={`trello-card ${isOverlay ? "drag-overlay-card" : ""}`}
+      className={`trello-card ${isOverlay ? "drag-overlay-card" : ""}`.trim()}
       onClick={onClick}
     >
       {card.labels.length > 0 && (
@@ -38,9 +38,7 @@ export default function CardPreview({
           <span>📅 {new Date(card.due_date).toLocaleDateString()}</span>
         )}
 
-        {card.assignees.length > 0 && (
-          <span>👥 {card.assignees.length}</span>
-        )}
+        {card.assignees.length > 0 && <span>👥 {card.assignees.length}</span>}
       </div>
     </button>
   );

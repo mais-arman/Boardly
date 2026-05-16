@@ -1,9 +1,9 @@
 import { API_ROUTES } from "../../../app/constants/apiRoutes";
 import { apiClient } from "../../../shared/api/client";
+import type { ApiResponse } from "../../../shared/api/types";
 import type {
   AdminBoard,
   AdminUser,
-  ApiResponse,
   UpdateAdminUserRolePayload,
 } from "../types";
 

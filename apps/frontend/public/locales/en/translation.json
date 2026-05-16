@@ -239,6 +239,10 @@
     "OWNER_ROLE_CANNOT_BE_CHANGED": "Owner role cannot be changed.",
     "OWNER_CANNOT_BE_REMOVED": "Owner cannot be removed.",
     "USER_EMAIL_NOT_FOUND": "This email does not belong to an existing Boardly account. Ask the user to sign up first.",
-    "ACCOUNT_NOT_FOUND": "This account does not exist. Please sign up first."
+    "ACCOUNT_NOT_FOUND": "This account does not exist. Please sign up first.",
+    "boardTitleTooShort": "Board title must be at least 2 characters.",
+    "failedSaveBoard": "Failed to save board.",
+    "failedDeleteBoard": "Failed to delete board.",
+    "failedLoadBoards": "Failed to load boards."
   }
 }

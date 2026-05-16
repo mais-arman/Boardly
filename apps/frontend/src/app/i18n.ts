@@ -2,6 +2,7 @@ import i18n from "i18next";
 import HttpBackend from "i18next-http-backend";
 import LanguageDetector from "i18next-browser-languagedetector";
 import { initReactI18next } from "react-i18next";
+import { STORAGE_KEYS } from "./constants/storage";
 
 export const supportedLanguages = {
   en: {
@@ -18,7 +19,7 @@ export const supportedLanguages = {
 
 export type SupportedLanguage = keyof typeof supportedLanguages;
 
-function getNormalizedLanguage(language: string): SupportedLanguage {
+export function getNormalizedLanguage(language: string): SupportedLanguage {
   return language.startsWith("ar") ? "ar" : "en";
 }
 
@@ -48,7 +49,7 @@ i18n
     detection: {
       order: ["localStorage", "navigator"],
       caches: ["localStorage"],
-      lookupLocalStorage: "boardly_language",
+      lookupLocalStorage: STORAGE_KEYS.LANGUAGE,
     },
 
     backend: {

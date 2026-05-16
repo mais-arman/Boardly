@@ -23,8 +23,8 @@ export default function ConfirmModal({
   const { t } = useTranslation();
 
   return (
-    <div className="confirm-backdrop">
-      <section className="confirm-modal">
+    <div className="confirm-backdrop" role="presentation">
+      <section className="confirm-modal" role="dialog" aria-modal="true">
         <div className="confirm-icon danger">!</div>
 
         <h2>{title}</h2>

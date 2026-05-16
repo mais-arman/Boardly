@@ -25,7 +25,7 @@ export default function Button({
     <button
       className={`button button-${variant} ${
         fullWidth ? "full-width" : ""
-      } ${className}`}
+      } ${className}`.trim()}
       disabled={disabled || isLoading}
       {...props}
     >

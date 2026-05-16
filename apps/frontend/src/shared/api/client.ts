@@ -22,7 +22,7 @@ function clearTokens() {
   localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
 }
 
-function resolveQueue(token: string | null) {
+function resolveRefreshQueue(token: string | null) {
   refreshQueue.forEach((callback) => callback(token));
   refreshQueue = [];
 }
@@ -100,14 +100,14 @@ apiClient.interceptors.response.use(
       const nextAccessToken = response.data.data.access_token as string;
 
       saveAccessToken(nextAccessToken);
-      resolveQueue(nextAccessToken);
+      resolveRefreshQueue(nextAccessToken);
 
       originalRequest.headers.Authorization = `Bearer ${nextAccessToken}`;
 
       return apiClient(originalRequest);
     } catch (refreshError) {
       clearTokens();
-      resolveQueue(null);
+      resolveRefreshQueue(null);
 
       return Promise.reject(refreshError);
     } finally {

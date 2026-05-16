@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from "react";
 import type { ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { QUERY_KEYS } from "../../../app/constants/queryKeys";
 import { STORAGE_KEYS } from "../../../app/constants/storage";
 import { disconnectSocket } from "../../../shared/realtime/socket";
 import {
@@ -12,8 +13,6 @@ import {
 import type { LoginPayload, SignupPayload } from "../types";
 import { AuthContext } from "./authContext";
 import type { AuthContextValue } from "./authContext";
-
-const AUTH_QUERY_KEY = ["auth", "me"];
 
 function saveAuthTokens(accessToken: string, refreshToken: string) {
   localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, accessToken);
@@ -30,7 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const hasToken = Boolean(localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN));
 
   const { data: user = null, isLoading } = useQuery({
-    queryKey: AUTH_QUERY_KEY,
+    queryKey: QUERY_KEYS.AUTH.ME,
     queryFn: getCurrentUserRequest,
     enabled: hasToken,
     retry: false,
@@ -40,7 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     mutationFn: loginRequest,
     onSuccess: (data) => {
       saveAuthTokens(data.access_token, data.refresh_token);
-      queryClient.setQueryData(AUTH_QUERY_KEY, data.user);
+      queryClient.setQueryData(QUERY_KEYS.AUTH.ME, data.user);
     },
   });
 
@@ -48,7 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     mutationFn: signupRequest,
     onSuccess: (data) => {
       saveAuthTokens(data.access_token, data.refresh_token);
-      queryClient.setQueryData(AUTH_QUERY_KEY, data.user);
+      queryClient.setQueryData(QUERY_KEYS.AUTH.ME, data.user);
     },
   });
 

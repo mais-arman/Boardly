@@ -1,7 +1,7 @@
 import { API_ROUTES } from "../../../app/constants/apiRoutes";
 import { apiClient } from "../../../shared/api/client";
+import type { ApiResponse } from "../../../shared/api/types";
 import type {
-  ApiResponse,
   AuthResponse,
   LoginPayload,
   SignupPayload,
@@ -56,7 +56,13 @@ export async function logoutRequest(): Promise<void> {
 
 export async function verifyEmailRequest(token: string): Promise<User> {
   const response = await apiClient.post<ApiResponse<User>>(
-    `${API_ROUTES.AUTH.VERIFY_EMAIL}?token=${token}`
+    API_ROUTES.AUTH.VERIFY_EMAIL,
+    null,
+    {
+      params: {
+        token,
+      },
+    }
   );
 
   return response.data.data;

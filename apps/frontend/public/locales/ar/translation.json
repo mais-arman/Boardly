@@ -239,6 +239,10 @@
     "OWNER_ROLE_CANNOT_BE_CHANGED": "لا يمكن تغيير صلاحية المالك.",
     "OWNER_CANNOT_BE_REMOVED": "لا يمكن إزالة المالك.",
     "USER_EMAIL_NOT_FOUND": "هذا البريد الإلكتروني غير مرتبط بحساب موجود في Boardly. اطلب من المستخدم إنشاء حساب أولًا.",
-    "ACCOUNT_NOT_FOUND": "هذا الحساب غير موجود. يرجى إنشاء حساب أولًا."
+    "ACCOUNT_NOT_FOUND": "هذا الحساب غير موجود. يرجى إنشاء حساب أولًا.",
+    "boardTitleTooShort": "يجب أن يكون عنوان اللوحة حرفين على الأقل.",
+    "failedSaveBoard": "فشل حفظ اللوحة.",
+    "failedDeleteBoard": "فشل حذف اللوحة.",
+    "failedLoadBoards": "فشل تحميل اللوحات."
   }
 }

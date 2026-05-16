@@ -82,13 +82,20 @@ export type BoardMember = {
   created_at: string;
 };
 
+export type BoardInvitationStatus =
+  | "pending"
+  | "accepted"
+  | "declined"
+  | "cancelled"
+  | "expired";
+
 export type BoardInvitation = {
   id: string;
   board_id: string;
   invited_by_id: string;
   email: string;
   role: ManageableBoardRole;
-  status: "pending" | "accepted" | "declined" | "cancelled" | "expired";
+  status: BoardInvitationStatus;
   expires_at: string;
   created_at: string;
   responded_at: string | null;
@@ -165,10 +172,4 @@ export type InviteMemberPayload = {
 
 export type UpdateMemberRolePayload = {
   role: ManageableBoardRole;
-};
-
-export type ApiResponse<T> = {
-  success: boolean;
-  message: string;
-  data: T;
 };

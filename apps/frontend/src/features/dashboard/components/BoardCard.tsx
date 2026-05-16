@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { getBoardPath } from "../../../app/constants/routes";
 import Button from "../../../shared/components/Button";
-import type { Board, BoardRole } from "../../boards/types";
+import type { Board } from "../../boards/types";
 
 type BoardCardProps = {
   board: Board;
@@ -10,10 +10,6 @@ type BoardCardProps = {
   onEdit: (board: Board) => void;
   onDelete: (board: Board) => void;
 };
-
-function getRoleKey(role: BoardRole | null) {
-  return role || "";
-}
 
 export default function BoardCard({
   board,
@@ -39,7 +35,7 @@ export default function BoardCard({
 
             {board.role && (
               <span className={`role-pill ${board.role}`}>
-                {t(`roles.${getRoleKey(board.role)}`)}
+                {t(`roles.${board.role}`)}
               </span>
             )}
           </div>
@@ -50,9 +46,11 @@ export default function BoardCard({
             <span>
               {board.members_count} {t("common.members")}
             </span>
+
             <span>
               {board.lists_count} {t("common.lists")}
             </span>
+
             <span>
               {board.cards_count} {t("common.cards")}
             </span>

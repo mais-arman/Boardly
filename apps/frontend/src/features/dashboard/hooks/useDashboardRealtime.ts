@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { QUERY_KEYS } from "../../../app/constants/queryKeys";
 import { getSocket } from "../../../shared/realtime/socket";
 
 type UserRealtimeEvent = {
@@ -24,8 +25,13 @@ export function useDashboardRealtime() {
         event.type === "invitation.accepted" ||
         event.type === "invitation.declined"
       ) {
-        queryClient.invalidateQueries({ queryKey: ["boards"] });
-        queryClient.invalidateQueries({ queryKey: ["my-invitations"] });
+        queryClient.invalidateQueries({
+          queryKey: QUERY_KEYS.BOARDS.ALL,
+        });
+
+        queryClient.invalidateQueries({
+          queryKey: QUERY_KEYS.DASHBOARD.MY_INVITATIONS,
+        });
       }
     }
 

@@ -28,9 +28,3 @@ export type AdminBoard = {
 export type UpdateAdminUserRolePayload = {
   role: AdminUserRole;
 };
-
-export type ApiResponse<T> = {
-  success: boolean;
-  message: string;
-  data: T;
-};

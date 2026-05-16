@@ -9,6 +9,7 @@
         "eirn",
         "eventlet",
         "itsdangerous",
+        "Lngs",
         "lpng",
         "ondelete",
         "onupdate",

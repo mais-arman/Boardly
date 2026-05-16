@@ -7,14 +7,10 @@ import type {
   DragStartEvent,
 } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
+import { QUERY_KEYS } from "../../../app/constants/queryKeys";
+import { getApiErrorMessage } from "../../../shared/api/getApiErrorMessage";
 import type { BoardList, Card } from "../types";
 import { moveCardRequest, reorderListsRequest } from "../api/boardPageApi";
-import {
-  BOARD_QUERY_KEY,
-  CARDS_QUERY_KEY,
-  LISTS_QUERY_KEY,
-} from "./useBoardData";
-import { getApiErrorMessage } from "../../../shared/api/getApiErrorMessage";
 
 type UseBoardDragAndDropParams = {
   boardId: string;
@@ -50,7 +46,7 @@ export function useBoardDragAndDrop({
 
   function updateCardsCache(nextCardsByList: Record<string, Card[]>) {
     Object.entries(nextCardsByList).forEach(([listId, cards]) => {
-      queryClient.setQueryData([CARDS_QUERY_KEY, listId], cards);
+      queryClient.setQueryData(QUERY_KEYS.BOARDS.LIST_CARDS(listId), cards);
     });
   }
 
@@ -135,7 +131,10 @@ export function useBoardDragAndDrop({
 
       const reorderedLists = arrayMove(lists, oldIndex, newIndex);
 
-      queryClient.setQueryData([LISTS_QUERY_KEY, boardId], reorderedLists);
+      queryClient.setQueryData(
+        QUERY_KEYS.BOARDS.LISTS(boardId),
+        reorderedLists
+      );
 
       try {
         await reorderListsRequest(boardId, {
@@ -146,11 +145,11 @@ export function useBoardDragAndDrop({
         });
 
         queryClient.invalidateQueries({
-          queryKey: [BOARD_QUERY_KEY, boardId],
+          queryKey: QUERY_KEYS.BOARDS.DETAIL(boardId),
         });
       } catch (error) {
         queryClient.invalidateQueries({
-          queryKey: [LISTS_QUERY_KEY, boardId],
+          queryKey: QUERY_KEYS.BOARDS.LISTS(boardId),
         });
 
         onError(getApiErrorMessage(error, t("errors.failedReorderLists")));
@@ -184,18 +183,18 @@ export function useBoardDragAndDrop({
       });
 
       queryClient.invalidateQueries({
-        queryKey: [BOARD_QUERY_KEY, boardId],
+        queryKey: QUERY_KEYS.BOARDS.DETAIL(boardId),
       });
 
       lists.forEach((list) => {
         queryClient.invalidateQueries({
-          queryKey: [CARDS_QUERY_KEY, list.id],
+          queryKey: QUERY_KEYS.BOARDS.LIST_CARDS(list.id),
         });
       });
     } catch (error) {
       lists.forEach((list) => {
         queryClient.invalidateQueries({
-          queryKey: [CARDS_QUERY_KEY, list.id],
+          queryKey: QUERY_KEYS.BOARDS.LIST_CARDS(list.id),
         });
       });
 

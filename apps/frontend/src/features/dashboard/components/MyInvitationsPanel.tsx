@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { QUERY_KEYS } from "../../../app/constants/queryKeys";
 import Button from "../../../shared/components/Button";
 import { getApiErrorMessage } from "../../../shared/api/getApiErrorMessage";
 import {
@@ -12,20 +13,27 @@ type MyInvitationsPanelProps = {
   onError: (message: string) => void;
 };
 
-export default function MyInvitationsPanel({ onError }: MyInvitationsPanelProps) {
+export default function MyInvitationsPanel({
+  onError,
+}: MyInvitationsPanelProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   const invitationsQuery = useQuery({
-    queryKey: ["my-invitations"],
+    queryKey: QUERY_KEYS.DASHBOARD.MY_INVITATIONS,
     queryFn: getMyInvitationsRequest,
   });
 
   const acceptMutation = useMutation({
     mutationFn: acceptMyInvitationRequest,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["my-invitations"] });
-      queryClient.invalidateQueries({ queryKey: ["boards"] });
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.DASHBOARD.MY_INVITATIONS,
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.BOARDS.ALL,
+      });
     },
     onError: (error) => {
       onError(getApiErrorMessage(error, t("invitations.acceptFailed")));
@@ -35,8 +43,13 @@ export default function MyInvitationsPanel({ onError }: MyInvitationsPanelProps)
   const declineMutation = useMutation({
     mutationFn: declineMyInvitationRequest,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["my-invitations"] });
-      queryClient.invalidateQueries({ queryKey: ["boards"] });
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.DASHBOARD.MY_INVITATIONS,
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.BOARDS.ALL,
+      });
     },
     onError: (error) => {
       onError(getApiErrorMessage(error, t("invitations.declineFailed")));
@@ -62,7 +75,9 @@ export default function MyInvitationsPanel({ onError }: MyInvitationsPanelProps)
         {invitations.map((invitation) => (
           <article className="invitation-card" key={invitation.id}>
             <div>
-              <h3>{invitation.board_title || t("invitations.boardInvitation")}</h3>
+              <h3>
+                {invitation.board_title || t("invitations.boardInvitation")}
+              </h3>
 
               <p>
                 {t("invitations.invitedBy")}:{" "}

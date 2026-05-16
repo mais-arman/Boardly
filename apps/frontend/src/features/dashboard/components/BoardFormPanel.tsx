@@ -38,9 +38,7 @@ export default function BoardFormPanel({
       <div className="section-header">
         <div>
           <h2>
-            {editingBoard
-              ? t("boards.saveChanges")
-              : t("boards.createBoard")}
+            {editingBoard ? t("boards.saveChanges") : t("boards.createBoard")}
           </h2>
           <p>{t("boards.boardDescription")}</p>
         </div>
@@ -48,6 +46,7 @@ export default function BoardFormPanel({
 
       <form className="auth-form" onSubmit={onSubmit}>
         <Input
+          id="board-title"
           label={t("boards.boardTitle")}
           value={boardTitle}
           onChange={(event) => onTitleChange(event.target.value)}

@@ -1,7 +1,15 @@
-import type { Board } from "../types";
+import type { Board, BoardRole } from "../types";
+
+function isEditorRole(role: BoardRole) {
+  return role === "owner" || role === "admin" || role === "editor";
+}
+
+function isManagerRole(role: BoardRole) {
+  return role === "owner" || role === "admin";
+}
 
 export function useBoardPermissions(board: Board | undefined) {
-  const role = board?.role || "viewer";
+  const role: BoardRole = board?.role || "viewer";
 
   return {
     role,
@@ -13,18 +21,15 @@ export function useBoardPermissions(board: Board | undefined) {
 
     canView: Boolean(board),
 
-    canEditBoard: role === "owner" || role === "admin",
+    canEditBoard: isManagerRole(role),
 
-    canManageMembers: role === "owner" || role === "admin",
+    canManageMembers: isManagerRole(role),
 
-    canManageLists:
-      role === "owner" || role === "admin" || role === "editor",
+    canManageLists: isEditorRole(role),
 
-    canManageCards:
-      role === "owner" || role === "admin" || role === "editor",
+    canManageCards: isEditorRole(role),
 
-    canComment:
-      role === "owner" || role === "admin" || role === "editor",
+    canComment: isEditorRole(role),
 
     canDeleteBoard: role === "owner",
   };
