@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { QUERY_KEYS } from "../../../../app/constants/queryKeys";
 import type { Card } from "../../../cards/types";
-import type { BoardList } from "../../../boards/types";
+import type { BoardList } from "../../types";
 import {
   getBoardListsRequest,
   getBoardRequest,
@@ -31,6 +31,8 @@ export function useBoardData(
     [listsQuery.data]
   );
 
+  const listIds = useMemo(() => lists.map((list) => list.id), [lists]);
+
   const cardQueries = useQueries({
     queries: lists.map((list) => ({
       queryKey: QUERY_KEYS.BOARDS.LIST_CARDS(list.id),
@@ -52,6 +54,9 @@ export function useBoardData(
     enabled: Boolean(selectedCardId),
   });
 
+  const isCardsLoading = cardQueries.some((query) => query.isLoading);
+  const isCardsError = cardQueries.some((query) => query.isError);
+
   return {
     boardQuery,
     listsQuery,
@@ -60,11 +65,12 @@ export function useBoardData(
 
     board: boardQuery.data,
     lists,
-    listIds: lists.map((list) => list.id),
+    listIds,
     cardsByList,
     comments: commentsQuery.data || [],
 
     isLoading: boardQuery.isLoading || listsQuery.isLoading,
-    isError: boardQuery.isError || listsQuery.isError,
+    isCardsLoading,
+    isError: boardQuery.isError || listsQuery.isError || isCardsError,
   };
 }

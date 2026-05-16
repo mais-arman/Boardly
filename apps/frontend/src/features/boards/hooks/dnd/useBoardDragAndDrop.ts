@@ -9,8 +9,14 @@ import type {
 import { arrayMove } from "@dnd-kit/sortable";
 import { QUERY_KEYS } from "../../../../app/constants/queryKeys";
 import { getApiErrorMessage } from "../../../../shared/api/getApiErrorMessage";
-import type { BoardList, Card } from "../../../cards/types";
+import type { BoardList } from "../../types";
+import type { Card } from "../../../cards/types";
 import { moveCardRequest, reorderListsRequest } from "../../api/boardPageApi";
+import {
+  findCardContainer,
+  isListId,
+  updateCardPositions,
+} from "./dndHelpers";
 
 type UseBoardDragAndDropParams = {
   boardId: string;
@@ -19,19 +25,6 @@ type UseBoardDragAndDropParams = {
   canEdit: boolean;
   onError: (message: string) => void;
 };
-
-function findCardContainer(
-  cardsByList: Record<string, Card[]>,
-  cardId: string
-) {
-  return Object.keys(cardsByList).find((listId) =>
-    cardsByList[listId].some((card) => card.id === cardId)
-  );
-}
-
-function isListId(lists: BoardList[], id: string) {
-  return lists.some((list) => list.id === id);
-}
 
 export function useBoardDragAndDrop({
   boardId,
@@ -98,67 +91,47 @@ export function useBoardDragAndDrop({
 
     updateCardsCache({
       ...cardsByList,
-
-      [sourceListId]: sourceCards.map((card, index) => ({
-        ...card,
-        position: index,
-      })),
-
-      [targetListId]: targetCards.map((card, index) => ({
-        ...card,
-        position: index,
-      })),
+      [sourceListId]: updateCardPositions(sourceCards),
+      [targetListId]: updateCardPositions(targetCards),
     });
   }
 
-  async function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event;
+  async function handleListDragEnd(activeId: string, overId: string) {
+    const oldIndex = lists.findIndex((list) => list.id === activeId);
+    const newIndex = lists.findIndex((list) => list.id === overId);
 
-    setActiveCard(null);
-
-    if (!canEdit || !over) return;
-
-    const activeType = active.data.current?.type;
-    const overType = over.data.current?.type;
-
-    if (activeType === "list" && overType === "list") {
-      const oldIndex = lists.findIndex((list) => list.id === active.id);
-      const newIndex = lists.findIndex((list) => list.id === over.id);
-
-      if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) {
-        return;
-      }
-
-      const reorderedLists = arrayMove(lists, oldIndex, newIndex);
-
-      queryClient.setQueryData(
-        QUERY_KEYS.BOARDS.LISTS(boardId),
-        reorderedLists
-      );
-
-      try {
-        await reorderListsRequest(boardId, {
-          lists: reorderedLists.map((list, index) => ({
-            id: list.id,
-            position: index,
-          })),
-        });
-
-        queryClient.invalidateQueries({
-          queryKey: QUERY_KEYS.BOARDS.DETAIL(boardId),
-        });
-      } catch (error) {
-        queryClient.invalidateQueries({
-          queryKey: QUERY_KEYS.BOARDS.LISTS(boardId),
-        });
-
-        onError(getApiErrorMessage(error, t("errors.failedReorderLists")));
-      }
-
+    if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) {
       return;
     }
 
-    if (activeType !== "card") return;
+    const reorderedLists = arrayMove(lists, oldIndex, newIndex);
+
+    queryClient.setQueryData(QUERY_KEYS.BOARDS.LISTS(boardId), reorderedLists);
+
+    try {
+      await reorderListsRequest(boardId, {
+        lists: reorderedLists.map((list, index) => ({
+          id: list.id,
+          position: index,
+        })),
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.BOARDS.DETAIL(boardId),
+      });
+    } catch (error) {
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.BOARDS.LISTS(boardId),
+      });
+
+      onError(getApiErrorMessage(error, t("errors.failedReorderLists")));
+    }
+  }
+
+  async function handleCardDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+
+    if (!over) return;
 
     const activeCardFromEvent = active.data.current?.card as Card | undefined;
     const activeId = String(active.id);
@@ -199,6 +172,26 @@ export function useBoardDragAndDrop({
       });
 
       onError(getApiErrorMessage(error, t("errors.failedMoveCard")));
+    }
+  }
+
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+
+    setActiveCard(null);
+
+    if (!canEdit || !over) return;
+
+    const activeType = active.data.current?.type;
+    const overType = over.data.current?.type;
+
+    if (activeType === "list" && overType === "list") {
+      await handleListDragEnd(String(active.id), String(over.id));
+      return;
+    }
+
+    if (activeType === "card") {
+      await handleCardDragEnd(event);
     }
   }
 

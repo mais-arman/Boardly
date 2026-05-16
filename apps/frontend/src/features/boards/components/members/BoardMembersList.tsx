@@ -7,7 +7,8 @@ type BoardMembersListProps = {
   roleOptions: ManageableBoardRole[];
   canManageMembers: boolean;
   isLoading: boolean;
-  isRemoving: boolean;
+  removingMemberId: string | null;
+  updatingMemberId: string | null;
   onRoleChange: (member: BoardMember, nextRole: string) => void;
   onRemoveMember: (member: BoardMember) => void;
 };
@@ -21,7 +22,8 @@ export default function BoardMembersList({
   roleOptions,
   canManageMembers,
   isLoading,
-  isRemoving,
+  removingMemberId,
+  updatingMemberId,
   onRoleChange,
   onRemoveMember,
 }: BoardMembersListProps) {
@@ -33,45 +35,55 @@ export default function BoardMembersList({
 
       {isLoading ? (
         <p className="muted-text">{t("members.loadingMembers")}</p>
+      ) : members.length === 0 ? (
+        <p className="muted-text">{t("members.noMembers")}</p>
       ) : (
         <div className="members-list">
-          {members.map((member) => (
-            <article className="member-row" key={member.id}>
-              <div>
-                <strong>{getMemberDisplayName(member)}</strong>
-                <span>
-                  {member.user?.email || member.user_id} ·{" "}
-                  {t(`roles.${member.role}`)}
-                </span>
-              </div>
+          {members.map((member) => {
+            const isOwner = member.role === "owner";
+            const isRemoving = removingMemberId === member.id;
+            const isUpdating = updatingMemberId === member.id;
 
-              {canManageMembers && member.role !== "owner" && (
-                <div className="member-actions">
-                  <select
-                    value={member.role}
-                    onChange={(event) =>
-                      onRoleChange(member, event.target.value)
-                    }
-                  >
-                    {roleOptions.map((item) => (
-                      <option key={item} value={item}>
-                        {t(`roles.${item}`)}
-                      </option>
-                    ))}
-                  </select>
-
-                  <Button
-                    type="button"
-                    variant="danger"
-                    isLoading={isRemoving}
-                    onClick={() => onRemoveMember(member)}
-                  >
-                    {t("members.remove")}
-                  </Button>
+            return (
+              <article className="member-row" key={member.id}>
+                <div>
+                  <strong>{getMemberDisplayName(member)}</strong>
+                  <span>
+                    {member.user?.email || member.user_id} ·{" "}
+                    {t(`roles.${member.role}`)}
+                  </span>
                 </div>
-              )}
-            </article>
-          ))}
+
+                {canManageMembers && !isOwner && (
+                  <div className="member-actions">
+                    <select
+                      value={member.role}
+                      disabled={isUpdating || isRemoving}
+                      onChange={(event) =>
+                        onRoleChange(member, event.target.value)
+                      }
+                    >
+                      {roleOptions.map((item) => (
+                        <option key={item} value={item}>
+                          {t(`roles.${item}`)}
+                        </option>
+                      ))}
+                    </select>
+
+                    <Button
+                      type="button"
+                      variant="danger"
+                      isLoading={isRemoving}
+                      disabled={isUpdating}
+                      onClick={() => onRemoveMember(member)}
+                    >
+                      {t("members.remove")}
+                    </Button>
+                  </div>
+                )}
+              </article>
+            );
+          })}
         </div>
       )}
     </section>

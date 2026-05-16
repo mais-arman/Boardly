@@ -4,7 +4,11 @@ import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "../../../app/constants/queryKeys";
 import { getApiErrorMessage } from "../../../shared/api/getApiErrorMessage";
-import type { BoardInvitation, BoardMember, ManageableBoardRole } from "../types";
+import type {
+  BoardInvitation,
+  BoardMember,
+  ManageableBoardRole,
+} from "../types";
 import {
   cancelBoardInvitationRequest,
   getBoardInvitationsRequest,
@@ -37,6 +41,12 @@ export default function BoardMembersPanel({
   const [role, setRole] = useState<ManageableBoardRole>("viewer");
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+
+  const [removingMemberId, setRemovingMemberId] = useState<string | null>(null);
+  const [updatingMemberId, setUpdatingMemberId] = useState<string | null>(null);
+  const [cancellingInvitationId, setCancellingInvitationId] = useState<
+    string | null
+  >(null);
 
   const membersQuery = useQuery({
     queryKey: QUERY_KEYS.BOARDS.MEMBERS(boardId),
@@ -88,6 +98,10 @@ export default function BoardMembersPanel({
         queryKey: QUERY_KEYS.BOARDS.MEMBERS(boardId),
       });
     },
+
+    onSettled: () => {
+      setUpdatingMemberId(null);
+    },
   });
 
   const removeMemberMutation = useMutation({
@@ -98,6 +112,10 @@ export default function BoardMembersPanel({
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.BOARDS.MEMBERS(boardId),
       });
+    },
+
+    onSettled: () => {
+      setRemovingMemberId(null);
     },
   });
 
@@ -110,12 +128,18 @@ export default function BoardMembersPanel({
         queryKey: QUERY_KEYS.BOARDS.INVITATIONS(boardId),
       });
     },
+
+    onSettled: () => {
+      setCancellingInvitationId(null);
+    },
   });
 
   async function handleInvite(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
     setSuccessMessage("");
+
+    if (!canManageMembers) return;
 
     try {
       await inviteMutation.mutateAsync();
@@ -125,9 +149,10 @@ export default function BoardMembersPanel({
   }
 
   async function handleRoleChange(member: BoardMember, nextRole: string) {
-    if (member.role === "owner") return;
+    if (!canManageMembers || member.role === "owner") return;
 
     setError("");
+    setUpdatingMemberId(member.id);
 
     try {
       await updateRoleMutation.mutateAsync({
@@ -140,9 +165,10 @@ export default function BoardMembersPanel({
   }
 
   async function handleRemoveMember(member: BoardMember) {
-    if (member.role === "owner") return;
+    if (!canManageMembers || member.role === "owner") return;
 
     setError("");
+    setRemovingMemberId(member.id);
 
     try {
       await removeMemberMutation.mutateAsync(member.id);
@@ -152,7 +178,10 @@ export default function BoardMembersPanel({
   }
 
   async function handleCancelInvitation(invitation: BoardInvitation) {
+    if (!canManageMembers) return;
+
     setError("");
+    setCancellingInvitationId(invitation.id);
 
     try {
       await cancelInvitationMutation.mutateAsync(invitation.id);
@@ -195,7 +224,8 @@ export default function BoardMembersPanel({
           roleOptions={ROLE_OPTIONS}
           canManageMembers={canManageMembers}
           isLoading={membersQuery.isLoading}
-          isRemoving={removeMemberMutation.isPending}
+          removingMemberId={removingMemberId}
+          updatingMemberId={updatingMemberId}
           onRoleChange={handleRoleChange}
           onRemoveMember={handleRemoveMember}
         />
@@ -205,6 +235,7 @@ export default function BoardMembersPanel({
             invitations={invitationsQuery.data || []}
             isLoading={invitationsQuery.isLoading}
             isCancelling={cancelInvitationMutation.isPending}
+            cancellingInvitationId={cancellingInvitationId}
             onCancelInvitation={handleCancelInvitation}
           />
         )}

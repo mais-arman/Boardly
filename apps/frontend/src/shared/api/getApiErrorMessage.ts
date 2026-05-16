@@ -1,11 +1,6 @@
 import { AxiosError } from "axios";
 import i18n from "../../app/i18n";
-
-type ApiErrorResponse = {
-  message?: string;
-  code?: string;
-  errors?: Record<string, string[]>;
-};
+import type { ApiErrorResponse } from "./types";
 
 export function getApiErrorMessage(
   error: unknown,

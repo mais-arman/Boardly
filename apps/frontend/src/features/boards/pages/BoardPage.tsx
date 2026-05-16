@@ -91,6 +91,10 @@ export default function BoardPage() {
 
       {state.pageError && <div className="alert error">{state.pageError}</div>}
 
+      {boardData.isCardsLoading && (
+        <div className="alert info">{t("boards.loadingCards")}</div>
+      )}
+
       {boardData.lists.length === 0 && (
         <EmptyBoardState
           canManageLists={permissions.canManageLists}
@@ -99,41 +103,45 @@ export default function BoardPage() {
         />
       )}
 
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCorners}
-        onDragStart={drag.handleDragStart}
-        onDragOver={drag.handleDragOver}
-        onDragEnd={drag.handleDragEnd}
-        onDragCancel={drag.handleDragCancel}
-      >
-        <BoardLanes
-          lists={boardData.lists}
-          cardsByList={boardData.cardsByList}
-          canManageCards={permissions.canManageCards}
-          canManageLists={permissions.canManageLists}
-          editingListId={state.editingListId}
-          editingListTitle={state.editingListTitle}
-          cardTitleByList={state.cardTitleByList}
-          newListTitle={state.newListTitle}
-          isCreatingCard={mutations.createCardMutation.isPending}
-          isCreatingList={mutations.createListMutation.isPending}
-          onOpenCard={actions.setSelectedCard}
-          onStartEditList={actions.startEditingList}
-          onCancelEditList={actions.cancelEditingList}
-          onEditingListTitleChange={actions.setEditingListTitle}
-          onUpdateList={actions.handleUpdateList}
-          onDeleteList={actions.setListToDelete}
-          onCardTitleChange={actions.handleCardTitleChange}
-          onCreateCard={actions.handleCreateCard}
-          onNewListTitleChange={actions.setNewListTitle}
-          onCreateList={actions.handleCreateList}
-        />
+      {boardData.lists.length > 0 && (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCorners}
+          onDragStart={drag.handleDragStart}
+          onDragOver={drag.handleDragOver}
+          onDragEnd={drag.handleDragEnd}
+          onDragCancel={drag.handleDragCancel}
+        >
+          <BoardLanes
+            lists={boardData.lists}
+            cardsByList={boardData.cardsByList}
+            canManageCards={permissions.canManageCards}
+            canManageLists={permissions.canManageLists}
+            editingListId={state.editingListId}
+            editingListTitle={state.editingListTitle}
+            cardTitleByList={state.cardTitleByList}
+            newListTitle={state.newListTitle}
+            isCreatingCard={mutations.createCardMutation.isPending}
+            isCreatingList={mutations.createListMutation.isPending}
+            onOpenCard={actions.setSelectedCard}
+            onStartEditList={actions.startEditingList}
+            onCancelEditList={actions.cancelEditingList}
+            onEditingListTitleChange={actions.setEditingListTitle}
+            onUpdateList={actions.handleUpdateList}
+            onDeleteList={actions.setListToDelete}
+            onCardTitleChange={actions.handleCardTitleChange}
+            onCreateCard={actions.handleCreateCard}
+            onNewListTitleChange={actions.setNewListTitle}
+            onCreateList={actions.handleCreateList}
+          />
 
-        <DragOverlay>
-          {drag.activeCard ? <CardPreview card={drag.activeCard} isOverlay /> : null}
-        </DragOverlay>
-      </DndContext>
+          <DragOverlay>
+            {drag.activeCard ? (
+              <CardPreview card={drag.activeCard} isOverlay />
+            ) : null}
+          </DragOverlay>
+        </DndContext>
+      )}
 
       {state.selectedCard && (
         <CardDetailsModal

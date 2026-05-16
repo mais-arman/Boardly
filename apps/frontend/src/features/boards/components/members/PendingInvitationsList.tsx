@@ -6,6 +6,7 @@ type PendingInvitationsListProps = {
   invitations: BoardInvitation[];
   isLoading: boolean;
   isCancelling: boolean;
+  cancellingInvitationId: string | null;
   onCancelInvitation: (invitation: BoardInvitation) => void;
 };
 
@@ -13,6 +14,7 @@ export default function PendingInvitationsList({
   invitations,
   isLoading,
   isCancelling,
+  cancellingInvitationId,
   onCancelInvitation,
 }: PendingInvitationsListProps) {
   const { t } = useTranslation();
@@ -27,28 +29,33 @@ export default function PendingInvitationsList({
         <p className="muted-text">{t("members.noPendingInvitations")}</p>
       ) : (
         <div className="members-list">
-          {invitations.map((invitation) => (
-            <article className="member-row" key={invitation.id}>
-              <div>
-                <strong>{invitation.email}</strong>
-                <span>
-                  {t(`roles.${invitation.role}`)} ·{" "}
-                  {t(`invitationStatus.${invitation.status}`)}
-                </span>
-              </div>
+          {invitations.map((invitation) => {
+            const isCurrentCancelling =
+              isCancelling && cancellingInvitationId === invitation.id;
 
-              {invitation.status === "pending" && (
-                <Button
-                  type="button"
-                  variant="danger"
-                  isLoading={isCancelling}
-                  onClick={() => onCancelInvitation(invitation)}
-                >
-                  {t("common.cancel")}
-                </Button>
-              )}
-            </article>
-          ))}
+            return (
+              <article className="member-row" key={invitation.id}>
+                <div>
+                  <strong>{invitation.email}</strong>
+                  <span>
+                    {t(`roles.${invitation.role}`)} ·{" "}
+                    {t(`invitationStatus.${invitation.status}`)}
+                  </span>
+                </div>
+
+                {invitation.status === "pending" && (
+                  <Button
+                    type="button"
+                    variant="danger"
+                    isLoading={isCurrentCancelling}
+                    onClick={() => onCancelInvitation(invitation)}
+                  >
+                    {t("common.cancel")}
+                  </Button>
+                )}
+              </article>
+            );
+          })}
         </div>
       )}
     </section>

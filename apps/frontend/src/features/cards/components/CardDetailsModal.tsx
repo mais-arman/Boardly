@@ -1,8 +1,8 @@
-import { useState } from "react";
 import type { FormEvent } from "react";
 import { useTranslation } from "react-i18next";
-import type { Card, Comment } from "../../cards/types";
+import type { Card, Comment } from "../types";
 import { useCardMeta } from "../hooks/useCardMeta";
+import { useCardDetailsState } from "../hooks/useCardDetailsState";
 import CardDetailsHeader from "./card-details/CardDetailsHeader";
 import CardDetailsForm from "./card-details/CardDetailsForm";
 import CardLabelsPanel from "./card-details/CardLabelsPanel";
@@ -51,12 +51,8 @@ export default function CardDetailsModal({
 }: CardDetailsModalProps) {
   const { t } = useTranslation();
 
-  const [title, setTitle] = useState(card.title);
-  const [description, setDescription] = useState(card.description || "");
-  const [dueDate, setDueDate] = useState(
-    card.due_date ? card.due_date.slice(0, 10) : ""
-  );
-  const [comment, setComment] = useState("");
+  const details = useCardDetailsState(card);
+  const { state, actions } = details;
 
   const { labels, assignees, meta } = useCardMeta({
     boardId,
@@ -69,7 +65,9 @@ export default function CardDetailsModal({
 
     meta.setLocalError("");
 
-    if (title.trim().length < 2) {
+    const trimmedTitle = state.title.trim();
+
+    if (trimmedTitle.length < 2) {
       meta.setLocalError(t("errors.cardTitleTooShort"));
       return;
     }
@@ -77,9 +75,9 @@ export default function CardDetailsModal({
     try {
       await onUpdate({
         cardId: card.id,
-        title: title.trim(),
-        description,
-        dueDate,
+        title: trimmedTitle,
+        description: state.description,
+        dueDate: state.dueDate,
       });
 
       const labelsUpdatedCard = await meta.syncLabels();
@@ -99,13 +97,13 @@ export default function CardDetailsModal({
 
     if (!canComment) return;
 
-    const content = comment.trim();
+    const content = state.comment.trim();
 
     if (!content) return;
 
     try {
       await onCreateComment(card.id, content);
-      setComment("");
+      actions.setComment("");
     } catch {
       meta.setLocalError(t("errors.failedAddComment"));
     }
@@ -115,7 +113,7 @@ export default function CardDetailsModal({
     <div className="modal-backdrop trello-modal-backdrop">
       <section className="trello-card-modal">
         <CardDetailsHeader
-          title={card.title}
+          title={state.title || card.title}
           roleLabel={roleLabel}
           onClose={onClose}
         />
@@ -124,34 +122,32 @@ export default function CardDetailsModal({
         {meta.localError && <div className="alert error">{meta.localError}</div>}
 
         {!canEdit && (
-          <div className="alert warning">
-            {t("card.viewerEditDisabled")}
-          </div>
+          <div className="alert warning">{t("card.viewerEditDisabled")}</div>
         )}
 
         <div className="trello-modal-grid">
           <section className="trello-main-column">
             <CardDetailsForm
               card={card}
-              title={title}
-              description={description}
-              dueDate={dueDate}
+              title={state.title}
+              description={state.description}
+              dueDate={state.dueDate}
               canEdit={canEdit}
               isDeleting={isDeleting}
               isSaving={isUpdating || meta.isSavingMeta}
-              onTitleChange={setTitle}
-              onDescriptionChange={setDescription}
-              onDueDateChange={setDueDate}
+              onTitleChange={actions.setTitle}
+              onDescriptionChange={actions.setDescription}
+              onDueDateChange={actions.setDueDate}
               onSave={handleSaveChanges}
               onDelete={onDelete}
             />
 
             <CardActivity
               comments={comments}
-              comment={comment}
+              comment={state.comment}
               canComment={canComment}
               isAddingComment={isAddingComment}
-              onCommentChange={setComment}
+              onCommentChange={actions.setComment}
               onSubmitComment={handleAddComment}
             />
           </section>

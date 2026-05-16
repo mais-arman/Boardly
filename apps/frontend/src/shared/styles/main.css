@@ -60,10 +60,6 @@ a {
   text-decoration: none;
 }
 
-/* =========================
-   Shared
-========================= */
-
 .screen-center {
   min-height: 100vh;
   display: grid;
@@ -150,9 +146,6 @@ a {
   font-weight: 750;
 }
 
-/* =========================
-   Buttons
-========================= */
 
 .button {
   height: 48px;
@@ -205,9 +198,6 @@ a {
   width: 100%;
 }
 
-/* =========================
-   Forms
-========================= */
 
 .field-group {
   display: flex;
@@ -270,9 +260,6 @@ a {
   gap: 12px;
 }
 
-/* =========================
-   Auth
-========================= */
 
 .auth-layout {
   min-height: 100vh;
@@ -418,9 +405,6 @@ a {
   line-height: 1.7;
 }
 
-/* =========================
-   Dashboard
-========================= */
 
 .dashboard-shell {
   min-height: 100vh;
@@ -696,10 +680,6 @@ a {
   margin-bottom: 14px;
 }
 
-/* =========================
-   Profile
-========================= */
-
 .profile-page {
   min-height: 100vh;
   display: grid;
@@ -742,9 +722,6 @@ a {
   margin: 0 0 8px;
 }
 
-/* =========================
-   Confirm Modal
-========================= */
 
 .confirm-backdrop,
 .modal-backdrop,
@@ -798,18 +775,20 @@ a {
   gap: 12px;
 }
 
-/* =========================
-   Trello Board Page
-========================= */
 
 .trello-board-page {
   min-height: 100vh;
+  height: 100vh;
   padding: 22px;
   background-size: cover;
   color: white;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .trello-board-header {
+  flex-shrink: 0;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -852,25 +831,73 @@ a {
   margin-bottom: 18px;
 }
 
-.workflow-empty h2 {
-  margin: 0 0 8px;
+.trello-board-page > .alert {
+  flex-shrink: 0;
+  width: fit-content;
+  max-width: min(620px, 100%);
+  padding: 13px 18px;
+  border-radius: 16px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
 }
 
-.workflow-empty p {
-  color: #5e6c84;
+html[dir="ltr"] .trello-board-page > .alert {
+  margin: 8px auto 16px 0;
+  text-align: left;
+}
+
+html[dir="rtl"] .trello-board-page > .alert {
+  margin: 8px 0 16px auto;
+  text-align: right;
 }
 
 .trello-lanes {
+  flex: 1;
+  min-height: 0;
   display: flex;
   align-items: flex-start;
-  gap: 14px;
+  gap: 16px;
   overflow-x: auto;
-  padding: 8px 4px 24px;
+  overflow-y: hidden;
+  padding: 8px 6px 36px;
+  scroll-padding-inline: 24px;
+  scrollbar-gutter: stable;
+}
+
+.trello-lanes::before,
+.trello-lanes::after {
+  content: "";
+  flex: 0 0 2px;
+}
+
+.trello-lanes {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.6) rgba(255, 255, 255, 0.18);
+}
+
+.trello-lanes::-webkit-scrollbar {
+  height: 12px;
+}
+
+.trello-lanes::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+}
+
+.trello-lanes::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.62);
+  border-radius: 999px;
+  border: 3px solid rgba(255, 255, 255, 0.18);
+}
+
+.trello-lanes::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.82);
 }
 
 .trello-list {
   width: 304px;
   flex: 0 0 304px;
+  max-height: calc(100vh - 260px);
+  overflow-y: auto;
   border-radius: 14px;
   background: #ebecf0;
   padding: 10px;
@@ -1046,10 +1073,6 @@ a {
   flex-direction: column;
   gap: 8px;
 }
-
-/* =========================
-   Trello Card Modal
-========================= */
 
 .trello-modal-backdrop {
   align-items: center;
@@ -1277,9 +1300,6 @@ a {
   line-height: 1.55;
 }
 
-/* =========================
-   Members Panel
-========================= */
 
 .members-panel {
   position: fixed;
@@ -1364,10 +1384,6 @@ a {
   align-items: center;
   gap: 8px;
 }
-
-/* =========================
-   Admin
-========================= */
 
 .admin-page {
   min-height: 100vh;
@@ -1471,9 +1487,6 @@ a {
   vertical-align: -2px;
 }
 
-/* =========================
-   Animations + Responsive
-========================= */
 
 @keyframes card-enter {
   from {
@@ -1567,9 +1580,10 @@ a {
   }
 
   .trello-list {
-    width: 286px;
-    flex-basis: 286px;
-  }
+  width: 286px;
+  flex-basis: 286px;
+  max-height: calc(100vh - 240px);
+}
 }
 
 .board-card {
@@ -1677,11 +1691,4 @@ html[dir="rtl"] .admin-board-color {
 html[dir="rtl"] .members-panel {
   right: auto;
   left: 0;
-}
-.trello-lanes {
-  scrollbar-width: none;
-}
-
-.trello-lanes::-webkit-scrollbar {
-  display: none;
 }

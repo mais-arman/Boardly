@@ -97,7 +97,8 @@
     "deleteCardDescription": "حذف {{title}}؟",
     "deleteBoardQuestion": "هل تريد حذف اللوحة؟",
     "deleteBoardDescription": "سيتم حذف اللوحة والقوائم والبطاقات والتصنيفات والتعليقات والأعضاء بشكل دائم.",
-    "createDefaultWorkflow": "إنشاء مسار العمل الافتراضي"
+    "createDefaultWorkflow": "إنشاء مسار العمل الافتراضي",
+    "loadingCards": "جاري تحميل الكروت..."
   },
   "roles": {
     "owner": "مالك",
@@ -243,6 +244,7 @@
     "boardTitleTooShort": "يجب أن يكون عنوان اللوحة حرفين على الأقل.",
     "failedSaveBoard": "فشل حفظ اللوحة.",
     "failedDeleteBoard": "فشل حذف اللوحة.",
-    "failedLoadBoards": "فشل تحميل اللوحات."
+    "failedLoadBoards": "فشل تحميل اللوحات.",
+    "noMembers": "لا يوجد أعضاء."
   }
 }

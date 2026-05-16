@@ -97,7 +97,8 @@
     "deleteCardDescription": "Delete {{title}}?",
     "deleteBoardQuestion": "Delete board?",
     "deleteBoardDescription": "This permanently deletes the board, lists, cards, labels, comments, and members.",
-    "createDefaultWorkflow": "Create default workflow"
+    "createDefaultWorkflow": "Create default workflow",
+    "loadingCards": "Loading cards..."
   },
   "roles": {
     "owner": "Owner",
@@ -243,6 +244,7 @@
     "boardTitleTooShort": "Board title must be at least 2 characters.",
     "failedSaveBoard": "Failed to save board.",
     "failedDeleteBoard": "Failed to delete board.",
-    "failedLoadBoards": "Failed to load boards."
+    "failedLoadBoards": "Failed to load boards.",
+    "noMembers": "No members found."
   }
 }

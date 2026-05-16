@@ -73,7 +73,3 @@ export type ApplyLabelPayload = {
 export type AddAssigneePayload = {
   user_id: string;
 };
-
-export type BoardList = {
-  id: string;
-};
