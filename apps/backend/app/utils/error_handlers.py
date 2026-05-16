@@ -14,52 +14,47 @@ def register_error_handlers(app):
 
     @app.errorhandler(RateLimitExceeded)
     def handle_rate_limit(error):
-        logger.warning({
-            "error": "RateLimitExceeded",
-            "message": str(error.description),
-            "status_code": 429,
-            "path": request.path,
-            "method": request.method,
-        })
-
         return error_response(
             error="RateLimitExceeded",
             message="Too many requests. Please try again later.",
             status_code=429,
+            code="RATE_LIMIT_EXCEEDED",
         )
 
     @app.errorhandler(Exception)
     def handle_exceptions(error):
         errors = None
+        code = None
 
         if isinstance(error, AppError):
             status_code = error.status_code
             message = error.message
             error_name = error.__class__.__name__
             errors = error.errors
+            code = error.code
 
         elif isinstance(error, ValidationError):
             status_code = 400
             message = "Validation error"
             error_name = "ValidationError"
             errors = error.messages
+            code = "VALIDATION_ERROR"
 
         elif isinstance(error, HTTPException):
             status_code = error.code or 500
             message = getattr(error, "description", "HTTP error")
             error_name = getattr(error, "name", error.__class__.__name__)
+            code = error_name.upper().replace(" ", "_")
 
         else:
             status_code = getattr(error, "code", 500)
-            error_name = error.__class__.__name__
 
             if not isinstance(status_code, int):
                 status_code = 500
 
+            error_name = error.__class__.__name__
             message = "Internal server error" if status_code >= 500 else str(error)
-
-        if not isinstance(status_code, int):
-            status_code = 500
+            code = "INTERNAL_SERVER_ERROR" if status_code >= 500 else "REQUEST_ERROR"
 
         try:
             db.session.rollback()
@@ -84,4 +79,5 @@ def register_error_handlers(app):
             message=message,
             status_code=status_code,
             errors=errors,
+            code=code,
         )

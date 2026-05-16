@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import Button from "../../../../shared/components/Button";
 
 type EmptyBoardStateProps = {
@@ -11,28 +12,30 @@ export default function EmptyBoardState({
   isCreating,
   onCreateDefaultWorkflow,
 }: EmptyBoardStateProps) {
+  const { t } = useTranslation();
+
   return (
     <section className="workflow-empty">
-      <h2>No lists yet</h2>
+      <h2>{t("boards.noListsYet")}</h2>
 
       {canManageLists ? (
         <>
-          <p>Create a Trello-like workflow to start managing cards.</p>
+          <p>{t("boards.emptyWorkflowDescription")}</p>
 
           <Button
             type="button"
             isLoading={isCreating}
             onClick={onCreateDefaultWorkflow}
           >
-            Create default workflow
+            {t("boards.createDefaultWorkflow")}
           </Button>
         </>
       ) : (
         <>
-          <p>You have viewer access. You can view board content only.</p>
+          <p>{t("boards.viewerBoardAccess")}</p>
 
           <span className="permission-note">
-            Ask the owner or admin for Editor access.
+            {t("boards.askForEditorAccess")}
           </span>
         </>
       )}

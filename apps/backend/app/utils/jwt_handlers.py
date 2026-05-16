@@ -4,11 +4,12 @@ from app.extensions import jwt, get_redis
 JWT_BLOCKLIST_PREFIX = "jwt_blocklist:"
 
 
-def jwt_error_response(error_name, message, status_code=401):
+def jwt_error_response(error_name, message, status_code=401, code=None):
     response = {
         "success": False,
         "error": error_name,
         "message": message,
+        "code": code or error_name,
     }
 
     return jsonify(response), status_code
@@ -17,7 +18,6 @@ def jwt_error_response(error_name, message, status_code=401):
 @jwt.token_in_blocklist_loader
 def check_if_token_revoked(jwt_header, jwt_payload):
     jti = jwt_payload["jti"]
-
     return bool(get_redis().exists(f"{JWT_BLOCKLIST_PREFIX}{jti}"))
 
 
@@ -27,6 +27,7 @@ def expired_token_callback(jwt_header, jwt_payload):
         error_name="TokenExpired",
         message="Token has expired",
         status_code=401,
+        code="TOKEN_EXPIRED",
     )
 
 
@@ -36,6 +37,7 @@ def invalid_token_callback(error):
         error_name="InvalidToken",
         message="Invalid token",
         status_code=401,
+        code="INVALID_TOKEN",
     )
 
 
@@ -45,6 +47,7 @@ def missing_token_callback(error):
         error_name="AuthorizationRequired",
         message="Authorization token is required",
         status_code=401,
+        code="AUTHORIZATION_REQUIRED",
     )
 
 
@@ -54,4 +57,5 @@ def revoked_token_callback(jwt_header, jwt_payload):
         error_name="TokenRevoked",
         message="Token has been revoked",
         status_code=401,
+        code="TOKEN_REVOKED",
     )

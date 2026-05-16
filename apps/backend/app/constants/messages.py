@@ -6,6 +6,7 @@ class Messages:
     CURRENT_USER_FETCHED = "Current user fetched successfully"
     EMAIL_VERIFIED = "Email verified successfully"
     VERIFICATION_EMAIL_SENT = "Verification email sent successfully"
+    USER_EMAIL_NOT_FOUND = "This email does not belong to an existing Boardly account. Ask the user to sign up first."
 
     EMAIL_EXISTS = "Email already exists"
     INVALID_CREDENTIALS = "Invalid email or password"
@@ -33,3 +34,5 @@ class Messages:
     MEMBER_NOT_FOUND = "Member not found"
     OWNER_ROLE_CANNOT_BE_CHANGED = "Owner role cannot be changed"
     OWNER_CANNOT_BE_REMOVED = "Owner cannot be removed"
+    EMAIL_ALREADY_VERIFIED = "Email already verified"
+    ACCOUNT_NOT_FOUND = "This account does not exist. Please sign up first."

@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 
 import { ROUTES } from "../../../app/constants/routes";
 import { getApiErrorMessage } from "../../../shared/api/getApiErrorMessage";
@@ -25,13 +26,12 @@ import {
   LISTS_QUERY_KEY,
 } from "./useBoardData";
 
-const DEFAULT_LISTS = ["To Do", "In Progress", "Doing", "Done"];
-
 type UseBoardCommandsParams = {
   boardId: string | undefined;
 };
 
 export function useBoardCommands({ boardId }: UseBoardCommandsParams) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -74,13 +74,7 @@ export function useBoardCommands({ boardId }: UseBoardCommandsParams) {
   });
 
   const updateListMutation = useMutation({
-    mutationFn: ({
-      listId,
-      title,
-    }: {
-      listId: string;
-      title: string;
-    }) =>
+    mutationFn: ({ listId, title }: { listId: string; title: string }) =>
       updateListRequest(listId, {
         title,
       }),
@@ -112,13 +106,7 @@ export function useBoardCommands({ boardId }: UseBoardCommandsParams) {
   });
 
   const createCardMutation = useMutation({
-    mutationFn: ({
-      listId,
-      title,
-    }: {
-      listId: string;
-      title: string;
-    }) =>
+    mutationFn: ({ listId, title }: { listId: string; title: string }) =>
       createCardRequest(listId, {
         title,
         description: null,
@@ -196,13 +184,7 @@ export function useBoardCommands({ boardId }: UseBoardCommandsParams) {
   });
 
   const createCommentMutation = useMutation({
-    mutationFn: ({
-      cardId,
-      content,
-    }: {
-      cardId: string;
-      content: string;
-    }) =>
+    mutationFn: ({ cardId, content }: { cardId: string; content: string }) =>
       createCommentRequest(cardId, {
         content,
       }),
@@ -231,28 +213,33 @@ export function useBoardCommands({ boardId }: UseBoardCommandsParams) {
     const title = newListTitle.trim();
 
     if (title.length < 2) {
-      setPageError("List title must be at least 2 characters.");
+      setPageError(t("errors.listTitleTooShort"));
       return;
     }
 
     try {
       await createListMutation.mutateAsync(title);
     } catch (error) {
-      setPageError(getApiErrorMessage(error, "Failed to create list."));
+      setPageError(getApiErrorMessage(error, t("errors.failedCreateList")));
     }
   }
 
   async function handleCreateDefaultWorkflow() {
     setPageError("");
 
+    const defaultLists = [
+      t("boards.todo"),
+      t("boards.inProgress"),
+      t("boards.doing"),
+      t("boards.done"),
+    ];
+
     try {
-      for (const title of DEFAULT_LISTS) {
+      for (const title of defaultLists) {
         await createListMutation.mutateAsync(title);
       }
     } catch (error) {
-      setPageError(
-        getApiErrorMessage(error, "Failed to create workflow lists.")
-      );
+      setPageError(getApiErrorMessage(error, t("errors.failedCreateWorkflow")));
     }
   }
 
@@ -276,7 +263,7 @@ export function useBoardCommands({ boardId }: UseBoardCommandsParams) {
     const title = editingListTitle.trim();
 
     if (title.length < 2) {
-      setPageError("List title must be at least 2 characters.");
+      setPageError(t("errors.listTitleTooShort"));
       return;
     }
 
@@ -286,7 +273,7 @@ export function useBoardCommands({ boardId }: UseBoardCommandsParams) {
         title,
       });
     } catch (error) {
-      setPageError(getApiErrorMessage(error, "Failed to update list."));
+      setPageError(getApiErrorMessage(error, t("errors.failedUpdateList")));
     }
   }
 
@@ -298,7 +285,7 @@ export function useBoardCommands({ boardId }: UseBoardCommandsParams) {
     try {
       await deleteListMutation.mutateAsync(listToDelete.id);
     } catch (error) {
-      setPageError(getApiErrorMessage(error, "Failed to delete list."));
+      setPageError(getApiErrorMessage(error, t("errors.failedDeleteList")));
       setListToDelete(null);
     }
   }
@@ -313,7 +300,7 @@ export function useBoardCommands({ boardId }: UseBoardCommandsParams) {
     const title = cardTitleByList[listId]?.trim();
 
     if (!title || title.length < 2) {
-      setPageError("Card title must be at least 2 characters.");
+      setPageError(t("errors.cardTitleTooShort"));
       return;
     }
 
@@ -323,7 +310,7 @@ export function useBoardCommands({ boardId }: UseBoardCommandsParams) {
         title,
       });
     } catch (error) {
-      setPageError(getApiErrorMessage(error, "Failed to create card."));
+      setPageError(getApiErrorMessage(error, t("errors.failedCreateCard")));
     }
   }
 
@@ -336,14 +323,14 @@ export function useBoardCommands({ boardId }: UseBoardCommandsParams) {
     setModalError("");
 
     if (payload.title.trim().length < 2) {
-      setModalError("Card title must be at least 2 characters.");
+      setModalError(t("errors.cardTitleTooShort"));
       return;
     }
 
     try {
       await updateCardMutation.mutateAsync(payload);
     } catch (error) {
-      setModalError(getApiErrorMessage(error, "Failed to update card."));
+      setModalError(getApiErrorMessage(error, t("errors.failedUpdateCard")));
     }
   }
 
@@ -355,7 +342,7 @@ export function useBoardCommands({ boardId }: UseBoardCommandsParams) {
     try {
       await deleteCardMutation.mutateAsync(cardToDelete.id);
     } catch (error) {
-      setModalError(getApiErrorMessage(error, "Failed to delete card."));
+      setModalError(getApiErrorMessage(error, t("errors.failedDeleteCard")));
       setCardToDelete(null);
     }
   }
@@ -369,7 +356,7 @@ export function useBoardCommands({ boardId }: UseBoardCommandsParams) {
         content,
       });
     } catch (error) {
-      setModalError(getApiErrorMessage(error, "Failed to add comment."));
+      setModalError(getApiErrorMessage(error, t("errors.failedAddComment")));
     }
   }
 

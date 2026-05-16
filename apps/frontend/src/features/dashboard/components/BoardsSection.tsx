@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import Button from "../../../shared/components/Button";
 import type { Board } from "../../boards/types";
 import BoardCard from "./BoardCard";
@@ -17,23 +18,25 @@ export default function BoardsSection({
   onEditBoard,
   onDeleteBoard,
 }: BoardsSectionProps) {
+  const { t } = useTranslation();
+
   return (
     <section className="section-block">
       <div className="section-header">
         <div>
-          <h2>Your boards</h2>
-          <p>Boards you own or collaborate on.</p>
+          <h2>{t("dashboard.yourBoards")}</h2>
+          <p>{t("dashboard.boardsSubtitle")}</p>
         </div>
       </div>
 
       {boards.length === 0 ? (
         <div className="empty-state">
           <div className="empty-icon">📋</div>
-          <h3>No boards yet</h3>
-          <p>Create your first Kanban board and start organizing work.</p>
+          <h3>{t("boards.emptyTitle")}</h3>
+          <p>{t("boards.emptyDescription")}</p>
 
           <Button type="button" onClick={onCreateBoard}>
-            Create board
+            {t("dashboard.createBoard")}
           </Button>
         </div>
       ) : (

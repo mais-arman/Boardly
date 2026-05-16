@@ -1,5 +1,6 @@
 from flask import jsonify
 
+
 def success_response(data=None, message="Success", status_code=200, meta=None):
     response = {
         "success": True,
@@ -18,12 +19,16 @@ def error_response(
     status_code=500,
     error="Error",
     errors=None,
+    code=None,
 ):
     response = {
         "success": False,
         "error": error,
         "message": message,
     }
+
+    if code is not None:
+        response["code"] = code
 
     if errors is not None:
         response["errors"] = errors

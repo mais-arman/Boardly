@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import Button from "./Button";
 
 type ConfirmModalProps = {
@@ -14,11 +15,13 @@ export default function ConfirmModal({
   title,
   description,
   confirmLabel,
-  cancelLabel = "Cancel",
+  cancelLabel,
   isLoading = false,
   onConfirm,
   onCancel,
 }: ConfirmModalProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="confirm-backdrop">
       <section className="confirm-modal">
@@ -29,7 +32,7 @@ export default function ConfirmModal({
 
         <div className="confirm-actions">
           <Button type="button" variant="secondary" onClick={onCancel}>
-            {cancelLabel}
+            {cancelLabel || t("common.cancel")}
           </Button>
 
           <Button

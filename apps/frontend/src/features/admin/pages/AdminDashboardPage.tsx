@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ROUTES, getBoardPath } from "../../../app/constants/routes";
 import Button from "../../../shared/components/Button";
@@ -20,6 +21,7 @@ const ADMIN_USERS_QUERY_KEY = ["admin", "users"];
 const ADMIN_BOARDS_QUERY_KEY = ["admin", "boards"];
 
 export default function AdminDashboardPage() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
@@ -79,7 +81,7 @@ export default function AdminDashboardPage() {
         role,
       });
     } catch (error) {
-      setError(getApiErrorMessage(error, "Failed to update user role."));
+      setError(getApiErrorMessage(error, t("admin.updateRoleFailed")));
     }
   }
 
@@ -91,7 +93,7 @@ export default function AdminDashboardPage() {
     try {
       await deleteUserMutation.mutateAsync(userToDelete.id);
     } catch (error) {
-      setError(getApiErrorMessage(error, "Failed to delete user."));
+      setError(getApiErrorMessage(error, t("admin.deleteUserFailed")));
       setUserToDelete(null);
     }
   }
@@ -104,7 +106,7 @@ export default function AdminDashboardPage() {
     try {
       await deleteBoardMutation.mutateAsync(boardToDelete.id);
     } catch (error) {
-      setError(getApiErrorMessage(error, "Failed to delete board."));
+      setError(getApiErrorMessage(error, t("admin.deleteBoardFailed")));
       setBoardToDelete(null);
     }
   }
@@ -121,14 +123,14 @@ export default function AdminDashboardPage() {
       <section className="admin-shell">
         <header className="admin-header">
           <div>
-            <p className="eyebrow">System administration</p>
-            <h1>Super Admin Dashboard</h1>
-            <p>Manage users, roles, and boards across Boardly.</p>
+            <p className="eyebrow">{t("admin.systemAdministration")}</p>
+            <h1>{t("admin.title")}</h1>
+            <p>{t("admin.subtitle")}</p>
           </div>
 
           <Link to={ROUTES.DASHBOARD}>
             <Button type="button" variant="secondary">
-              Back to workspace
+              {t("admin.backToWorkspace")}
             </Button>
           </Link>
         </header>
@@ -138,27 +140,27 @@ export default function AdminDashboardPage() {
         <section className="admin-stats-grid">
           <article>
             <strong>{users.length}</strong>
-            <span>Users</span>
+            <span>{t("admin.users")}</span>
           </article>
 
           <article>
             <strong>{boards.length}</strong>
-            <span>Boards</span>
+            <span>{t("admin.boards")}</span>
           </article>
 
           <article>
             <strong>
               {users.filter((item) => item.role === "super_admin").length}
             </strong>
-            <span>Super admins</span>
+            <span>{t("admin.superAdmins")}</span>
           </article>
         </section>
 
         <section className="admin-section">
           <div className="section-header">
             <div>
-              <h2>Users</h2>
-              <p>Change system roles or remove users.</p>
+              <h2>{t("admin.users")}</h2>
+              <p>{t("admin.changeRoles")}</p>
             </div>
           </div>
 
@@ -166,11 +168,11 @@ export default function AdminDashboardPage() {
             <table className="admin-table">
               <thead>
                 <tr>
-                  <th>User</th>
-                  <th>Email</th>
-                  <th>Verified</th>
-                  <th>Role</th>
-                  <th>Created</th>
+                  <th>{t("admin.user")}</th>
+                  <th>{t("auth.email")}</th>
+                  <th>{t("admin.verified")}</th>
+                  <th>{t("profile.role")}</th>
+                  <th>{t("common.created")}</th>
                   <th />
                 </tr>
               </thead>
@@ -180,7 +182,7 @@ export default function AdminDashboardPage() {
                   <tr key={item.id}>
                     <td>{item.name}</td>
                     <td>{item.email}</td>
-                    <td>{item.is_email_verified ? "Yes" : "No"}</td>
+                    <td>{item.is_email_verified ? t("common.yes") : t("common.no")}</td>
 
                     <td>
                       <select
@@ -193,8 +195,12 @@ export default function AdminDashboardPage() {
                           )
                         }
                       >
-                        <option value="user">user</option>
-                        <option value="super_admin">super_admin</option>
+                        <option value="user">
+                          {t("admin.userRole")}
+                        </option>
+                        <option value="super_admin">
+                          {t("admin.superAdminRole")}
+                        </option>
                       </select>
                     </td>
 
@@ -207,7 +213,7 @@ export default function AdminDashboardPage() {
                         disabled={item.id === user?.id}
                         onClick={() => setUserToDelete(item)}
                       >
-                        Delete
+                        {t("common.delete")}
                       </Button>
                     </td>
                   </tr>
@@ -220,8 +226,8 @@ export default function AdminDashboardPage() {
         <section className="admin-section">
           <div className="section-header">
             <div>
-              <h2>Boards</h2>
-              <p>View, open, and moderate all boards.</p>
+              <h2>{t("admin.boards")}</h2>
+              <p>{t("admin.viewBoards")}</p>
             </div>
           </div>
 
@@ -229,12 +235,12 @@ export default function AdminDashboardPage() {
             <table className="admin-table">
               <thead>
                 <tr>
-                  <th>Board</th>
-                  <th>Owner</th>
-                  <th>Members</th>
-                  <th>Lists</th>
-                  <th>Cards</th>
-                  <th>Created</th>
+                  <th>{t("admin.board")}</th>
+                  <th>{t("admin.owner")}</th>
+                  <th>{t("common.members")}</th>
+                  <th>{t("common.lists")}</th>
+                  <th>{t("common.cards")}</th>
+                  <th>{t("common.created")}</th>
                   <th />
                 </tr>
               </thead>
@@ -251,7 +257,7 @@ export default function AdminDashboardPage() {
                     </td>
 
                     <td>
-                      {board.owner_name || "Unknown"}
+                      {board.owner_name || t("admin.unknownOwner")}
                       <small>{board.owner_email}</small>
                     </td>
 
@@ -266,7 +272,7 @@ export default function AdminDashboardPage() {
                           to={getBoardPath(board.id)}
                           className="button button-secondary"
                         >
-                          Open
+                          {t("common.open")}
                         </Link>
 
                         <Button
@@ -274,7 +280,7 @@ export default function AdminDashboardPage() {
                           variant="danger"
                           onClick={() => setBoardToDelete(board)}
                         >
-                          Delete
+                          {t("common.delete")}
                         </Button>
                       </div>
                     </td>
@@ -288,9 +294,11 @@ export default function AdminDashboardPage() {
 
       {userToDelete && (
         <ConfirmModal
-          title="Delete user?"
-          description={`This will permanently delete ${userToDelete.email} and owned boards.`}
-          confirmLabel="Delete user"
+          title={t("admin.deleteUserQuestion")}
+          description={t("admin.deleteUserDescription", {
+            email: userToDelete.email,
+          })}
+          confirmLabel={t("admin.deleteUser")}
           isLoading={deleteUserMutation.isPending}
           onCancel={() => setUserToDelete(null)}
           onConfirm={handleDeleteUser}
@@ -299,9 +307,11 @@ export default function AdminDashboardPage() {
 
       {boardToDelete && (
         <ConfirmModal
-          title="Delete board?"
-          description={`This will permanently delete "${boardToDelete.title}".`}
-          confirmLabel="Delete board"
+          title={t("admin.deleteBoardQuestion")}
+          description={t("admin.deleteBoardDescription", {
+            title: boardToDelete.title,
+          })}
+          confirmLabel={t("admin.deleteBoard")}
           isLoading={deleteBoardMutation.isPending}
           onCancel={() => setBoardToDelete(null)}
           onConfirm={handleDeleteBoard}

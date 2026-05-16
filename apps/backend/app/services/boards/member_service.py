@@ -18,7 +18,7 @@ class MemberService:
         board = db.session.get(Board, board_id)
 
         if not board:
-            raise NotFoundError(Messages.BOARD_NOT_FOUND)
+            raise NotFoundError(Messages.BOARD_NOT_FOUND, code="BOARD_NOT_FOUND")
 
         email = data["email"].lower().strip()
         role = BoardRole(data["role"])
@@ -27,7 +27,8 @@ class MemberService:
 
         if not user:
             raise BadRequestError(
-                "This email does not belong to an existing Boardly account. Ask the user to sign up first."
+                Messages.USER_EMAIL_NOT_FOUND,
+                code="USER_EMAIL_NOT_FOUND",
             )
 
         existing_member = BoardMember.query.filter_by(
@@ -36,7 +37,10 @@ class MemberService:
         ).first()
 
         if existing_member:
-            raise ConflictError(Messages.USER_ALREADY_MEMBER)
+            raise ConflictError(
+                Messages.USER_ALREADY_MEMBER,
+                code="USER_ALREADY_MEMBER",
+            )
 
         existing_pending_invitation = BoardInvitation.query.filter_by(
             board_id=board_id,
@@ -45,7 +49,10 @@ class MemberService:
         ).first()
 
         if existing_pending_invitation:
-            raise ConflictError(Messages.PENDING_INVITATION_EXISTS)
+            raise ConflictError(
+                Messages.PENDING_INVITATION_EXISTS,
+                code="PENDING_INVITATION_EXISTS",
+            )
 
         raw_token = generate_secure_token()
 
@@ -81,7 +88,10 @@ class MemberService:
 
         except Exception:
             db.session.rollback()
-            raise BadRequestError(Messages.EMAIL_SEND_FAILED)
+            raise BadRequestError(
+                Messages.EMAIL_SEND_FAILED,
+                code="EMAIL_SEND_FAILED",
+            )
 
     @staticmethod
     def get_members(board_id):
@@ -92,10 +102,16 @@ class MemberService:
         member = db.session.get(BoardMember, member_id)
 
         if not member or str(member.board_id) != str(board_id):
-            raise NotFoundError("Member not found")
+            raise NotFoundError(
+                Messages.MEMBER_NOT_FOUND,
+                code="MEMBER_NOT_FOUND",
+            )
 
         if member.role == BoardRole.OWNER:
-            raise BadRequestError("Owner role cannot be changed")
+            raise BadRequestError(
+                Messages.OWNER_ROLE_CANNOT_BE_CHANGED,
+                code="OWNER_ROLE_CANNOT_BE_CHANGED",
+            )
 
         member.role = BoardRole(data["role"])
         db.session.commit()
@@ -109,10 +125,16 @@ class MemberService:
         member = db.session.get(BoardMember, member_id)
 
         if not member or str(member.board_id) != str(board_id):
-            raise NotFoundError("Member not found")
+            raise NotFoundError(
+                Messages.MEMBER_NOT_FOUND,
+                code="MEMBER_NOT_FOUND",
+            )
 
         if member.role == BoardRole.OWNER:
-            raise BadRequestError("Owner cannot be removed")
+            raise BadRequestError(
+                Messages.OWNER_CANNOT_BE_REMOVED,
+                code="OWNER_CANNOT_BE_REMOVED",
+            )
 
         db.session.delete(member)
         db.session.commit()

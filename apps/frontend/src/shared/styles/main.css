@@ -1636,3 +1636,52 @@ a {
 .trello-section .field-group {
   margin-bottom: 14px;
 }
+
+.language-switcher {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.language-option {
+  flex: 1;
+  height: 38px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: white;
+  color: var(--text);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.language-option.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+html[dir="rtl"] .trello-card {
+  text-align: right;
+}
+
+html[dir="rtl"] .admin-table th,
+html[dir="rtl"] .admin-table td {
+  text-align: right;
+}
+
+html[dir="rtl"] .admin-board-color {
+  margin-right: 0;
+  margin-left: 8px;
+}
+
+html[dir="rtl"] .members-panel {
+  right: auto;
+  left: 0;
+}
+.trello-lanes {
+  scrollbar-width: none;
+}
+
+.trello-lanes::-webkit-scrollbar {
+  display: none;
+}

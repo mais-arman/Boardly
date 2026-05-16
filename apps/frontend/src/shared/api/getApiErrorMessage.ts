@@ -1,7 +1,9 @@
 import { AxiosError } from "axios";
+import i18n from "../../app/i18n";
 
 type ApiErrorResponse = {
   message?: string;
+  code?: string;
   errors?: Record<string, string[]>;
 };
 
@@ -16,8 +18,14 @@ export function getApiErrorMessage(
   const status = error.response?.status;
   const data = error.response?.data as ApiErrorResponse | undefined;
 
+  if (data?.code) {
+    return i18n.t(`errors.${data.code}`, {
+      defaultValue: fallback,
+    });
+  }
+
   if (status && status >= 500) {
-    return "Something went wrong on our side. Please try again later.";
+    return fallback;
   }
 
   if (data?.errors) {

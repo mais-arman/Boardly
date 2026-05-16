@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { BoardMember } from "../../types";
 
 type CardMembersPanelProps = {
@@ -15,9 +16,11 @@ export default function CardMembersPanel({
   canEdit,
   onToggleAssignee,
 }: CardMembersPanelProps) {
+  const { t } = useTranslation();
+
   return (
     <section className="trello-section">
-      <h3>Members</h3>
+      <h3>{t("boards.members")}</h3>
 
       {selectedAssignees.length > 0 ? (
         <div className="selected-meta-list">
@@ -28,7 +31,7 @@ export default function CardMembersPanel({
           ))}
         </div>
       ) : (
-        <p className="muted-text">No assignees.</p>
+        <p className="muted-text">{t("card.noAssignees")}</p>
       )}
 
       {canEdit && (

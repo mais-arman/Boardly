@@ -1,7 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { ROUTES } from "../constants/routes";
 import ProtectedRoute from "./ProtectedRoute";
-import AdminRoute from "./AdminRoute";
 import LoginPage from "../../features/auth/pages/LoginPage";
 import SignupPage from "../../features/auth/pages/SignupPage";
 import VerifyEmailPage from "../../features/auth/pages/VerifyEmailPage";
@@ -28,7 +27,7 @@ export default function AppRouter() {
         <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
       </Route>
 
-      <Route element={<AdminRoute />}>
+      <Route element={<ProtectedRoute requireAdmin />}>
         <Route path={ROUTES.ADMIN} element={<AdminDashboardPage />} />
       </Route>
 

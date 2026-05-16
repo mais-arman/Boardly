@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import Button from "../../../../shared/components/Button";
 import type { CardLabel } from "../../types";
 
@@ -28,9 +29,11 @@ export default function CardLabelsPanel({
   onLabelColorChange,
   onCreateLabel,
 }: CardLabelsPanelProps) {
+  const { t } = useTranslation();
+
   return (
     <section className="trello-section">
-      <h3>Labels</h3>
+      <h3>{t("boards.labels")}</h3>
 
       {selectedLabels.length > 0 && (
         <div className="selected-meta-list">
@@ -69,7 +72,7 @@ export default function CardLabelsPanel({
             <input
               value={labelName}
               onChange={(event) => onLabelNameChange(event.target.value)}
-              placeholder="New label"
+              placeholder={t("card.newLabel")}
             />
 
             <input
@@ -84,7 +87,7 @@ export default function CardLabelsPanel({
               isLoading={isCreatingLabel}
               onClick={onCreateLabel}
             >
-              Create
+              {t("common.create")}
             </Button>
           </div>
         </>

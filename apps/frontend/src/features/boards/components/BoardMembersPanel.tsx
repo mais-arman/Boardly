@@ -1,9 +1,10 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { AxiosError } from "axios";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Button from "../../../shared/components/Button";
 import Input from "../../../shared/components/Input";
+import { getApiErrorMessage } from "../../../shared/api/getApiErrorMessage";
 import type { BoardInvitation, BoardMember, ManageableBoardRole } from "../types";
 import {
   cancelBoardInvitationRequest,
@@ -13,10 +14,6 @@ import {
   removeBoardMemberRequest,
   updateBoardMemberRoleRequest,
 } from "../api/boardMembersApi";
-
-type ErrorResponse = {
-  message?: string;
-};
 
 type BoardMembersPanelProps = {
   boardId: string;
@@ -29,15 +26,6 @@ const INVITATIONS_QUERY_KEY = "board-invitations";
 
 const ROLE_OPTIONS: ManageableBoardRole[] = ["admin", "editor", "viewer"];
 
-function getErrorMessage(error: unknown, fallback: string) {
-  if (error instanceof AxiosError) {
-    const data = error.response?.data as ErrorResponse | undefined;
-    return data?.message || fallback;
-  }
-
-  return fallback;
-}
-
 function getMemberDisplayName(member: BoardMember) {
   return member.user?.name || member.user?.email || member.user_id;
 }
@@ -47,6 +35,7 @@ export default function BoardMembersPanel({
   canManageMembers,
   onClose,
 }: BoardMembersPanelProps) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   const [email, setEmail] = useState("");
@@ -74,10 +63,12 @@ export default function BoardMembersPanel({
     onSuccess: () => {
       setEmail("");
       setRole("viewer");
-      setSuccessMessage("Invitation sent successfully.");
+      setSuccessMessage(t("members.invitationSent"));
+
       queryClient.invalidateQueries({
         queryKey: [INVITATIONS_QUERY_KEY, boardId],
       });
+
       queryClient.invalidateQueries({
         queryKey: [MEMBERS_QUERY_KEY, boardId],
       });
@@ -130,7 +121,7 @@ export default function BoardMembersPanel({
     try {
       await inviteMutation.mutateAsync();
     } catch (error) {
-      setError(getErrorMessage(error, "Failed to send invitation."));
+      setError(getApiErrorMessage(error, t("members.sendInvitationFailed")));
     }
   }
 
@@ -145,7 +136,7 @@ export default function BoardMembersPanel({
         nextRole: nextRole as ManageableBoardRole,
       });
     } catch (error) {
-      setError(getErrorMessage(error, "Failed to update member role."));
+      setError(getApiErrorMessage(error, t("members.updateRoleFailed")));
     }
   }
 
@@ -157,7 +148,7 @@ export default function BoardMembersPanel({
     try {
       await removeMemberMutation.mutateAsync(member.id);
     } catch (error) {
-      setError(getErrorMessage(error, "Failed to remove member."));
+      setError(getApiErrorMessage(error, t("members.removeMemberFailed")));
     }
   }
 
@@ -167,7 +158,7 @@ export default function BoardMembersPanel({
     try {
       await cancelInvitationMutation.mutateAsync(invitation.id);
     } catch (error) {
-      setError(getErrorMessage(error, "Failed to cancel invitation."));
+      setError(getApiErrorMessage(error, t("members.cancelInvitationFailed")));
     }
   }
 
@@ -176,8 +167,8 @@ export default function BoardMembersPanel({
       <aside className="members-panel">
         <header className="members-panel-header">
           <div>
-            <p className="eyebrow">Collaboration</p>
-            <h2>Members & invitations</h2>
+            <p className="eyebrow">{t("members.collaboration")}</p>
+            <h2>{t("members.title")}</h2>
           </div>
 
           <button type="button" className="icon-button" onClick={onClose}>
@@ -191,7 +182,7 @@ export default function BoardMembersPanel({
         {canManageMembers && (
           <form className="invite-form" onSubmit={handleInvite}>
             <Input
-              label="Invite by email"
+              label={t("members.inviteByEmail")}
               type="email"
               placeholder="teammate@example.com"
               value={email}
@@ -200,7 +191,8 @@ export default function BoardMembersPanel({
             />
 
             <div className="field-group">
-              <label htmlFor="invite-role">Role</label>
+              <label htmlFor="invite-role">{t("profile.role")}</label>
+
               <select
                 id="invite-role"
                 value={role}
@@ -210,23 +202,23 @@ export default function BoardMembersPanel({
               >
                 {ROLE_OPTIONS.map((item) => (
                   <option key={item} value={item}>
-                    {item}
+                    {t(`roles.${item}`)}
                   </option>
                 ))}
               </select>
             </div>
 
             <Button type="submit" fullWidth isLoading={inviteMutation.isPending}>
-              Send invitation
+              {t("members.sendInvitation")}
             </Button>
           </form>
         )}
 
         <section className="members-section">
-          <h3>Board members</h3>
+          <h3>{t("members.boardMembers")}</h3>
 
           {membersQuery.isLoading ? (
-            <p className="muted-text">Loading members...</p>
+            <p className="muted-text">{t("members.loadingMembers")}</p>
           ) : (
             <div className="members-list">
               {(membersQuery.data || []).map((member) => (
@@ -234,7 +226,8 @@ export default function BoardMembersPanel({
                   <div>
                     <strong>{getMemberDisplayName(member)}</strong>
                     <span>
-                      {member.user?.email || member.user_id} · {member.role}
+                      {member.user?.email || member.user_id} ·{" "}
+                      {t(`roles.${member.role}`)}
                     </span>
                   </div>
 
@@ -248,7 +241,7 @@ export default function BoardMembersPanel({
                       >
                         {ROLE_OPTIONS.map((item) => (
                           <option key={item} value={item}>
-                            {item}
+                            {t(`roles.${item}`)}
                           </option>
                         ))}
                       </select>
@@ -259,7 +252,7 @@ export default function BoardMembersPanel({
                         isLoading={removeMemberMutation.isPending}
                         onClick={() => handleRemoveMember(member)}
                       >
-                        Remove
+                        {t("members.remove")}
                       </Button>
                     </div>
                   )}
@@ -271,12 +264,12 @@ export default function BoardMembersPanel({
 
         {canManageMembers && (
           <section className="members-section">
-            <h3>Pending invitations</h3>
+            <h3>{t("members.pendingInvitations")}</h3>
 
             {invitationsQuery.isLoading ? (
-              <p className="muted-text">Loading invitations...</p>
+              <p className="muted-text">{t("members.loadingInvitations")}</p>
             ) : (invitationsQuery.data || []).length === 0 ? (
-              <p className="muted-text">No pending invitations.</p>
+              <p className="muted-text">{t("members.noPendingInvitations")}</p>
             ) : (
               <div className="members-list">
                 {(invitationsQuery.data || []).map((invitation) => (
@@ -284,7 +277,8 @@ export default function BoardMembersPanel({
                     <div>
                       <strong>{invitation.email}</strong>
                       <span>
-                        {invitation.role} · {invitation.status}
+                        {t(`roles.${invitation.role}`)} ·{" "}
+                        {t(`invitationStatus.${invitation.status}`)}
                       </span>
                     </div>
 
@@ -295,7 +289,7 @@ export default function BoardMembersPanel({
                         isLoading={cancelInvitationMutation.isPending}
                         onClick={() => handleCancelInvitation(invitation)}
                       >
-                        Cancel
+                        {t("common.cancel")}
                       </Button>
                     )}
                   </article>

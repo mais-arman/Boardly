@@ -1,10 +1,11 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ROUTES } from "../../../app/constants/routes";
-import Button from "../../../shared/components/Button";
 import ConfirmModal from "../../../shared/components/ConfirmModal";
+import Button from "../../../shared/components/Button";
 import Loader from "../../../shared/components/Loader";
 import { getApiErrorMessage } from "../../../shared/api/getApiErrorMessage";
 import { resendVerificationEmailRequest } from "../../auth/api/authApi";
@@ -36,6 +37,7 @@ const BOARD_COLORS = [
 ];
 
 export default function DashboardPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user, logout, isLoggingOut } = useAuth();
@@ -116,13 +118,11 @@ export default function DashboardPage() {
   const resendVerificationMutation = useMutation({
     mutationFn: resendVerificationEmailRequest,
     onSuccess: () => {
-      setBannerMessage("Verification email sent successfully.");
+      setBannerMessage(t("verification.success"));
       setBannerError("");
     },
     onError: (error) => {
-      setBannerError(
-        getApiErrorMessage(error, "Failed to resend verification email.")
-      );
+      setBannerError(getApiErrorMessage(error, t("verification.tryAgain")));
       setBannerMessage("");
     },
   });
@@ -162,7 +162,7 @@ export default function DashboardPage() {
     const title = boardTitle.trim();
 
     if (title.length < 2) {
-      setFormError("Board title must be at least 2 characters.");
+      setFormError(t("errors.listTitleTooShort"));
       return;
     }
 
@@ -184,7 +184,7 @@ export default function DashboardPage() {
         background_color: boardColor,
       });
     } catch (error) {
-      setFormError(getApiErrorMessage(error, "Failed to save board."));
+      setFormError(getApiErrorMessage(error, t("admin.deleteBoardFailed")));
     }
   }
 
@@ -194,7 +194,7 @@ export default function DashboardPage() {
     try {
       await deleteBoardMutation.mutateAsync(deletingBoard.id);
     } catch (error) {
-      setFormError(getApiErrorMessage(error, "Failed to delete board."));
+      setFormError(getApiErrorMessage(error, t("admin.deleteBoardFailed")));
       setDeletingBoard(null);
     }
   }
@@ -235,19 +235,17 @@ export default function DashboardPage() {
 
         <header className="dashboard-header">
           <div>
-            <p className="eyebrow">Workspace</p>
-            <h1>Welcome, {user?.name || "User"}</h1>
-            <p className="dashboard-subtitle">
-              Manage your boards, members, lists, and cards.
-            </p>
+            <p className="eyebrow">{t("dashboard.workspace")}</p>
+            <h1>{t("dashboard.welcome", { name: user?.name || "User" })}</h1>
+            <p className="dashboard-subtitle">{t("dashboard.subtitle")}</p>
           </div>
 
           <Button type="button" onClick={openCreateBoard}>
-            Create board
+            {t("dashboard.createBoard")}
           </Button>
         </header>
 
-        {isError && <div className="alert error">Failed to load boards.</div>}
+        {isError && <div className="alert error">{t("admin.deleteBoardFailed")}</div>}
         {formError && <div className="alert error">{formError}</div>}
 
         <MyInvitationsPanel onError={setFormError} />
@@ -279,9 +277,11 @@ export default function DashboardPage() {
 
       {deletingBoard && (
         <ConfirmModal
-          title="Delete board?"
-          description={`This will permanently delete "${deletingBoard.title}" with its lists and cards.`}
-          confirmLabel="Delete board"
+          title={t("boards.deleteBoardQuestion")}
+          description={t("admin.deleteBoardDescription", {
+            title: deletingBoard.title,
+          })}
+          confirmLabel={t("boards.deleteBoard")}
           isLoading={deleteBoardMutation.isPending}
           onCancel={() => setDeletingBoard(null)}
           onConfirm={handleDeleteBoard}

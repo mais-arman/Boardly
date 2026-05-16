@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ROUTES } from "../../../app/constants/routes";
 import Button from "../../../shared/components/Button";
 import Input from "../../../shared/components/Input";
@@ -8,8 +9,11 @@ import { getApiErrorMessage } from "../../../shared/api/getApiErrorMessage";
 import { useAuth } from "../hooks/useAuth";
 
 export default function SignupPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { signup, isSigningUp } = useAuth();
+
+  const hasSubmittedRef = useRef(false);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -19,33 +23,37 @@ export default function SignupPage() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (hasSubmittedRef.current || isSigningUp) {
+      return;
+    }
+
+    hasSubmittedRef.current = true;
     setError("");
 
     try {
       await signup({ name, email, password });
       navigate(ROUTES.DASHBOARD);
     } catch (error) {
-      setError(getApiErrorMessage(error, "Signup failed. Please try again."));
+      setError(getApiErrorMessage(error, t("auth.signupFailed")));
+      hasSubmittedRef.current = false;
     }
   }
 
   return (
     <main className="auth-layout">
       <section className="auth-hero">
-        <div className="hero-badge">Start Organized</div>
-        <h1>Create your Boardly workspace.</h1>
-        <p>
-          Build boards, manage roles, assign cards, and collaborate with your
-          team.
-        </p>
+        <div className="hero-badge">{t("auth.signupHeroBadge")}</div>
+        <h1>{t("auth.signupHeroTitle")}</h1>
+        <p>{t("auth.signupHeroDescription")}</p>
       </section>
 
       <section className="auth-card">
         <div className="auth-card-header">
           <span className="brand-mark">B</span>
           <div>
-            <h2>Create account</h2>
-            <p>You can start now and verify your email later</p>
+            <h2>{t("auth.signup")}</h2>
+            <p>{t("auth.signupSubtitle")}</p>
           </div>
         </div>
 
@@ -53,27 +61,27 @@ export default function SignupPage() {
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <Input
-            label="Name"
+            label={t("auth.name")}
             type="text"
-            placeholder="Your name"
+            placeholder={t("auth.namePlaceholder")}
             value={name}
             onChange={(event) => setName(event.target.value)}
             required
           />
 
           <Input
-            label="Email"
+            label={t("auth.email")}
             type="email"
-            placeholder="you@example.com"
+            placeholder={t("auth.emailPlaceholder")}
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             required
           />
 
           <Input
-            label="Password"
+            label={t("auth.password")}
             type="password"
-            placeholder="At least 8 characters"
+            placeholder={t("auth.passwordPlaceholder")}
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             minLength={8}
@@ -81,12 +89,13 @@ export default function SignupPage() {
           />
 
           <Button type="submit" fullWidth isLoading={isSigningUp}>
-            Create account
+            {t("auth.createAccount")}
           </Button>
         </form>
 
         <p className="auth-footer">
-          Already have an account? <Link to={ROUTES.LOGIN}>Login</Link>
+          {t("auth.alreadyHaveAccount")}{" "}
+          <Link to={ROUTES.LOGIN}>{t("auth.login")}</Link>
         </p>
       </section>
     </main>

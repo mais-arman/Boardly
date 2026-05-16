@@ -1,4 +1,5 @@
 import type { FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 import {
   SortableContext,
   verticalListSortingStrategy,
@@ -50,6 +51,8 @@ export default function SortableList({
   onCardTitleChange,
   onCreateCard,
 }: SortableListProps) {
+  const { t } = useTranslation();
+
   const {
     attributes,
     listeners,
@@ -75,11 +78,7 @@ export default function SortableList({
         transition,
       }}
     >
-      <header
-        className="trello-list-header"
-        {...attributes}
-        {...listeners}
-      >
+      <header className="trello-list-header" {...attributes} {...listeners}>
         {editingListId === list.id ? (
           <form className="list-title-edit-form" onSubmit={onUpdateList}>
             <input
@@ -91,10 +90,10 @@ export default function SortableList({
             />
 
             <div className="list-edit-actions">
-              <button type="submit">Save</button>
+              <button type="submit">{t("common.save")}</button>
 
               <button type="button" onClick={onCancelEditList}>
-                Cancel
+                {t("common.cancel")}
               </button>
             </div>
           </form>
@@ -107,18 +106,12 @@ export default function SortableList({
 
               {canEdit && (
                 <>
-                  <button
-                    type="button"
-                    onClick={() => onStartEditList(list)}
-                  >
-                    Edit
+                  <button type="button" onClick={() => onStartEditList(list)}>
+                    {t("common.edit")}
                   </button>
 
-                  <button
-                    type="button"
-                    onClick={() => onDeleteList(list)}
-                  >
-                    Delete
+                  <button type="button" onClick={() => onDeleteList(list)}>
+                    {t("common.delete")}
                   </button>
                 </>
               )}
@@ -153,21 +146,15 @@ export default function SortableList({
             onChange={(event) =>
               onCardTitleChange(list.id, event.target.value)
             }
-            placeholder="Add a card"
+            placeholder={t("boards.addCard")}
           />
 
-          <Button
-            type="submit"
-            variant="secondary"
-            isLoading={isCreatingCard}
-          >
-            Add card
+          <Button type="submit" variant="secondary" isLoading={isCreatingCard}>
+            {t("boards.addCard")}
           </Button>
         </form>
       ) : (
-        <p className="viewer-note">
-          Viewer mode: you can open cards but cannot edit or move them.
-        </p>
+        <p className="viewer-note">{t("boards.viewerCardAccess")}</p>
       )}
     </article>
   );

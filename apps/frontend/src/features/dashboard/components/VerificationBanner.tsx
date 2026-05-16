@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import Button from "../../../shared/components/Button";
 
 type VerificationBannerProps = {
@@ -13,11 +14,13 @@ export default function VerificationBanner({
   isLoading,
   onResend,
 }: VerificationBannerProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="alert warning verification-banner">
       <div>
-        <strong>Email verification required</strong>
-        <p>We sent a verification email. Please verify your account.</p>
+        <strong>{t("verification.bannerTitle")}</strong>
+        <p>{t("verification.bannerDescription")}</p>
 
         {bannerMessage && <p>{bannerMessage}</p>}
         {bannerError && <p>{bannerError}</p>}
@@ -29,7 +32,7 @@ export default function VerificationBanner({
         isLoading={isLoading}
         onClick={onResend}
       >
-        Resend email
+        {t("verification.resendButton")}
       </Button>
     </div>
   );

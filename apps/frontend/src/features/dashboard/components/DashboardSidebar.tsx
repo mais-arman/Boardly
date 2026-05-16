@@ -1,6 +1,8 @@
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ROUTES } from "../../../app/constants/routes";
 import Button from "../../../shared/components/Button";
+import LanguageSwitcher from "../../../shared/components/LanguageSwitcher";
 import { isSuperAdmin } from "../../auth/utils/roles";
 import type { User } from "../../auth/types";
 
@@ -15,6 +17,7 @@ export default function DashboardSidebar({
   isLoggingOut,
   onLogout,
 }: DashboardSidebarProps) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   return (
@@ -24,14 +27,14 @@ export default function DashboardSidebar({
 
         <div>
           <span>Boardly</span>
-          <small>Kanban Workspace</small>
+          <small>{t("dashboard.appSubtitle")}</small>
         </div>
       </div>
 
+      <LanguageSwitcher />
+
       <Link to={ROUTES.PROFILE} className="sidebar-user clickable">
-        <span className="avatar">
-          {user?.name?.charAt(0).toUpperCase()}
-        </span>
+        <span className="avatar">{user?.name?.charAt(0).toUpperCase()}</span>
 
         <div>
           <strong>{user?.name}</strong>
@@ -47,7 +50,7 @@ export default function DashboardSidebar({
             fullWidth
             onClick={() => navigate(ROUTES.ADMIN)}
           >
-            Admin panel
+            {t("dashboard.adminPanel")}
           </Button>
         )}
 
@@ -58,7 +61,7 @@ export default function DashboardSidebar({
           isLoading={isLoggingOut}
           onClick={onLogout}
         >
-          Logout
+          {t("dashboard.logout")}
         </Button>
       </div>
     </aside>

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Button from "../../../shared/components/Button";
 import { getApiErrorMessage } from "../../../shared/api/getApiErrorMessage";
@@ -12,6 +13,7 @@ type MyInvitationsPanelProps = {
 };
 
 export default function MyInvitationsPanel({ onError }: MyInvitationsPanelProps) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   const invitationsQuery = useQuery({
@@ -26,7 +28,7 @@ export default function MyInvitationsPanel({ onError }: MyInvitationsPanelProps)
       queryClient.invalidateQueries({ queryKey: ["boards"] });
     },
     onError: (error) => {
-      onError(getApiErrorMessage(error, "Failed to accept invitation."));
+      onError(getApiErrorMessage(error, t("invitations.acceptFailed")));
     },
   });
 
@@ -37,7 +39,7 @@ export default function MyInvitationsPanel({ onError }: MyInvitationsPanelProps)
       queryClient.invalidateQueries({ queryKey: ["boards"] });
     },
     onError: (error) => {
-      onError(getApiErrorMessage(error, "Failed to decline invitation."));
+      onError(getApiErrorMessage(error, t("invitations.declineFailed")));
     },
   });
 
@@ -51,8 +53,8 @@ export default function MyInvitationsPanel({ onError }: MyInvitationsPanelProps)
     <section className="section-block invitations-panel">
       <div className="section-header">
         <div>
-          <h2>Pending invitations</h2>
-          <p>Boards you have been invited to join.</p>
+          <h2>{t("invitations.pendingTitle")}</h2>
+          <p>{t("invitations.pendingSubtitle")}</p>
         </div>
       </div>
 
@@ -60,23 +62,25 @@ export default function MyInvitationsPanel({ onError }: MyInvitationsPanelProps)
         {invitations.map((invitation) => (
           <article className="invitation-card" key={invitation.id}>
             <div>
-              <h3>{invitation.board_title || "Board invitation"}</h3>
+              <h3>{invitation.board_title || t("invitations.boardInvitation")}</h3>
 
               <p>
-                Invited by:{" "}
+                {t("invitations.invitedBy")}:{" "}
                 <strong>
                   {invitation.invited_by_name ||
                     invitation.invited_by_email ||
-                    "Board owner"}
+                    t("invitations.boardOwner")}
                 </strong>
               </p>
 
               <p>
-                Role: <strong>{invitation.role}</strong>
+                {t("profile.role")}:{" "}
+                <strong>{t(`roles.${invitation.role}`)}</strong>
               </p>
 
               <small>
-                Expires: {new Date(invitation.expires_at).toLocaleDateString()}
+                {t("invitations.expires")}:{" "}
+                {new Date(invitation.expires_at).toLocaleDateString()}
               </small>
             </div>
 
@@ -87,7 +91,7 @@ export default function MyInvitationsPanel({ onError }: MyInvitationsPanelProps)
                 isLoading={declineMutation.isPending}
                 onClick={() => declineMutation.mutate(invitation.id)}
               >
-                Decline
+                {t("invitations.decline")}
               </Button>
 
               <Button
@@ -95,7 +99,7 @@ export default function MyInvitationsPanel({ onError }: MyInvitationsPanelProps)
                 isLoading={acceptMutation.isPending}
                 onClick={() => acceptMutation.mutate(invitation.id)}
               >
-                Accept
+                {t("invitations.accept")}
               </Button>
             </div>
           </article>

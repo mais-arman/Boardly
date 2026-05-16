@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import Button from "../../../../shared/components/Button";
 import Input from "../../../../shared/components/Input";
 import type { Card } from "../../types";
@@ -31,10 +32,12 @@ export default function CardDetailsForm({
   onSave,
   onDelete,
 }: CardDetailsFormProps) {
+  const { t } = useTranslation();
+
   return (
     <section className="trello-section">
       <Input
-        label="Title"
+        label={t("boards.title")}
         value={title}
         onChange={(event) => onTitleChange(event.target.value)}
         disabled={!canEdit}
@@ -42,19 +45,19 @@ export default function CardDetailsForm({
       />
 
       <div className="field-group">
-        <label htmlFor="card-description">Description</label>
+        <label htmlFor="card-description">{t("boards.description")}</label>
 
         <textarea
           id="card-description"
           value={description}
           onChange={(event) => onDescriptionChange(event.target.value)}
           disabled={!canEdit}
-          placeholder="Add a more detailed description..."
+          placeholder={t("card.descriptionPlaceholder")}
         />
       </div>
 
       <Input
-        label="Due date"
+        label={t("boards.dueDate")}
         type="date"
         value={dueDate}
         onChange={(event) => onDueDateChange(event.target.value)}
@@ -69,11 +72,11 @@ export default function CardDetailsForm({
             isLoading={isDeleting}
             onClick={() => onDelete(card)}
           >
-            Delete card
+            {t("boards.deleteCard")}
           </Button>
 
           <Button type="button" isLoading={isSaving} onClick={onSave}>
-            Save changes
+            {t("boards.saveChanges")}
           </Button>
         </div>
       )}

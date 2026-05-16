@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { ROUTES } from "../../../app/constants/routes";
 import Button from "../../../shared/components/Button";
 import ConfirmModal from "../../../shared/components/ConfirmModal";
@@ -13,6 +14,7 @@ import { useAuth } from "../hooks/useAuth";
 const AUTH_QUERY_KEY = ["auth", "me"];
 
 export default function ProfilePage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user, logout } = useAuth();
@@ -26,7 +28,7 @@ export default function ProfilePage() {
     mutationFn: updateProfileRequest,
     onSuccess: (updatedUser) => {
       queryClient.setQueryData(AUTH_QUERY_KEY, updatedUser);
-      setSuccessMessage("Profile updated successfully.");
+      setSuccessMessage(t("profile.updateSuccess"));
     },
   });
 
@@ -44,7 +46,7 @@ export default function ProfilePage() {
     setSuccessMessage("");
 
     if (name.trim().length < 2) {
-      setError("Name must be at least 2 characters.");
+      setError(t("profile.nameTooShort"));
       return;
     }
 
@@ -53,7 +55,7 @@ export default function ProfilePage() {
         name: name.trim(),
       });
     } catch (error) {
-      setError(getApiErrorMessage(error, "Failed to update profile."));
+      setError(getApiErrorMessage(error, t("profile.updateFailed")));
     }
   }
 
@@ -63,7 +65,7 @@ export default function ProfilePage() {
     try {
       await deleteMutation.mutateAsync();
     } catch (error) {
-      setError(getApiErrorMessage(error, "Failed to delete account."));
+      setError(getApiErrorMessage(error, t("profile.deleteFailed")));
       setIsDeleteOpen(false);
     }
   }
@@ -72,7 +74,7 @@ export default function ProfilePage() {
     <main className="profile-page">
       <section className="profile-card">
         <Link to={ROUTES.DASHBOARD} className="back-link">
-          ← Back to dashboard
+          ← {t("profile.backToDashboard")}
         </Link>
 
         <div className="profile-header">
@@ -81,7 +83,7 @@ export default function ProfilePage() {
           </span>
 
           <div>
-            <p className="eyebrow">Profile</p>
+            <p className="eyebrow">{t("profile.title")}</p>
             <h1>{user?.name}</h1>
             <p>{user?.email}</p>
           </div>
@@ -92,53 +94,50 @@ export default function ProfilePage() {
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <Input
-            label="Name"
+            label={t("auth.name")}
             value={name}
             onChange={(event) => setName(event.target.value)}
             required
           />
 
-          <Input label="Email" value={user?.email || ""} disabled />
+          <Input label={t("auth.email")} value={user?.email || ""} disabled />
+
+          <Input label={t("profile.role")} value={user?.role || ""} disabled />
 
           <Input
-            label="Role"
-            value={user?.role || ""}
-            disabled
-          />
-
-          <Input
-            label="Email verified"
-            value={user?.is_email_verified ? "Verified" : "Not verified"}
+            label={t("profile.emailVerified")}
+            value={
+              user?.is_email_verified
+                ? t("profile.verified")
+                : t("profile.notVerified")
+            }
             disabled
           />
 
           <Button type="submit" isLoading={updateMutation.isPending}>
-            Save profile
+            {t("profile.saveProfile")}
           </Button>
         </form>
 
         <div className="danger-zone">
-          <h2>Danger zone</h2>
-          <p>
-            Deleting your account will permanently remove your account and owned
-            boards.
-          </p>
+          <h2>{t("profile.dangerZone")}</h2>
+          <p>{t("profile.deleteAccountDescription")}</p>
 
           <Button
             type="button"
             variant="danger"
             onClick={() => setIsDeleteOpen(true)}
           >
-            Delete account
+            {t("profile.deleteAccount")}
           </Button>
         </div>
       </section>
 
       {isDeleteOpen && (
         <ConfirmModal
-          title="Delete account?"
-          description="This action cannot be undone. Your account and owned boards will be permanently removed."
-          confirmLabel="Delete account"
+          title={t("profile.deleteAccountQuestion")}
+          description={t("profile.deleteAccountConfirmDescription")}
+          confirmLabel={t("profile.deleteAccount")}
           isLoading={deleteMutation.isPending}
           onCancel={() => setIsDeleteOpen(false)}
           onConfirm={handleDeleteAccount}

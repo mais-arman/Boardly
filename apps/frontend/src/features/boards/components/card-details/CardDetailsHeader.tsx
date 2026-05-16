@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 type CardDetailsHeaderProps = {
   title: string;
   roleLabel: string;
@@ -9,14 +11,18 @@ export default function CardDetailsHeader({
   roleLabel,
   onClose,
 }: CardDetailsHeaderProps) {
+  const { t } = useTranslation();
+
   return (
     <header className="trello-modal-header">
       <div>
-        <p className="trello-modal-eyebrow">Card details</p>
+        <p className="trello-modal-eyebrow">{t("boards.cardDetails")}</p>
         <h2>{title}</h2>
 
         <span className="viewer-role-note">
-          Current access: {roleLabel}
+          {t("boards.currentAccess", {
+            role: t(`roles.${roleLabel}`),
+          })}
         </span>
       </div>
 

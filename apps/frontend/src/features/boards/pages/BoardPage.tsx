@@ -1,4 +1,5 @@
 import { Link, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   closestCorners,
   DndContext,
@@ -26,6 +27,7 @@ import { useBoardPermissions } from "../hooks/useBoardPermissions";
 import { useBoardRealtime } from "../hooks/useBoardRealtime";
 
 export default function BoardPage() {
+  const { t } = useTranslation();
   const { boardId } = useParams<{ boardId: string }>();
 
   const commands = useBoardCommands({
@@ -65,8 +67,8 @@ export default function BoardPage() {
   if (!boardId || boardData.isError || !boardData.board) {
     return (
       <main className="trello-board-page">
-        <div className="alert error">Board not found.</div>
-        <Link to={ROUTES.DASHBOARD}>Back to boards</Link>
+        <div className="alert error">{t("boards.notFound")}</div>
+        <Link to={ROUTES.DASHBOARD}>{t("boards.backToBoards")}</Link>
       </main>
     );
   }
@@ -169,9 +171,11 @@ export default function BoardPage() {
 
       {state.listToDelete && (
         <ConfirmModal
-          title="Delete list?"
-          description={`Delete ${state.listToDelete.title} and all its cards?`}
-          confirmLabel="Delete list"
+          title={t("boards.deleteListQuestion")}
+          description={t("boards.deleteListDescription", {
+            title: state.listToDelete.title,
+          })}
+          confirmLabel={t("boards.deleteList")}
           isLoading={mutations.deleteListMutation.isPending}
           onCancel={() => actions.setListToDelete(null)}
           onConfirm={actions.confirmDeleteList}
@@ -180,9 +184,11 @@ export default function BoardPage() {
 
       {state.cardToDelete && (
         <ConfirmModal
-          title="Delete card?"
-          description={`Delete ${state.cardToDelete.title}?`}
-          confirmLabel="Delete card"
+          title={t("boards.deleteCardQuestion")}
+          description={t("boards.deleteCardDescription", {
+            title: state.cardToDelete.title,
+          })}
+          confirmLabel={t("boards.deleteCard")}
           isLoading={mutations.deleteCardMutation.isPending}
           onCancel={() => actions.setCardToDelete(null)}
           onConfirm={actions.confirmDeleteCard}
@@ -191,9 +197,9 @@ export default function BoardPage() {
 
       {state.isDeleteBoardOpen && (
         <ConfirmModal
-          title="Delete board?"
-          description="This permanently deletes the board, lists, cards, labels, comments, and members."
-          confirmLabel="Delete board"
+          title={t("boards.deleteBoardQuestion")}
+          description={t("boards.deleteBoardDescription")}
+          confirmLabel={t("boards.deleteBoard")}
           isLoading={mutations.deleteBoardMutation.isPending}
           onCancel={() => actions.setIsDeleteBoardOpen(false)}
           onConfirm={() => mutations.deleteBoardMutation.mutate()}

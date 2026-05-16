@@ -1,4 +1,5 @@
 import type { FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 import Button from "../../../shared/components/Button";
 
 type CreateListPanelProps = {
@@ -14,17 +15,19 @@ export default function CreateListPanel({
   onTitleChange,
   onSubmit,
 }: CreateListPanelProps) {
+  const { t } = useTranslation();
+
   return (
     <article className="trello-list add-list-panel">
       <form onSubmit={onSubmit}>
         <input
           value={title}
           onChange={(event) => onTitleChange(event.target.value)}
-          placeholder="Add another list"
+          placeholder={t("boards.addAnotherList")}
         />
 
         <Button type="submit" variant="secondary" isLoading={isCreating}>
-          Add list
+          {t("boards.addList")}
         </Button>
       </form>
     </article>

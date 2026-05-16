@@ -2,7 +2,6 @@ from datetime import datetime, timezone, timedelta
 from flask_jwt_extended import create_access_token, create_refresh_token
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import generate_password_hash, check_password_hash
-
 from app.extensions import db
 from app.models.auth.user import User
 from app.services.auth.email_service import EmailService
@@ -26,7 +25,7 @@ class AuthService:
         existing_user = User.query.filter_by(email=email).first()
 
         if existing_user:
-            raise ConflictError(Messages.EMAIL_EXISTS)
+            raise ConflictError(Messages.EMAIL_EXISTS, code="EMAIL_EXISTS")
 
         raw_token = generate_secure_token()
 
@@ -50,11 +49,11 @@ class AuthService:
 
         except IntegrityError:
             db.session.rollback()
-            raise ConflictError(Messages.EMAIL_EXISTS)
+            raise ConflictError(Messages.EMAIL_EXISTS, code="EMAIL_EXISTS")
 
         except Exception:
             db.session.rollback()
-            raise BadRequestError(Messages.EMAIL_SEND_FAILED)
+            raise BadRequestError(Messages.EMAIL_SEND_FAILED, code="EMAIL_SEND_FAILED")
 
         return {
             "user": user,
@@ -70,11 +69,15 @@ class AuthService:
 
         if not user:
             raise UnauthorizedError(
-                "This account does not exist. Please sign up first."
+                Messages.ACCOUNT_NOT_FOUND,
+                code="ACCOUNT_NOT_FOUND",
             )
 
         if not check_password_hash(user.password_hash, password):
-            raise UnauthorizedError("Incorrect password. Please try again.")
+            raise UnauthorizedError(
+                Messages.INVALID_CREDENTIALS,
+                code="INVALID_CREDENTIALS",
+            )
 
         return {
             "user": user,
@@ -86,7 +89,7 @@ class AuthService:
         user = db.session.get(User, user_id)
 
         if not user:
-            raise UnauthorizedError(Messages.USER_NOT_FOUND)
+            raise UnauthorizedError(Messages.USER_NOT_FOUND, code="USER_NOT_FOUND")
 
         return {
             "access_token": create_access_token(identity=str(user.id)),
@@ -101,7 +104,10 @@ class AuthService:
         ).first()
 
         if not user:
-            raise BadRequestError(Messages.INVALID_VERIFICATION_TOKEN)
+            raise BadRequestError(
+                Messages.INVALID_VERIFICATION_TOKEN,
+                code="INVALID_VERIFICATION_TOKEN",
+            )
 
         if user.is_email_verified:
             return user
@@ -109,11 +115,12 @@ class AuthService:
         now = datetime.now(timezone.utc)
 
         if user.email_verification_expires_at < now:
-            raise BadRequestError(Messages.VERIFICATION_EXPIRED)
+            raise BadRequestError(
+                Messages.VERIFICATION_EXPIRED,
+                code="VERIFICATION_EXPIRED",
+            )
 
         user.is_email_verified = True
-        user.email_verification_token_hash = None
-        user.email_verification_expires_at = None
 
         db.session.commit()
 
@@ -124,7 +131,7 @@ class AuthService:
         user = db.session.get(User, user_id)
 
         if not user:
-            raise UnauthorizedError(Messages.USER_NOT_FOUND)
+            raise UnauthorizedError(Messages.USER_NOT_FOUND, code="USER_NOT_FOUND")
 
         if user.is_email_verified:
             return user
@@ -142,6 +149,6 @@ class AuthService:
 
         except Exception:
             db.session.rollback()
-            raise BadRequestError(Messages.EMAIL_SEND_FAILED)
+            raise BadRequestError(Messages.EMAIL_SEND_FAILED, code="EMAIL_SEND_FAILED")
 
         return user

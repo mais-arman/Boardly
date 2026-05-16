@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { Comment } from "../types";
 
 type CommentListProps = {
@@ -13,8 +14,10 @@ function getName(comment: Comment) {
 }
 
 export default function CommentList({ comments }: CommentListProps) {
+  const { t } = useTranslation();
+
   if (comments.length === 0) {
-    return <p className="empty-comments">No comments yet.</p>;
+    return <p className="empty-comments">{t("boards.noComments")}</p>;
   }
 
   return (

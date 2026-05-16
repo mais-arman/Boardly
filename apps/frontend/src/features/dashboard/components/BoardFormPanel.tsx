@@ -1,4 +1,5 @@
 import type { FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 import Button from "../../../shared/components/Button";
 import Input from "../../../shared/components/Input";
 import type { Board } from "../../boards/types";
@@ -30,36 +31,42 @@ export default function BoardFormPanel({
   onSubmit,
   onCancel,
 }: BoardFormPanelProps) {
+  const { t } = useTranslation();
+
   return (
     <section className="section-block create-board-panel">
       <div className="section-header">
         <div>
-          <h2>{editingBoard ? "Edit board" : "Create board"}</h2>
-          <p>Choose title, description, and board background.</p>
+          <h2>
+            {editingBoard
+              ? t("boards.saveChanges")
+              : t("boards.createBoard")}
+          </h2>
+          <p>{t("boards.boardDescription")}</p>
         </div>
       </div>
 
       <form className="auth-form" onSubmit={onSubmit}>
         <Input
-          label="Board title"
+          label={t("boards.boardTitle")}
           value={boardTitle}
           onChange={(event) => onTitleChange(event.target.value)}
           required
         />
 
         <div className="field-group">
-          <label htmlFor="board-description">Description</label>
+          <label htmlFor="board-description">{t("boards.description")}</label>
 
           <textarea
             id="board-description"
             value={boardDescription}
             onChange={(event) => onDescriptionChange(event.target.value)}
-            placeholder="Optional board description"
+            placeholder={t("boards.boardDescription")}
           />
         </div>
 
         <div className="field-group">
-          <label>Background color</label>
+          <label>{t("boards.backgroundColor")}</label>
 
           <div className="color-picker-grid">
             {boardColors.map((color) => (
@@ -79,11 +86,11 @@ export default function BoardFormPanel({
 
         <div className="form-actions">
           <Button type="button" variant="secondary" onClick={onCancel}>
-            Cancel
+            {t("common.cancel")}
           </Button>
 
           <Button type="submit" isLoading={isSaving}>
-            {editingBoard ? "Save changes" : "Create board"}
+            {editingBoard ? t("boards.saveChanges") : t("boards.createBoard")}
           </Button>
         </div>
       </form>

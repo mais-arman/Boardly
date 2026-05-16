@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import type {
   DragEndEvent,
@@ -7,10 +8,7 @@ import type {
 } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
 import type { BoardList, Card } from "../types";
-import {
-  moveCardRequest,
-  reorderListsRequest,
-} from "../api/boardPageApi";
+import { moveCardRequest, reorderListsRequest } from "../api/boardPageApi";
 import {
   BOARD_QUERY_KEY,
   CARDS_QUERY_KEY,
@@ -46,6 +44,7 @@ export function useBoardDragAndDrop({
   canEdit,
   onError,
 }: UseBoardDragAndDropParams) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [activeCard, setActiveCard] = useState<Card | null>(null);
 
@@ -136,10 +135,7 @@ export function useBoardDragAndDrop({
 
       const reorderedLists = arrayMove(lists, oldIndex, newIndex);
 
-      queryClient.setQueryData(
-        [LISTS_QUERY_KEY, boardId],
-        reorderedLists
-      );
+      queryClient.setQueryData([LISTS_QUERY_KEY, boardId], reorderedLists);
 
       try {
         await reorderListsRequest(boardId, {
@@ -157,7 +153,7 @@ export function useBoardDragAndDrop({
           queryKey: [LISTS_QUERY_KEY, boardId],
         });
 
-        onError(getApiErrorMessage(error, "Failed to reorder lists."));
+        onError(getApiErrorMessage(error, t("errors.failedReorderLists")));
       }
 
       return;
@@ -203,7 +199,7 @@ export function useBoardDragAndDrop({
         });
       });
 
-      onError(getApiErrorMessage(error, "Failed to move card."));
+      onError(getApiErrorMessage(error, t("errors.failedMoveCard")));
     }
   }
 

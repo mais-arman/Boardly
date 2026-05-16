@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { getBoardPath } from "../../../app/constants/routes";
 import Button from "../../../shared/components/Button";
 import type { Board, BoardRole } from "../../boards/types";
@@ -10,9 +11,8 @@ type BoardCardProps = {
   onDelete: (board: Board) => void;
 };
 
-function getRoleLabel(role: BoardRole | null) {
-  if (!role) return "";
-  return role.charAt(0).toUpperCase() + role.slice(1);
+function getRoleKey(role: BoardRole | null) {
+  return role || "";
 }
 
 export default function BoardCard({
@@ -21,6 +21,8 @@ export default function BoardCard({
   onEdit,
   onDelete,
 }: BoardCardProps) {
+  const { t } = useTranslation();
+
   return (
     <article className="board-card">
       <Link to={getBoardPath(board.id)} className="board-card-link">
@@ -37,21 +39,28 @@ export default function BoardCard({
 
             {board.role && (
               <span className={`role-pill ${board.role}`}>
-                {getRoleLabel(board.role)}
+                {t(`roles.${getRoleKey(board.role)}`)}
               </span>
             )}
           </div>
 
-          <p>{board.description || "No description provided."}</p>
+          <p>{board.description || t("boards.noDescription")}</p>
 
           <div className="board-meta">
-            <span>{board.members_count} members</span>
-            <span>{board.lists_count} lists</span>
-            <span>{board.cards_count} cards</span>
+            <span>
+              {board.members_count} {t("common.members")}
+            </span>
+            <span>
+              {board.lists_count} {t("common.lists")}
+            </span>
+            <span>
+              {board.cards_count} {t("common.cards")}
+            </span>
           </div>
 
           <div className="board-date">
-            Created: {new Date(board.created_at).toLocaleDateString()}
+            {t("common.created")}:{" "}
+            {new Date(board.created_at).toLocaleDateString()}
           </div>
         </div>
       </Link>
@@ -63,7 +72,7 @@ export default function BoardCard({
             variant="secondary"
             onClick={() => onEdit(board)}
           >
-            Edit
+            {t("common.edit")}
           </Button>
 
           <Button
@@ -71,7 +80,7 @@ export default function BoardCard({
             variant="danger"
             onClick={() => onDelete(board)}
           >
-            Delete
+            {t("common.delete")}
           </Button>
         </div>
       )}

@@ -1,4 +1,5 @@
 import type { FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 import Button from "../../../../shared/components/Button";
 import type { Comment } from "../../types";
 import CommentList from "../CommentList";
@@ -20,24 +21,26 @@ export default function CardActivity({
   onCommentChange,
   onSubmitComment,
 }: CardActivityProps) {
+  const { t } = useTranslation();
+
   return (
     <section className="trello-section trello-activity-section">
-      <h3>Activity</h3>
+      <h3>{t("card.activity")}</h3>
 
       {canComment ? (
         <form className="trello-comment-form" onSubmit={onSubmitComment}>
           <textarea
             value={comment}
             onChange={(event) => onCommentChange(event.target.value)}
-            placeholder="Write a comment..."
+            placeholder={t("boards.writeComment")}
           />
 
           <Button type="submit" isLoading={isAddingComment}>
-            Add comment
+            {t("boards.addComment")}
           </Button>
         </form>
       ) : (
-        <p className="viewer-note">Viewer access: commenting is disabled.</p>
+        <p className="viewer-note">{t("card.viewerCommentDisabled")}</p>
       )}
 
       <CommentList comments={comments} />
