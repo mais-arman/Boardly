@@ -5,7 +5,6 @@ import { useMutation } from "@tanstack/react-query";
 import { ROUTES } from "../../../app/constants/routes";
 import ConfirmModal from "../../../shared/components/ConfirmModal";
 import Button from "../../../shared/components/Button";
-import Loader from "../../../shared/components/Loader";
 import { getApiErrorMessage } from "../../../shared/api/getApiErrorMessage";
 import { resendVerificationEmailRequest } from "../../auth/api/authApi";
 import { useAuth } from "../../auth/hooks/useAuth";
@@ -49,10 +48,6 @@ export default function DashboardPage() {
     navigate(ROUTES.LOGIN, {
       replace: true,
     });
-  }
-
-  if (isLoading) {
-    return <Loader />;
   }
 
   return (
@@ -114,6 +109,7 @@ export default function DashboardPage() {
         <BoardsSection
           boards={boards}
           fallbackColor={BOARD_COLORS[0]}
+          isLoading={isLoading}
           onCreateBoard={actions.openCreateBoard}
           onEditBoard={actions.openEditBoard}
           onDeleteBoard={actions.setDeletingBoard}

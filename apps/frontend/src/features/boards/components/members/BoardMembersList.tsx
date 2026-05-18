@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import Button from "../../../../shared/components/Button";
 import type { BoardMember, ManageableBoardRole } from "../../types";
+import MemberRowSkeleton from "./MemberRowSkeleton";
 
 type BoardMembersListProps = {
   members: BoardMember[];
@@ -34,7 +35,11 @@ export default function BoardMembersList({
       <h3>{t("members.boardMembers")}</h3>
 
       {isLoading ? (
-        <p className="muted-text">{t("members.loadingMembers")}</p>
+        <div className="members-list">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <MemberRowSkeleton key={index} />
+          ))}
+        </div>
       ) : members.length === 0 ? (
         <p className="muted-text">{t("members.noMembers")}</p>
       ) : (

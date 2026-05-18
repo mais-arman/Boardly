@@ -8,6 +8,7 @@ import {
   declineMyInvitationRequest,
   getMyInvitationsRequest,
 } from "../../../boards/api/invitationsApi";
+import InvitationCardSkeleton from "./InvitationCardSkeleton";
 
 type MyInvitationsPanelProps = {
   onError: (message: string) => void;
@@ -57,6 +58,25 @@ export default function MyInvitationsPanel({
   });
 
   const invitations = invitationsQuery.data || [];
+
+  if (invitationsQuery.isLoading) {
+    return (
+      <section className="section-block invitations-panel">
+        <div className="section-header">
+          <div>
+            <h2>{t("invitations.pendingTitle")}</h2>
+            <p>{t("invitations.pendingSubtitle")}</p>
+          </div>
+        </div>
+
+        <div className="invitation-list">
+          {Array.from({ length: 2 }).map((_, index) => (
+            <InvitationCardSkeleton key={index} />
+          ))}
+        </div>
+      </section>
+    );
+  }
 
   if (invitations.length === 0) {
     return null;

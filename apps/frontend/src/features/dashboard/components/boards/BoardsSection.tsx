@@ -2,11 +2,12 @@ import { useTranslation } from "react-i18next";
 import type { Board } from "../../../boards/types";
 import Button from "../../../../shared/components/Button";
 import BoardCard from "./BoardCard";
-
+import BoardCardSkeleton from "./BoardCardSkeleton";
 
 type BoardsSectionProps = {
   boards: Board[];
   fallbackColor: string;
+  isLoading: boolean;
   onCreateBoard: () => void;
   onEditBoard: (board: Board) => void;
   onDeleteBoard: (board: Board) => void;
@@ -15,6 +16,7 @@ type BoardsSectionProps = {
 export default function BoardsSection({
   boards,
   fallbackColor,
+  isLoading,
   onCreateBoard,
   onEditBoard,
   onDeleteBoard,
@@ -30,7 +32,13 @@ export default function BoardsSection({
         </div>
       </div>
 
-      {boards.length === 0 ? (
+      {isLoading ? (
+        <div className="boards-grid">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <BoardCardSkeleton key={index} />
+          ))}
+        </div>
+      ) : boards.length === 0 ? (
         <div className="empty-state">
           <div className="empty-icon">📋</div>
           <h3>{t("boards.emptyTitle")}</h3>

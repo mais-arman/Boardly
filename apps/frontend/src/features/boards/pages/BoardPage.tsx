@@ -11,7 +11,6 @@ import {
 
 import { ROUTES } from "../../../app/constants/routes";
 import ConfirmModal from "../../../shared/components/ConfirmModal";
-import Loader from "../../../shared/components/Loader";
 
 import BoardHeader from "../components/BoardHeader";
 import BoardMembersPanel from "../components/BoardMembersPanel";
@@ -19,6 +18,7 @@ import CardDetailsModal from "../../cards/components/CardDetailsModal";
 import CardPreview from "../../cards/components/CardPreview";
 import EmptyBoardState from "../components/board-page/EmptyBoardState";
 import BoardLanes from "../components/board-page/BoardLanes";
+import BoardLanesSkeleton from "../components/board-page/BoardLanesSkeleton";
 
 import { useBoardCommands } from "../hooks/board/useBoardCommands";
 import { useBoardData } from "../hooks/board/useBoardData";
@@ -60,11 +60,7 @@ export default function BoardPage() {
     onError: actions.setPageError,
   });
 
-  if (boardData.isLoading) {
-    return <Loader />;
-  }
-
-  if (!boardId || boardData.isError || !boardData.board) {
+  if (!boardId || boardData.isError) {
     return (
       <main className="trello-board-page">
         <div className="alert error">{t("boards.notFound")}</div>
@@ -77,70 +73,85 @@ export default function BoardPage() {
     <main
       className="trello-board-page"
       style={{
-        background: boardData.board.background_color,
+        background: boardData.board?.background_color || "#0f4c81",
       }}
     >
-      <BoardHeader
-        board={boardData.board}
-        role={permissions.role}
-        canManageMembers={permissions.canManageMembers}
-        canDeleteBoard={permissions.canDeleteBoard}
-        onOpenMembers={() => actions.setIsMembersPanelOpen(true)}
-        onOpenDeleteBoard={() => actions.setIsDeleteBoardOpen(true)}
-      />
-
-      {state.pageError && <div className="alert error">{state.pageError}</div>}
-
-      {boardData.isCardsLoading && (
-        <div className="alert info">{t("boards.loadingCards")}</div>
-      )}
-
-      {boardData.lists.length === 0 && (
-        <EmptyBoardState
-          canManageLists={permissions.canManageLists}
-          isCreating={mutations.createListMutation.isPending}
-          onCreateDefaultWorkflow={actions.handleCreateDefaultWorkflow}
+      {boardData.board && (
+        <BoardHeader
+          board={boardData.board}
+          role={permissions.role}
+          canManageMembers={permissions.canManageMembers}
+          canDeleteBoard={permissions.canDeleteBoard}
+          onOpenMembers={() => actions.setIsMembersPanelOpen(true)}
+          onOpenDeleteBoard={() => actions.setIsDeleteBoardOpen(true)}
         />
       )}
 
-      {boardData.lists.length > 0 && (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCorners}
-          onDragStart={drag.handleDragStart}
-          onDragOver={drag.handleDragOver}
-          onDragEnd={drag.handleDragEnd}
-          onDragCancel={drag.handleDragCancel}
-        >
-          <BoardLanes
-            lists={boardData.lists}
-            cardsByList={boardData.cardsByList}
-            canManageCards={permissions.canManageCards}
-            canManageLists={permissions.canManageLists}
-            editingListId={state.editingListId}
-            editingListTitle={state.editingListTitle}
-            cardTitleByList={state.cardTitleByList}
-            newListTitle={state.newListTitle}
-            isCreatingCard={mutations.createCardMutation.isPending}
-            isCreatingList={mutations.createListMutation.isPending}
-            onOpenCard={actions.setSelectedCard}
-            onStartEditList={actions.startEditingList}
-            onCancelEditList={actions.cancelEditingList}
-            onEditingListTitleChange={actions.setEditingListTitle}
-            onUpdateList={actions.handleUpdateList}
-            onDeleteList={actions.setListToDelete}
-            onCardTitleChange={actions.handleCardTitleChange}
-            onCreateCard={actions.handleCreateCard}
-            onNewListTitleChange={actions.setNewListTitle}
-            onCreateList={actions.handleCreateList}
-          />
+      {!boardData.board && (
+        <header className="trello-board-header">
+          <div>
+            <Link to={ROUTES.DASHBOARD} className="back-link">
+              ← {t("boards.backToBoards")}
+            </Link>
+            <h1>{t("boards.loadingBoard", "Loading board...")}</h1>
+          </div>
+        </header>
+      )}
 
-          <DragOverlay>
-            {drag.activeCard ? (
-              <CardPreview card={drag.activeCard} isOverlay />
-            ) : null}
-          </DragOverlay>
-        </DndContext>
+      {state.pageError && <div className="alert error">{state.pageError}</div>}
+
+      {boardData.isLoading ? (
+        <BoardLanesSkeleton />
+      ) : (
+        <>
+          {boardData.lists.length === 0 && (
+            <EmptyBoardState
+              canManageLists={permissions.canManageLists}
+              isCreating={mutations.createListMutation.isPending}
+              onCreateDefaultWorkflow={actions.handleCreateDefaultWorkflow}
+            />
+          )}
+
+          {boardData.lists.length > 0 && (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCorners}
+              onDragStart={drag.handleDragStart}
+              onDragOver={drag.handleDragOver}
+              onDragEnd={drag.handleDragEnd}
+              onDragCancel={drag.handleDragCancel}
+            >
+              <BoardLanes
+                lists={boardData.lists}
+                cardsByList={boardData.cardsByList}
+                canManageCards={permissions.canManageCards}
+                canManageLists={permissions.canManageLists}
+                editingListId={state.editingListId}
+                editingListTitle={state.editingListTitle}
+                cardTitleByList={state.cardTitleByList}
+                newListTitle={state.newListTitle}
+                isCreatingCard={mutations.createCardMutation.isPending}
+                isCreatingList={mutations.createListMutation.isPending}
+                onOpenCard={actions.setSelectedCard}
+                onStartEditList={actions.startEditingList}
+                onCancelEditList={actions.cancelEditingList}
+                onEditingListTitleChange={actions.setEditingListTitle}
+                onUpdateList={actions.handleUpdateList}
+                onDeleteList={actions.setListToDelete}
+                onCardTitleChange={actions.handleCardTitleChange}
+                onCreateCard={actions.handleCreateCard}
+                onNewListTitleChange={actions.setNewListTitle}
+                onCreateList={actions.handleCreateList}
+              />
+
+              <DragOverlay>
+                {drag.activeCard ? (
+                  <CardPreview card={drag.activeCard} isOverlay />
+                ) : null}
+              </DragOverlay>
+            </DndContext>
+          )}
+        </>
       )}
 
       {state.selectedCard && (

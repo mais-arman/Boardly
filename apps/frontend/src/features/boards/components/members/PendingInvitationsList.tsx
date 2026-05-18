@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import Button from "../../../../shared/components/Button";
 import type { BoardInvitation } from "../../types";
+import MemberRowSkeleton from "./MemberRowSkeleton";
 
 type PendingInvitationsListProps = {
   invitations: BoardInvitation[];
@@ -24,7 +25,11 @@ export default function PendingInvitationsList({
       <h3>{t("members.pendingInvitations")}</h3>
 
       {isLoading ? (
-        <p className="muted-text">{t("members.loadingInvitations")}</p>
+        <div className="members-list">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <MemberRowSkeleton key={index} />
+          ))}
+        </div>
       ) : invitations.length === 0 ? (
         <p className="muted-text">{t("members.noPendingInvitations")}</p>
       ) : (

@@ -102,7 +102,8 @@
     "deleteBoardQuestion": "هل تريد حذف اللوحة؟",
     "deleteBoardDescription": "سيتم حذف اللوحة والقوائم والبطاقات والتصنيفات والتعليقات والأعضاء بشكل دائم.",
     "createDefaultWorkflow": "إنشاء مسار العمل الافتراضي",
-    "loadingCards": "جاري تحميل الكروت..."
+    "loadingCards": "جاري تحميل الكروت...",
+    "loadingBoard": "جاري تحميل البورد..."
   },
   "roles": {
     "owner": "مالك",
@@ -205,7 +206,8 @@
     "pendingInvitations": "الدعوات المعلقة",
     "loadingInvitations": "جاري تحميل الدعوات...",
     "noPendingInvitations": "لا توجد دعوات معلقة.",
-    "remove": "إزالة"
+    "remove": "إزالة",
+    "noMembers": "لا يوجد أعضاء."
   },
   "invitationStatus": {
     "pending": "معلقة",

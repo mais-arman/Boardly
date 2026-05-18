@@ -1854,3 +1854,41 @@ html[dir="rtl"] .members-panel {
     flex: 1;
   }
 }
+
+/* =========================
+   Skeleton Layouts
+========================= */
+
+.board-card-skeleton {
+  cursor: default;
+}
+
+.board-card-skeleton:hover {
+  transform: none;
+  box-shadow: var(--shadow-sm);
+  border-color: var(--border);
+}
+
+.board-card-skeleton .board-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 20px;
+}
+
+.member-skeleton-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.trello-list .skeleton,
+.trello-card .skeleton,
+.member-row .skeleton,
+.invitation-card .skeleton {
+  display: block;
+}
+
+.invitation-card .member-skeleton-content {
+  flex: 1;
+}
