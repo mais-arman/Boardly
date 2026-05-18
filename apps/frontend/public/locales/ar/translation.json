@@ -15,7 +15,11 @@
     "cards": "بطاقات",
     "create": "إنشاء",
     "yes": "نعم",
-    "no": "لا"
+    "no": "لا",
+    "rowsPerPage": "عدد الصفوف",
+    "pageOf": "صفحة {{page}} من {{totalPages}}",
+    "previous": "السابق",
+    "next": "التالي"
   },
   "auth": {
     "login": "تسجيل الدخول",
@@ -131,7 +135,11 @@
     "deleteUser": "حذف المستخدم",
     "deleteBoardQuestion": "هل تريد حذف اللوحة؟",
     "deleteBoardDescription": "سيتم حذف \"{{title}}\" بشكل دائم.",
-    "deleteBoard": "حذف اللوحة"
+    "deleteBoard": "حذف اللوحة",
+    "noUsers": "لا يوجد مستخدمون.",
+    "noBoards": "لا توجد بوردات.",
+    "searchUsers": "ابحث عن مستخدم...",
+    "searchBoards": "ابحث عن بورد..."
   },
   "verification": {
   "title": "تأكيد البريد الإلكتروني",

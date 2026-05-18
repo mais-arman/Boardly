@@ -1,6 +1,13 @@
 import axios from "axios";
+import type { InternalAxiosRequestConfig } from "axios";
 import { STORAGE_KEYS } from "../../app/constants/storage";
 import { API_ROUTES } from "../../app/constants/apiRoutes";
+
+const MAX_REFRESH_RETRIES = 1;
+
+type RetryableRequestConfig = InternalAxiosRequestConfig & {
+  _retryCount?: number;
+};
 
 let isRefreshing = false;
 let refreshQueue: Array<(token: string | null) => void> = [];
@@ -55,9 +62,21 @@ apiClient.interceptors.response.use(
   (response) => response,
 
   async (error) => {
-    const originalRequest = error.config;
+    const originalRequest = error.config as RetryableRequestConfig | undefined;
 
-    if (error.response?.status !== 401 || originalRequest?._retry) {
+    if (!originalRequest || error.response?.status !== 401) {
+      return Promise.reject(error);
+    }
+
+    if (originalRequest.url === API_ROUTES.AUTH.REFRESH) {
+      clearTokens();
+      return Promise.reject(error);
+    }
+
+    originalRequest._retryCount = originalRequest._retryCount || 0;
+
+    if (originalRequest._retryCount >= MAX_REFRESH_RETRIES) {
+      clearTokens();
       return Promise.reject(error);
     }
 
@@ -68,7 +87,7 @@ apiClient.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    originalRequest._retry = true;
+    originalRequest._retryCount += 1;
 
     if (isRefreshing) {
       return new Promise((resolve, reject) => {

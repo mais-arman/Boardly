@@ -1,27 +1,27 @@
 import { useTranslation } from "react-i18next";
-import type { AdminBoard, AdminUser } from "../types";
 
 type AdminStatsProps = {
-  users: AdminUser[];
-  boards: AdminBoard[];
+  usersTotal: number;
+  boardsTotal: number;
+  superAdminsCount: number;
 };
 
-export default function AdminStats({ users, boards }: AdminStatsProps) {
+export default function AdminStats({
+  usersTotal,
+  boardsTotal,
+  superAdminsCount,
+}: AdminStatsProps) {
   const { t } = useTranslation();
-
-  const superAdminsCount = users.filter(
-    (user) => user.role === "super_admin"
-  ).length;
 
   return (
     <section className="admin-stats-grid">
       <article>
-        <strong>{users.length}</strong>
+        <strong>{usersTotal}</strong>
         <span>{t("admin.users")}</span>
       </article>
 
       <article>
-        <strong>{boards.length}</strong>
+        <strong>{boardsTotal}</strong>
         <span>{t("admin.boards")}</span>
       </article>
 

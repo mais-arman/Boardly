@@ -15,7 +15,11 @@
     "create": "Create",
     "cards": "cards",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "rowsPerPage": "Rows per page",
+    "pageOf": "Page {{page}} of {{totalPages}}",
+    "previous": "Previous",
+    "next": "Next"
   },
   "auth": {
     "login": "Login",
@@ -131,7 +135,11 @@
     "deleteUser": "Delete user",
     "deleteBoardQuestion": "Delete board?",
     "deleteBoardDescription": "This will permanently delete \"{{title}}\".",
-    "deleteBoard": "Delete board"
+    "deleteBoard": "Delete board",
+    "noUsers": "No users found.",
+    "noBoards": "No boards found.",
+    "searchUsers": "Search users...",
+    "searchBoards": "Search boards..."
   },
   "verification": {
   "title": "Email verification",

@@ -19,8 +19,18 @@ export const supportedLanguages = {
 
 export type SupportedLanguage = keyof typeof supportedLanguages;
 
+export const DEFAULT_LANGUAGE: SupportedLanguage = "en";
+
+export const supportedLanguageKeys = Object.keys(
+  supportedLanguages
+) as SupportedLanguage[];
+
 export function getNormalizedLanguage(language: string): SupportedLanguage {
-  return language.startsWith("ar") ? "ar" : "en";
+  return (
+    supportedLanguageKeys.find((supportedLanguage) =>
+      language.startsWith(supportedLanguage)
+    ) || DEFAULT_LANGUAGE
+  );
 }
 
 function applyDocumentDirection(language: string) {
@@ -36,8 +46,8 @@ i18n
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
-    fallbackLng: "en",
-    supportedLngs: Object.keys(supportedLanguages),
+    fallbackLng: DEFAULT_LANGUAGE,
+    supportedLngs: supportedLanguageKeys,
     ns: ["translation"],
     defaultNS: "translation",
     debug: false,

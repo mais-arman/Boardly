@@ -1,14 +1,29 @@
-from marshmallow import Schema, fields, validate
+from marshmallow import Schema, fields, validate, EXCLUDE
 from app.models.auth.user_role import UserRole
+
+class AdminPaginationQuerySchema(Schema):
+    class Meta:
+        unknown = EXCLUDE
+
+    page = fields.Integer(load_default=1, validate=validate.Range(min=1))
+    limit = fields.Integer(load_default=10, validate=validate.Range(min=1, max=100))
+    search = fields.String(load_default="")
+    sortBy = fields.String(load_default="created_at")
+    order = fields.String(
+        load_default="desc",
+        validate=validate.OneOf(["asc", "desc"]),
+    )
 
 
 class AdminUserUpdateRoleSchema(Schema):
     role = fields.String(
         required=True,
-        validate=validate.OneOf([
-            UserRole.USER.value,
-            UserRole.SUPER_ADMIN.value,
-        ]),
+        validate=validate.OneOf(
+            [
+                UserRole.USER.value,
+                UserRole.SUPER_ADMIN.value,
+            ]
+        ),
     )
 
 

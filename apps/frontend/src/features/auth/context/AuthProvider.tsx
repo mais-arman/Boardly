@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "../../../app/constants/queryKeys";
 import { STORAGE_KEYS } from "../../../app/constants/storage";
-import { disconnectSocket } from "../../../shared/realtime/socket";
+import { disconnectSocket } from "../../../shared/services/socket";
 import {
   getCurrentUserRequest,
   loginRequest,

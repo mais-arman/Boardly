@@ -7,6 +7,7 @@ from app.constants.routes import (
     ADMIN_BOARD_BY_ID,
 )
 from app.schemas.admin.admin_schema import (
+    AdminPaginationQuerySchema,
     AdminUserResponseSchema,
     AdminUserUpdateRoleSchema,
     AdminBoardResponseSchema,
@@ -18,6 +19,8 @@ from app.utils.responses import success_response
 
 admin_bp = Blueprint("admin", __name__)
 
+admin_pagination_query_schema = AdminPaginationQuerySchema()
+
 admin_user_response_schema = AdminUserResponseSchema()
 admin_users_response_schema = AdminUserResponseSchema(many=True)
 admin_user_update_role_schema = AdminUserUpdateRoleSchema()
@@ -26,14 +29,29 @@ admin_board_response_schema = AdminBoardResponseSchema()
 admin_boards_response_schema = AdminBoardResponseSchema(many=True)
 
 
+def build_paginated_response(paginated_result, schema):
+    return {
+        "items": schema.dump(paginated_result["items"]),
+        "page": paginated_result["page"],
+        "limit": paginated_result["limit"],
+        "total": paginated_result["total"],
+        "total_pages": paginated_result["total_pages"],
+    }
+
+
 @admin_bp.get(ADMIN_USERS)
 @jwt_required()
 @super_admin_required
 def get_users():
-    users = AdminService.get_users()
+    params = admin_pagination_query_schema.load(request.args)
+
+    paginated_users = AdminService.get_users(params)
 
     return success_response(
-        data=admin_users_response_schema.dump(users),
+        data=build_paginated_response(
+            paginated_users,
+            admin_users_response_schema,
+        ),
         message="Users fetched successfully",
     )
 
@@ -72,10 +90,15 @@ def delete_user(user_id):
 @jwt_required()
 @super_admin_required
 def get_boards():
-    boards = AdminService.get_boards()
+    params = admin_pagination_query_schema.load(request.args)
+
+    paginated_boards = AdminService.get_boards(params)
 
     return success_response(
-        data=admin_boards_response_schema.dump(boards),
+        data=build_paginated_response(
+            paginated_boards,
+            admin_boards_response_schema,
+        ),
         message="Boards fetched successfully",
     )
 
